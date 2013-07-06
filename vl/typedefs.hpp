@@ -38,8 +38,6 @@ namespace vl
 	class CadImporter;
 	typedef boost::shared_ptr<CadImporter> CadImporterRefPtr;
 
-	class Window;
-
 	/// Settings
 	class Settings;
 	class ProjSettings;
@@ -54,14 +52,18 @@ namespace vl
 	}
 
 	class Renderer;
-	class Config;
+	class Pipe;
+	class Window;
+	class Channel;
 
-	typedef boost::shared_ptr<Config> ConfigRefPtr;
 	// Auto ptr because Renderer has a single owner
 	// usually created elsewhere and passed to Config or Client
 	// Normal pointer for callbacks
+	typedef Pipe *PipePtr;
+	typedef boost::shared_ptr<Pipe> PipeRefPtr;
 	typedef Renderer *RendererPtr;
 	typedef std::auto_ptr<Renderer> RendererUniquePtr;
+	typedef Channel *ChannelPtr;
 
 	// Tracker objects
 	class TrackerSensor;

@@ -24,6 +24,8 @@
 
 #include "typedefs.hpp"
 
+#include "cluster/distributed.hpp"
+
 // Necessary for Window config and Wall
 #include "base/envsettings.hpp"
 // Child
@@ -45,7 +47,7 @@ namespace vl
 /**	@class Window represent an OpenGL drawable and context
  *
  */
-class HYDRA_API Window : public IWindow, public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
+class HYDRA_API Window : public IWindow, public Distributed, public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
 {
 public:
 	/// @brief Constructor
@@ -53,7 +55,13 @@ public:
 	/// @param env Environment config (used for projection)
 	/// @param parent Renderer that created this window
 	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
-	Window(vl::config::Window const &windowConf, vl::config::EnvSettingsRefPtr env, vl::RendererPtr parent);
+	Window(vl::config::Window const &windowConf, vl::config::EnvSettingsRefPtr env, vl::PipePtr parent);
+
+	/// Slave constructor
+	/// @param parent
+	/// @param renderer We need renderer for creating Ogre window
+	/// @param id 
+	Window(vl::RendererPtr renderer, uint64_t id);
 
 	virtual ~Window( void );
 
@@ -107,7 +115,22 @@ public:
 	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
 
-protected :
+	enum DirtyBits
+	{
+		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
+		DIRTY_PIPE = vl::Distributed::DIRTY_CUSTOM << 1,
+		DIRTY_CONFIG = vl::Distributed::DIRTY_CUSTOM << 2,
+		DIRTY_CHANNELS = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
+	};
+
+	/// Called from Pipe when window is atteched
+	void _createNative(void);
+
+private :
+	virtual void serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
+
+	virtual void deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
 
 	/// @todo should Ogre::RenderWindow be passed to constructor or created here?
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);
@@ -140,6 +163,14 @@ protected :
 
 	std::string _name;
 
+	config::Window _window_config;
+
+	/// Pipe used on Master
+	vl::PipePtr _pipe;
+	/// Pipe ID used on slaves to determine if the Pipe is on this Node
+	uint64_t _pipe_id;
+
+	// Need to have Renderer on Slaves for creating Ogre window
 	vl::RendererPtr _renderer;
 
 	std::vector<Channel *> _channels;

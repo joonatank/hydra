@@ -36,6 +36,26 @@ public :
 	Wall(void)
 	{}
 
+	// Copy constructor
+	Wall(Wall const &w)
+	{
+		copy(w);
+	}
+
+	Wall &operator=(Wall const &w)
+	{
+		copy(w);
+		return *this;
+	}
+
+	void copy(Wall const &w)
+	{
+		name = w.name;
+		bottom_left = w.bottom_left;
+		bottom_right = w.bottom_right;
+		top_left = w.top_left;
+	}
+
 	// Whether or not the Wall has been initialised
 	bool empty(void) const
 	{

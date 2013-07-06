@@ -87,7 +87,7 @@ public:
 	StereoCamera &getCamera(void)
 	{ return _camera; }
 
-	Ogre::Viewport *getWindowViewport(void)
+	Ogre::Viewport *getNative(void)
 	{ return _viewport; }
 
 	/// Methods

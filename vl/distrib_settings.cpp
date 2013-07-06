@@ -81,8 +81,8 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRefPtr const &env )
 {
 	msg << env->getLogLevel() << env->getCameraRotationAllowed()
-		<< env->getMaster() << env->getSlaves()
-		<< env->getWalls() << env->getIPD() << env->getLogDir();
+		<< env->getMaster() << env->getSlaves() << env->getIPD() 
+		<< env->getLogDir();
 
 	return msg;
 }
@@ -95,9 +95,8 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRe
 	double ipd = 0;
 	std::string log_dir;
 	vl::config::LogLevel log_level;
-	msg >> log_level >> rot_allowed >> env->getMaster()
-		>> env->getSlaves() >> env->getWalls()
-		>> ipd >> log_dir;
+	msg >> log_level >> rot_allowed >> env->getMaster() >> env->getSlaves() >> ipd 
+		>> log_dir;
 
 	env->setCameraRotationAllowed( rot_allowed );
 	env->setIPD(ipd);
@@ -190,7 +189,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
-	msg << chan.name << chan.wall_name << chan.area << chan.background_colour;
+	msg << chan.name << chan.wall << chan.area << chan.background_colour;
 
 	return msg;
 }
@@ -199,7 +198,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
-	msg >> chan.name >> chan.wall_name >> chan.area >> chan.background_colour;
+	msg >> chan.name >> chan.wall >> chan.area >> chan.background_colour;
 
 	return msg;
 }

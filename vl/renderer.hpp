@@ -2,7 +2,7 @@
  *	Copyright (c) 2011 Tampere University of Technology
  *	Copyright (c) 2011 - 2013 Savant Simulators
  *
- *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
+*	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file renderer.hpp
  *
@@ -140,15 +140,20 @@ public :
 	void addEventListener(EventSent::slot_type const &slot)
 	{ _event_signal.connect(slot); }
 
-	/// @todo should remove these and instead use the GUI directly
-	void enableDebugOverlay(bool enable)
-	{ _enable_debug_overlay = enable; }
-
-	bool isDebugOverlayEnabled(void) const
-	{ return _enable_debug_overlay; }
-
 	gui::GUIRefPtr getGui(void)
 	{ return _gui; }
+
+	vl::Session *getSession(void)
+	{ return _session; }
+
+	vl::Pipe *getPipe(void)
+	{ return _pipe; }
+
+	/// @brief Helper function for creating GUI when window is initalised
+	/// should not be called elsewhere than Window and GUI creation
+	/// NOP if GUI has already been initialised
+	/// @return true if initialised, false otherwise
+	bool _initialiseGUI(void);
 
 	/// Hack for getting current view and projection matrices
 	/// This is a hack because these don't take into account
@@ -171,13 +176,6 @@ public :
 	virtual void logMessage(LogMessage const &msg);
 
 	virtual uint32_t nLoggedMessages(void) const;
-
-	/// @brief
-	/// @param winConf definition for the window
-	/// @param env
-	/// @todo this should not require EnvSettings, they are required now because Window
-	/// creates Channels based of them.
-	vl::IWindow *createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env);
 
 protected :
 
@@ -205,6 +203,11 @@ protected :
 	std::string _name;
 
 	vl::Session *_session;
+	/// Pipe for this Renderer
+	vl::Pipe *_pipe;
+	/// We store all the pipes received from Master because we can't access
+	/// their names before they are completely serialised.
+	std::vector<vl::Pipe *> _all_pipes;
 
 	vl::MeshManagerRefPtr _mesh_manager;
 	vl::MaterialManagerRefPtr _material_manager;
@@ -217,8 +220,6 @@ protected :
 	vl::SceneManagerPtr _scene_manager;
 	vl::Player *_player;
 	uint32_t _screenshot_num;
-
-	std::vector<vl::Window *> _windows;
 
 	/// GUI related
 	vl::gui::GUIRefPtr _gui;
@@ -240,10 +241,6 @@ protected :
 	uint32_t _n_log_messages;
 
 	std::vector<vl::MaterialRefPtr> _materials_to_check;
-
-	bool _enable_debug_overlay;
-	// Temp variable we need so we don't need to save EnvSettings
-	bool _gui_enabled;
 
 	// Projection and View matrices used for last frame
 	// Used for the python interface.

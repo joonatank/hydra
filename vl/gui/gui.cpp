@@ -23,6 +23,10 @@
 #include "settings.hpp"
 // Necessary for init GUI
 #include "window.hpp"
+// Necessary for creating the Canvas
+#include "channel.hpp"
+
+#include "base/exceptions.hpp"
 
 vl::gui::GUI::GUI(vl::Session *session)
 	: _session(session)
@@ -151,16 +155,19 @@ vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 
 
 void
-vl::gui::GUI::initGUI(Ogre::Viewport *view)
+vl::gui::GUI::initGUI(vl::Channel *view)
 {
-	std::string message("vl::gui::GUI::_initGUI");
-	std::clog << message << std::endl;
+	assert(view);
+	if(!view->getNative())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No Ogre::Viewport")); }
+
+	std::clog << "vl::gui::GUI::_initGUI" << std::endl;
 
 	// @todo Gorilla::Silverback should be in the GUI
 	assert(!_gorilla);
 	_gorilla = new Gorilla::Silverback();
 	_gorilla->loadAtlas("dejavu");
-	mViewport = view;
+	mViewport = view->getNative();
 }
 
 bool

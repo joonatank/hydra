@@ -65,7 +65,7 @@ public :
 
 	gui::WindowRefPtr getWindow(std::string const &name);
 
-	void initGUI(Ogre::Viewport *view);
+	void initGUI(vl::Channel *view);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }

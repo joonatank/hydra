@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file renderer.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -40,6 +40,8 @@
 #include "material.hpp"
 #include "mesh_manager.hpp"
 
+#include "pipe.hpp"
+
 // Necessary for message pump
 #include <OGRE/OgreWindowEventUtilities.h>
 
@@ -49,13 +51,12 @@
 vl::Renderer::Renderer(vl::Session *session, std::string const &name)
 	: _name(name)
 	, _session(session)
+	, _pipe(0)
 	, _ogre_sm(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
 	, _n_log_messages(0)
-	, _enable_debug_overlay(false)
-	, _gui_enabled(false)
 {
 	std::cout << vl::TRACE << "vl::Renderer::Renderer : name = " << _name << std::endl;
 }
@@ -64,23 +65,23 @@ vl::Renderer::~Renderer(void)
 {
 	std::cout << vl::TRACE << "vl::Renderer::~Renderer" << std::endl;
 
-	std::vector<Window *>::iterator iter;
-	for( iter = _windows.begin(); iter != _windows.end(); ++iter )
-	{ delete *iter; }
-	_windows.clear();
-
 	// Necessary because this holds Ogre resources.
 	_material_manager.reset();
 
 	// Shouldn't be necessary anymore, if _root handles destruction cleanly
 	if( _root && _ogre_sm )
-	{ _root->getNative()->destroySceneManager( _ogre_sm ); }
+	{ _root->getNative()->destroySceneManager(_root->getSceneManager()); }
 	_ogre_sm = 0;
 
 	_root.reset();
 
 	delete _scene_manager;
 	delete _player;
+
+	// Don't delete pipe since it's a pointer in _all_pipes
+	_pipe = 0;
+	for(size_t i = 0; i < _all_pipes.size(); ++i)
+	{ delete _all_pipes.at(i); }
 
 	std::cout << vl::TRACE << "vl::Renderer::~Renderer : DONE" << std::endl;
 }
@@ -92,60 +93,19 @@ vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
 
 	assert(env);
 
-	// TODO the project name should be used instead of the hydra for all
-	// problem is that the project name is not known at this point
-	// so we should use a tmp file and then move it.
-	_root.reset( new vl::ogre::Root(env->getLogLevel()) );
+	// Don't necessarily need the log level thingy
+	// Release version has horrible amount of empty lines if we use LL_NORMAL
+	// Debug version is fine
+#ifdef _DEBUG
+	_root.reset( new vl::ogre::Root(config::LL_NORMAL) );
+#else
+	_root.reset( new vl::ogre::Root(config::LL_LOW) );
+#endif
 	// Initialise ogre
 	_root->createRenderSystem();
-
-	vl::config::Node node;
-	if(getName() == env->getMaster().name)
-	{ node = env->getMaster(); }
-	else
-	{ node = env->findSlave( getName() ); }
-
-	_gui_enabled = node.gui_enabled;
-
-	if(!node.empty())
-	{ 
-		std::cout << vl::TRACE << "Creating " << node.getNWindows() << " windows." << std::endl;
-
-		for( size_t i = 0; i < node.getNWindows(); ++i )
-		{ createWindow(node.getWindow(i), env); }
-	}
-	// Hack to handle Ogre's depency on Window creation before the use of
-	// the RenderingEngine
-	else
-	{
-		std::cout << vl::TRACE << "Creating dummy window" << std::endl;
-		// @todo should destroy the window after the init
-		createWindow(vl::config::Window("dummy", 400, 320, 0, 0), env);
-	}
 }
 
 /// --------------------------------------------------------------------------
-/// ----------------------- Window management --------------------------------
-vl::IWindow *
-vl::Renderer::createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env)
-{
-	std::cout << vl::TRACE << "vl::Renderer::createWindow : " << winConf.name << std::endl;
-
-	// Destroy dummy window
-	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
-	{
-		delete _windows.at(0);
-		_windows.clear();
-	}
-
-	vl::Window *window = new vl::Window(winConf, env, this);
-	if(_player)
-	{ window->setCamera(_player->getCamera()); }
-	_windows.push_back(window);
-
-	return window;
-}
-
 void
 vl::Renderer::sendEvent(vl::cluster::EventData const &event)
 {
@@ -156,14 +116,6 @@ void
 vl::Renderer::sendCommand( std::string const &cmd )
 {
 	_command_signal(cmd);
-}
-
-void
-vl::Renderer::capture(void)
-{
-	// Process input events
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->capture(); }
 }
 
 bool 
@@ -185,8 +137,21 @@ vl::Renderer::printToConsole(std::string const &text, double time,
 /// --------------------------------------------------------------------------
 /// ----------------------- Rendering ----------------------------------------
 void
+vl::Renderer::capture(void)
+{
+	if(!_pipe)
+	{ return; }
+
+	// Process input events
+	_pipe->capture();
+}
+
+void
 vl::Renderer::draw(void)
 {
+	if(!_pipe)
+	{ return; }
+
 	Ogre::WindowEventUtilities::messagePump();
 
 	// @todo move the callback notifiying to Root
@@ -195,17 +160,18 @@ vl::Renderer::draw(void)
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameStart(); }
 
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->draw(); }
+	if(_pipe)
+	{ _pipe->draw(); }
 
 	// Copy view and projection matrices
-	if(_windows.size() > 0 && _windows.at(0)->getChannels().size() > 0)
+	// @todo should be in the pipe or something
+	if(_pipe->getWindows().size() > 0 && _pipe->getWindows().at(0)->getChannels().size() > 0)
 	{
 		// @todo does this work for deferred shading or FBOs?
 		// what projection and view matrices exacatly are left after
 		// rendering a frame?
 		// need to test more but view matrix seemed fine for deferred.
-		Channel *chan = _windows.at(0)->getChannels().at(0);
+		Channel *chan = _pipe->getWindows().at(0)->getChannels().at(0);
 
 		vl::Transform t = chan->getCamera().getViewTransform();
 		_view_matrix = Ogre::Matrix4(t.quaternion);
@@ -214,7 +180,7 @@ vl::Renderer::draw(void)
 	}
 
 	// Hack to update Sky
-	if(_windows.size() > 0 && _player->getCamera()
+	if(_pipe->getWindows().size() > 0 && _player->getCamera()
 		&& _scene_manager && _scene_manager->getSkySimulator())
 	{
 		_scene_manager->getSkySimulator()->notifyCameraRender(_player->getCamera());
@@ -229,8 +195,10 @@ vl::Renderer::draw(void)
 void
 vl::Renderer::swap(void)
 {
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->swap(); }
+	if(!_pipe)
+	{ return; }
+
+	_pipe->swap();
 }
 
 /// --------------------------------------------------------------------------
@@ -262,16 +230,8 @@ vl::Renderer::setProject(vl::Settings const &settings)
 
 	std::clog << "Setting up the Ogre resources." << std::endl;
 
-	std::clog << "Adding paths to resources : " << std::endl;
-	for(size_t i = 0; i < paths.size(); ++i)
-	{
-		std::clog << "\t" << paths.at(i) << std::endl;
-	}
-
 	// add all resources
 	_root->setupResources(paths);
-	// initialise them
-	_root->loadResources();
 }
 
 void
@@ -285,19 +245,47 @@ vl::Renderer::clearProject(void)
 	}
 
 	// Remove cameras and wait for them to be reset
-	for(size_t i = 0; i < _windows.size(); ++i)
+	if(_pipe)
 	{
-		_windows.at(i)->setCamera(0);
-		_windows.at(i)->resetStatistics();
+		for(size_t i = 0; i < _pipe->getWindows().size(); ++i)
+		{
+			_pipe->getWindows().at(i)->setCamera(0);
+			_pipe->getWindows().at(i)->resetStatistics();
+		}
 	}
 }
 
 /// --------------------------------------------------------------------------
+bool
+vl::Renderer::_initialiseGUI(void)
+{
+	assert(_gui);
+
+	// NOP if already initialised
+	if(_gui->initialised())
+	{ return true; }
+
+	std::clog << "vl::Renderer::_initialiseGUI" << std::endl;
+
+	// Only initialise if we have a window
+	assert(_pipe);
+	// Oh fuck, this is called from Renderer where Window has been created
+	// but it has no Channels
+	if(!_pipe->getWindows().empty() && !_pipe->getWindows().at(0)->getChannels().empty())
+	{
+		_gui->initGUI(_pipe->getWindows().at(0)->getChannels().at(0));
+
+		return true;
+	}
+
+	return false;
+}
+
 /// ----------------------- Syncing -----------------------------------------
 void
 vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 {
-	std::cout << vl::TRACE << "vl::Renderer::createSceneObjects" << std::endl;
+	std::clog << "vl::Renderer::createSceneObjects" << std::endl;
 
 	assert(msg.getType() == vl::cluster::MSG_SG_CREATE);
 	
@@ -318,32 +306,13 @@ vl::Renderer::createSceneObjects(vl::cluster::Message& msg)
 		msg.read(type);
 		msg.read(id);
 
-		// @todo check for unique id
+		assert(_objects_not_yet_created.find(id) == _objects_not_yet_created.end());
+		// @todo this should be ordered set based on type not ID
+		// as long as types are ordered based on creation order
+		// (as long as first objects have lower id they are created first)
+		// we need to add a new container for this though.
 		_objects_not_yet_created[id] = type;
 	}
-
-	IdTypeMap saved_for_later;
-
-	// This method should work when ever we have create message
-	// divided into two separate messages in the same or concecutive
-	// frames.
-	// Because first message is going to leave some objects not created
-	// second causes us to re run this function and create all of them.
-	// This depends on the ordering of the objects so manager objects
-	// should have lowest ids which the current implementation enforces.
-	// because ids are ordered by creation and managers need to be created
-	// first.
-	// For later if there seems to be need for checking this every frame
-	// we can move it to data synchronisation instead of creation.
-	_create_objects(_objects_not_yet_created, saved_for_later);
-
-	size_t n_objects = _objects_not_yet_created.size();
-	size_t n_saved = saved_for_later.size();
-	size_t n_created = n_objects - n_saved;
-	std::cout << vl::TRACE << n_created << " objects created from " << n_objects
-		<< " and " << n_saved << " objects were left to be created later." << std::endl;
-
-	_objects_not_yet_created = saved_for_later;
 }
 
 void
@@ -355,12 +324,42 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 		uint64_t id = iter->first;
 		switch(iter->second)
 		{
+			case OBJ_PIPE :
+			{
+				std::clog << "Creating Pipe with id " << id << std::endl;
+				_all_pipes.push_back(new Pipe(_session, id));
+			}
+			break;
+
+			case OBJ_WINDOW :
+			{
+				if(_pipe)
+				{
+					std::clog << "Creating a Window with id " << id << std::endl;
+					Window *win = new Window(this, id);
+					
+					// Add the window to the Pipe
+					// this can't be done automatically by the Pipe because it's
+					// deserialised first (we need the proper pipe for this Renderer)
+					_pipe->_windowCreated(win);
+				}
+				else
+				{ left_overs[id] = iter->second; }
+			}
+			break;
+
+			case OBJ_CHANNEL :
+			{
+				std::clog << "Channel objects NOT YET SUPPORTED." << std::endl;
+			}
+			break;
+
 			case OBJ_PLAYER :
 			{
-				std::cout << vl::TRACE << "Creating Player with ID : " << id << std::endl;
 				// Create the Player if we have a SceneManager
 				if(_scene_manager)
 				{
+					std::clog << "Creating Player with ID : " << id << std::endl;
 					vl::Player *player = new vl::Player(_scene_manager);
 					// @todo this needs to use Slave
 					_session->registerObject(player, id);
@@ -377,41 +376,30 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 
 			case OBJ_GUI :
 			{
-				std::cout << vl::TRACE << "Renderer : Creating GUI with id " << id << std::endl;
-
-				// Create GUI on the Node if it was enabled
-				// The config parser automatically enables GUI on master if possible.
-				if(_gui_enabled)
+				if(_pipe)
 				{
-					std::cout << vl::TRACE << "Creating GUI" << std::endl;
+					std::clog << "Renderer : Creating GUI with id " << id << std::endl;
+
 					// Do not create the GUI multiple times
 					if(_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
-					// @todo fix callback with a signal
 					_gui.reset(new vl::gui::GUI(_session, id));
-					if(_windows.size() == 0 || _windows.at(0)->getChannels().size() == 0
-						|| _windows.at(0)->getChannels().at(0)->getWindowViewport() == 0)
-					{
-						std::string err_msg("Something really funny with Viewports when creating GUI");
-						BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err_msg)); 
-					}
-					_gui->initGUI( _windows.at(0)->getChannels().at(0)->getWindowViewport() );
+
+					_initialiseGUI();
 				}
+				// store for later
 				else
-				{
-					// Slaves need to ignore the GUI updates
-					_ignored_distributed_objects.push_back(id);
-				}
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
 			case OBJ_GUI_CONSOLE :
 			case OBJ_GUI_PERFORMANCE_OVERLAY:
 			{
-				if(_gui_enabled)
+				if(_pipe && _gui->initialised())
 				{
-					std::cout << vl::TRACE << "Renderer : Creating GUI Widnow" << std::endl;
+					std::clog << "Renderer : Creating GUI Widnow" << std::endl;
 					if(!_gui)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("NO GUI when trying to create GUI::Window.")); }
 					_gui->createWindow(iter->second, id);
@@ -420,24 +408,28 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 						_gui->getConsole()->addCommandListener(boost::bind(&Renderer::sendCommand, this, _1));
 					}
 				}
+				// store for later
 				else
-				{
-					// Slaves need to ignore the GUI updates
-					_ignored_distributed_objects.push_back(id);
-				}
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
 			case OBJ_SCENE_MANAGER :
 			{
-				std::cout << vl::TRACE << "Renderer : Creating SceneManager" << std::endl;
-				if(_scene_manager || _ogre_sm)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
-				if(!_mesh_manager)
-				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
+				if(_pipe)
+				{
+					std::clog << "Renderer : Creating SceneManager" << std::endl;
+					if(_scene_manager || _ogre_sm)
+					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
+					if(!_mesh_manager)
+					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
 
-				_ogre_sm = _root->createSceneManager("SceneManager");
-				_scene_manager = new SceneManager(_session, id, _ogre_sm, _mesh_manager);
+					_ogre_sm = _root->createSceneManager("SceneManager");
+					_scene_manager = new SceneManager(_session, id, _ogre_sm, _mesh_manager);
+				}
+				// store for later
+				else
+				{ left_overs[id] = iter->second; }
 			}
 			break;
 
@@ -452,11 +444,11 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 
 			case OBJ_MATERIAL_MANAGER :
 			{
-				std::cout << vl::TRACE << "Renderer : Creating MaterialManager" << std::endl;
+				std::clog << "Renderer : Creating MaterialManager" << std::endl;
 				if(_material_manager)
 				{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Material Manager already created.")); }
 				_material_manager.reset(new MaterialManager(_session, id));
-				std::cout << vl::TRACE << "Renderer : MaterialManager created" << std::endl;
+				std::clog << "Renderer : MaterialManager created" << std::endl;
 			}
 			break;
 
@@ -497,6 +489,37 @@ void
 vl::Renderer::updateScene(vl::cluster::Message& msg)
 {
 	assert(msg.getType() == vl::cluster::MSG_SG_UPDATE || msg.getType() == vl::cluster::MSG_SG_INIT);
+
+	// This method works whenever we have a create message
+	// divided into two separate messages in the same or concecutive
+	// frames.
+	// Because first message is going to leave some objects not created
+	// second causes us to re run this function and create all of them.
+	// This depends on the ordering of the objects so manager objects
+	// should have lowest ids which the current implementation enforces.
+	// because ids are ordered by creation and managers need to be created
+	// first.
+	// We do the checking here instead of createSceneObjects() because
+	// we added some objects that require ordered creation.
+	//
+	// @todo might move to separate function that iterates over the array
+	// till no more objects can be created this frame.
+	if(_objects_not_yet_created.size() > 0)
+	{
+		IdTypeMap saved_for_later;
+		_create_objects(_objects_not_yet_created, saved_for_later);
+
+		size_t n_objects = _objects_not_yet_created.size();
+		size_t n_saved = saved_for_later.size();
+		size_t n_created = n_objects - n_saved;
+		if(n_objects > 0)
+		{
+			std::clog << n_created << " objects created from " << n_objects
+				<< " and " << n_saved << " objects were left to be created later." << std::endl;
+		}
+
+		_objects_not_yet_created = saved_for_later;
+	}
 
 	// Read the IDs in the message and call pack on mapped objects
 	// based on thoses
@@ -570,7 +593,8 @@ vl::Renderer::_syncData(void)
 			}
 			else
 			{
-				std::cout << "No ID " << iter->getId() << " found in mapped objects. Saving for later."
+				std::clog << "No ID " << iter->getId() 
+					<< " found in mapped objects. Saving for later."
 					<< std::endl;
 				tmp.push_back( *iter );
 			}
@@ -578,6 +602,22 @@ vl::Renderer::_syncData(void)
 	}
 
 	_objects = tmp;
+
+	/// Find our Pipe
+	if(!_pipe)
+	{
+		std::clog << "Trying to find Pipe for : " << _name 
+			<< " we have " << _all_pipes.size() << " pipes available." << std::endl;
+		for(size_t i = 0; i < _all_pipes.size(); ++i)
+		{
+			if(_all_pipes.at(i)->getName() == _name)
+			{
+				std::clog << "Renderer Found a Pipe" << std::endl;
+				_pipe = _all_pipes.at(i);
+				break;
+			}
+		}	
+	}
 }
 
 void
@@ -585,13 +625,13 @@ vl::Renderer::_updateDistribData( void )
 {
 	// Update player
 	// TODO these should be moved to player using functors
-	if( _player )
+	if( _player && _pipe)
 	{		
 		if(!_player->getCamera())
 		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Active Camera name empty.")); }
-
-		for( size_t i = 0; i < _windows.size(); ++i )
-		{ _windows.at(i)->setCamera(_player->getCamera()); }
+		
+		for( size_t i = 0; i < _pipe->getWindows().size(); ++i )
+		{ _pipe->getWindows().at(i)->setCamera(_player->getCamera()); }
 
 		// Take a screenshot
 		if( _player->getScreenshotVersion() > _screenshot_num )
@@ -607,12 +647,15 @@ vl::Renderer::_updateDistribData( void )
 void
 vl::Renderer::_takeScreenshot( void )
 {
+	if(!_pipe)
+	{ return; }
+
 	std::string prefix( "screenshot_" );
 	std::string suffix = ".png";
 
 	// Tell the Window to take a screenshot
-	for( size_t i = 0; i < _windows.size(); ++i )
-	{ _windows.at(i)->takeScreenshot( prefix, suffix ); }
+	for( size_t i = 0; i < _pipe->getWindows().size(); ++i )
+	{ _pipe->getWindows().at(i)->takeScreenshot( prefix, suffix ); }
 }
 
 /// @todo document the purpose of this and clean it up a little bit

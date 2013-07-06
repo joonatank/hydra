@@ -25,7 +25,12 @@ namespace vl
 enum OBJ_TYPE
 {
 	OBJ_INVALID,
+	/// Configuration
+	OBJ_PIPE,
+	OBJ_WINDOW,
+	OBJ_CHANNEL,
 	OBJ_PLAYER,
+	/// GUI
 	OBJ_GUI,			// Master GUI object
 	OBJ_GUI_CONSOLE,	// GUI Console window
 	OBJ_GUI_PERFORMANCE_OVERLAY,	// GUI performance overlay

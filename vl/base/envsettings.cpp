@@ -191,18 +191,59 @@ vl::config::EnvSettings::getWall(size_t i) const
 	return _walls.at(i);
 }
 
-vl::Wall
-vl::config::EnvSettings::findWall(std::string const &wall_name) const
+bool
+vl::config::EnvSettings::hasWall(std::string const &name) const
+{
+	return( findWallPtr(name) != 0 );
+}
+
+vl::Wall &
+vl::config::EnvSettings::findWall(std::string const &name)
+{
+	Wall *wall = findWallPtr(name);
+	if(wall)
+	{ return *wall; }
+
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Wall not found."));
+}
+
+
+vl::Wall const &
+vl::config::EnvSettings::findWall(std::string const &name) const
+{
+	Wall const *wall = findWallPtr(name);
+	if(wall)
+	{ return *wall; }
+
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Wall not found."));
+}
+
+vl::Wall *
+vl::config::EnvSettings::findWallPtr(std::string const &name)
+{
+	std::vector<vl::Wall>::iterator iter;
+	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
+	{
+		if( iter->name == name )
+		{ return &(*iter); }
+	}
+
+	return 0;
+}
+
+vl::Wall const *
+vl::config::EnvSettings::findWallPtr(std::string const &name) const
 {
 	std::vector<vl::Wall>::const_iterator iter;
 	for( iter = _walls.begin(); iter != _walls.end(); ++iter )
 	{
-		if( iter->name == wall_name )
-		{ return *iter; }
+		if( iter->name == name )
+		{ return &(*iter); }
 	}
 
-	return vl::Wall();
+	return 0;
 }
+
 
 vl::config::Node const &
 vl::config::EnvSettings::findSlave(std::string const &name) const
@@ -214,9 +255,192 @@ vl::config::EnvSettings::findSlave(std::string const &name) const
 		{ return *iter; }
 	}
 
-	return vl::config::Node();
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Slave not found."));
 }
 
+std::vector<vl::config::Window *>
+vl::config::EnvSettings::get_all_windows()
+{
+	std::vector<Window *> windows;
+	for(size_t i = 0; i < _master.getNWindows(); ++i)
+	{
+		windows.push_back(&_master.getWindow(i));
+	}
+
+	for(size_t i = 0; i < _slaves.size(); ++i)
+	{
+		for(size_t j = 0; j <_slaves.at(i).windows.size(); ++j)
+		{
+			windows.push_back(&_slaves.at(i).windows.at(j));
+		}
+	}
+
+	return windows;
+}
+
+std::vector<vl::config::Window const *>
+vl::config::EnvSettings::get_all_windows() const
+{
+	std::vector<Window const *> windows;
+	for(size_t i = 0; i < _master.getNWindows(); ++i)
+	{
+		windows.push_back(&_master.getWindow(i));
+	}
+
+	for(size_t i = 0; i < _slaves.size(); ++i)
+	{
+		for(size_t j = 0; j <_slaves.at(i).windows.size(); ++j)
+		{
+			windows.push_back(&_slaves.at(i).windows.at(j));
+		}
+	}
+
+	return windows;
+}
+
+std::vector<vl::config::Channel *>
+vl::config::EnvSettings::get_all_channels()
+{
+	std::vector<Channel *> channels;
+
+	std::vector<Window *> const &windows = get_all_windows();
+
+	for(size_t i = 0; i < windows.size(); ++i)
+	{
+		for(size_t j = 0; j < windows.at(i)->get_n_channels(); ++j)
+		{
+			channels.push_back(&windows.at(i)->get_channel(j));
+		}
+	}
+
+	return channels;
+}
+
+std::vector<vl::config::Channel const *>
+vl::config::EnvSettings::get_all_channels() const
+{
+	std::vector<Channel const *> channels;
+
+	std::vector<Window const *> const &windows = get_all_windows();
+
+	for(size_t i = 0; i < windows.size(); ++i)
+	{
+		for(size_t j = 0; j < windows.at(i)->get_n_channels(); ++j)
+		{
+			channels.push_back(&windows.at(i)->get_channel(j));
+		}
+	}
+
+	return channels;
+}
+
+bool
+vl::config::EnvSettings::hasWindow(std::string const &name) const
+{
+	return( findWindowPtr(name) != 0 );
+}
+
+vl::config::Window &
+vl::config::EnvSettings::findWindow(std::string const &name)
+{
+	Window *win = findWindowPtr(name);
+	if(win)
+	{ return *win; }
+	
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Window not found."));
+}
+
+vl::config::Window const &
+vl::config::EnvSettings::findWindow(std::string const &name) const
+{
+	Window const *win = findWindowPtr(name);
+	if(win)
+	{ return *win; }
+	
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Window not found."));
+}
+
+vl::config::Window *
+vl::config::EnvSettings::findWindowPtr(std::string const &name)
+{
+	std::vector<Window *> windows = get_all_windows();
+	
+	for(size_t i = 0; i < windows.size(); ++i)
+	{
+		if(windows.at(i)->name == name)
+		{ return windows.at(i); }
+	}
+
+	return 0;
+}
+
+vl::config::Window const *
+vl::config::EnvSettings::findWindowPtr(std::string const &name) const
+{
+	std::vector<Window const *> windows = get_all_windows();
+	
+	for(size_t i = 0; i < windows.size(); ++i)
+	{
+		if(windows.at(i)->name == name)
+		{ return windows.at(i); }
+	}
+
+	return 0;
+}
+
+bool
+vl::config::EnvSettings::hasChannel(std::string const &name) const
+{
+	return( findChannelPtr(name) != 0 );
+}
+
+vl::config::Channel &
+vl::config::EnvSettings::findChannel(std::string const &name)
+{
+	Channel *chan = findChannelPtr(name);
+	if(chan)
+	{ return *chan; }
+	
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Channel not found."));
+}
+
+vl::config::Channel const &
+vl::config::EnvSettings::findChannel(std::string const &name) const
+{
+	Channel const *chan = findChannelPtr(name);
+	if(chan)
+	{ return *chan; }
+	
+	BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Channel not found."));
+}
+
+vl::config::Channel *
+vl::config::EnvSettings::findChannelPtr(std::string const &name)
+{
+	std::vector<Channel *> channels = get_all_channels();
+	
+	for(size_t i = 0; i < channels.size(); ++i)
+	{
+		if(channels.at(i)->name == name)
+		{ return channels.at(i); }
+	}
+
+	return 0;
+}
+
+vl::config::Channel const *
+vl::config::EnvSettings::findChannelPtr(std::string const &name) const
+{
+	std::vector<Channel const *> channels = get_all_channels();
+	
+	for(size_t i = 0; i < channels.size(); ++i)
+	{
+		if(channels.at(i)->name == name)
+		{ return channels.at(i); }
+	}
+
+	return 0;
+}
 
 std::string
 vl::config::EnvSettings::getLogDir(vl::PATH_TYPE const type) const
@@ -310,7 +534,11 @@ vl::config::EnvSerializer::readXML()
         std::cerr << "Errenous xml. env_config node missing. Wrong file?" << std::endl;
         return false;
     }
-    processConfig( xmlRoot );
+    
+	processConfig( xmlRoot );
+
+	finalise();
+
     return true;
 }
 
@@ -722,7 +950,12 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 	else
 	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
 
-	window.add_channel(vl::config::Channel(channel_name, wall_name, r, background_col));
+	
+	window.add_channel(Channel(channel_name, r, Wall(), background_col));
+	// this needs to be a reference because we use it to set the proper
+	// channel later on
+	// Nope we should not add pointers because window is a temporary object
+	_wall_map[channel_name] = wall_name;
 }
 
 void
@@ -954,6 +1187,20 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 	}
 }
 
+
+void
+vl::config::EnvSerializer::finalise(void)
+{
+	/// Set the walls
+	for(std::map<std::string, std::string>::iterator iter = _wall_map.begin();
+		iter != _wall_map.end(); ++iter)
+	{
+		// @todo this will throw if the Channel or Wall can not be found by name
+		Channel &chan = _env->findChannel(iter->first);
+		Wall const &wall = _env->findWall(iter->second);
+		chan.wall = wall;
+	}
+}
 
 std::vector<double>
 vl::config::EnvSerializer::getVector( rapidxml::xml_node<>* xml_node )

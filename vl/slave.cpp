@@ -96,11 +96,14 @@ vl::Slave::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt
 	assert(env->isSlave());
 
 	/// Correct name has been set
-	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
+	/// Meh because of the way the getEnvSetting functions work
+	/// on slaves the Master node of the settings is the slave
+	/// So confusing.
+	std::cout << "vl::Slave : name = " << env->getMaster().name << std::endl;
 
 	// We should hand over the Renderer to either client or config
-	_renderer.reset( new Renderer(this, env->getName()) );
-	_renderer->enableDebugOverlay(opt.debug.overlay);
+	_renderer.reset( new Renderer(this, env->getMaster().name) );
+	//_renderer->enableDebugOverlay(opt.debug.overlay);
 
 	_renderer->addCommandListener(boost::bind(&Slave::injectCommand, this, _1));
 	_renderer->addEventListener(boost::bind(&Slave::injectEvent, this, _1));

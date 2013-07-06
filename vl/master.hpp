@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
  *	@file master.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -107,6 +107,12 @@ private :
 	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
 
 protected :
+	/// Parse the Environment file and create the approriate Pipes
+	/// One pipe per Renderer
+	/// Pipes need to be properly named so even when we broadcast all
+	/// of them Renderers can pick the proper pipe for themselves.
+	void _createWindows(vl::config::EnvSettingsRefPtr env);
+
 	// Cluster rpc calss
 	void _updateServer( void );
 	void _updateRenderer(void);
@@ -133,6 +139,11 @@ protected :
 
 	vl::GameManagerPtr _game_manager;
 
+	vl::cluster::ServerRefPtr _server;
+	// @todo we should probably have a reference pointer here
+	RendererPtr _renderer;
+	std::vector<PipeRefPtr> _pipes;
+
 	/// Settings both project and environment saved because they are requested
 	/// by the slaves later than used by the Master.
 	/// Current project settings
@@ -140,15 +151,12 @@ protected :
 	/// Current environment settings
 	vl::config::EnvSettingsRefPtr _env;
 
-	vl::cluster::ServerRefPtr _server;
 	/// timer used to see how much delay there is with server updates
 	vl::chrono _server_timer;
 
 	vl::chrono _stats_timer;
 
 	bool _running;
-
-	RendererPtr _renderer;
 
 	uint32_t _frame;
 	vl::chrono _sim_timer;

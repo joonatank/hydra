@@ -104,11 +104,20 @@ struct Tracking
 	bool use;
 };
 
+/// @todo Channel should have projection parameter
+/// At the moment we need to use wall if we want to set projection
 struct HYDRA_API Channel
 {
-	Channel(std::string const &nam, std::string const &wall, 
-			Rect<double> const &a, Ogre::ColourValue const &colour)
-		: name(nam), wall_name(wall), area(a), background_colour(colour)
+	Channel(std::string const &nam, Rect<double> const &a, 
+		Wall const &w, Ogre::ColourValue const &colour)
+		: name(nam), wall(w), area(a), background_colour(colour)
+	{}
+
+	/// Minimal constructor
+	Channel(std::string const &nam)
+		: name(nam)
+		, area(1, 1, 0, 0)
+		, background_colour(0, 0, 0)
 	{}
 
 	/// Default constructor for vector resizes
@@ -116,12 +125,11 @@ struct HYDRA_API Channel
 	{}
 
 	bool empty( void ) const
-	{ return( name.empty() && wall_name.empty() && area == Rect<double>() ); }
+	{ return( name.empty() && wall.empty() && area == Rect<double>() ); }
 
 	std::string name;
 
-	// Name of the wall used for this window
-	std::string wall_name;
+	Wall wall;
 
 	Rect<double> area;
 
@@ -519,7 +527,11 @@ public :
 	std::vector<Wall> const &getWalls( void ) const
 	{ return _walls; }
 
-	Wall findWall( std::string const &wall_name ) const;
+	bool hasWall(std::string const &name) const;
+	Wall &findWall(std::string const &name);
+	Wall const &findWall(std::string const &name) const;
+	Wall *findWallPtr(std::string const &name);
+	Wall const *findWallPtr(std::string const &name) const;
 
 	std::vector<Node> &getSlaves( void )
 	{ return _slaves; }
@@ -529,8 +541,23 @@ public :
 
 	Node const &findSlave( std::string const &name ) const;
 
-	std::string const &getName(void) const
-	{ return _master.name; }
+	std::vector<Window *> get_all_windows();
+	std::vector<Window const *> get_all_windows() const;
+
+	std::vector<Channel *> get_all_channels();
+	std::vector<Channel const *> get_all_channels() const;
+
+	bool hasWindow(std::string const &name) const;
+	Window &findWindow(std::string const &name);
+	Window const &findWindow(std::string const &name) const;
+	Window *findWindowPtr(std::string const &name);
+	Window const *findWindowPtr(std::string const &name) const;
+
+	bool hasChannel(std::string const &name) const;
+	Channel &findChannel(std::string const &name);
+	Channel const &findChannel(std::string const &name) const;
+	Channel *findChannelPtr(std::string const &name);
+	Channel const *findChannelPtr(std::string const &name) const;
 
 	/** @brief Get the master nodes configuration
 	 *	@return Node representing the Master configuration
@@ -782,11 +809,22 @@ protected :
 
 	void processProjection(rapidxml::xml_node<> *xml_node, Projection &projection);
 
+	/// Do everything that needs data from multiple sections of the file
+	/// because sections can be in any order.
+	void finalise(void);
+
 	void _checkUniqueNode(rapidxml::xml_node<> *xml_node);
 
 	std::vector<double> getVector( rapidxml::xml_node<>* xml_node );
 
 	EnvSettingsRefPtr _env;
+
+	/// Temp map for getting proper wall into channel
+	/// We need this because Channels contains wall name info only
+	/// channel name -> wall name
+	/// Needs to be this way because Channel is guaranteed to be unique
+	/// wall is not.
+	std::map<std::string, std::string> _wall_map;
 
 	/// file content needed for rapidxml
 	char *_xml_data;

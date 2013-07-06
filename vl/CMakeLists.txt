@@ -39,6 +39,7 @@ set(SRC
 	master.cpp
 	slave.cpp
 	renderer.cpp
+	pipe.cpp
 	application.cpp
 	ogre_root.cpp
 	entity.cpp
@@ -269,6 +270,7 @@ set( HEADERS
 	master.hpp
 	slave.hpp
 	renderer.hpp
+	pipe.hpp
 	application.hpp
 	ogre_root.hpp
 	ray_object.hpp

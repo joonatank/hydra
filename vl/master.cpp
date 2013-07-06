@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
  *	@file master.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -46,15 +46,14 @@
 // Necessary for spawning external processes
 #include "base/system_util.hpp"
 
+#include "pipe.hpp"
+
 #include "remote_launcher_helper.hpp"
 
 /// ---------------------------------- Master --------------------------------
 vl::Master::Master(void)
 	: Application()
 	, _game_manager(0)
-	, _proj()
-	, _env()
-	, _server()
 	, _running(true)
 	, _renderer(0)
 	, _frame(0)
@@ -65,6 +64,9 @@ vl::Master::Master(void)
 vl::Master::~Master( void )
 {
 	std::cout << vl::TRACE << "vl::Master::~Master" << std::endl;
+
+	// @fixme this fails for some reason
+	//delete _renderer;
 
 	delete _game_manager;
 
@@ -439,11 +441,14 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	}
 
 	/// Correct name has been set
-	std::cout << "vl::Application::Application : name = " << env->getName() << std::endl;
+	std::cout << "vl::Master::Master : name = " << env->getMaster().name << std::endl;
+
+	/// Parses the env config and creates all pipes and windows
+	_createWindows(env);
 
 	/// Only create local Renderer if we have Windows defined
 	if(env->getMaster().getNWindows())
-	{ _renderer = new Renderer(this, env->getName()); }
+	{ _renderer = new Renderer(this, env->getMaster().name); }
 	else
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 
@@ -523,7 +528,39 @@ vl::Master::getSimulationTime(void) const
 	{ return _sim_timer.elapsed(); }
 }
 
-/// ------------ Private -------------
+/// ------------------------- Private ----------------------------------------
+void
+vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
+{
+	// @todo we should combine these by using getNodes or something similar
+
+	if(_env->getMaster().getNWindows() > 0)
+	{
+		PipeRefPtr pipe(new Pipe(this, env->getMaster().name));
+		// Because the gui::Windows are distributed if we enable this for
+		// master we automatically enable it for slaves also.
+		// oh well doesn't matter.
+		pipe->enableDebugOverlay(true);
+		for(size_t i = 0; i < _env->getMaster().getNWindows(); ++i)
+		{
+			pipe->createWindow(_env->getMaster().getWindow(i), env);
+		}
+		_pipes.push_back(pipe);
+	}
+
+	for(size_t i = 0; i < _env->getSlaves().size(); ++i)
+	{
+		config::Node const &slave = _env->getSlaves().at(i);
+		PipeRefPtr pipe(new Pipe(this, slave.name));
+		//slave.gui_enabled
+		for(size_t j = 0; j < slave.getNWindows(); ++j)
+		{
+			pipe->createWindow(slave.getWindow(j), env);
+		}
+		_pipes.push_back(pipe);
+	}
+}
+
 void
 vl::Master::_updateServer( void )
 {

@@ -35,34 +35,38 @@
 #include "gui/gui.hpp"
 // Necessary for updating frame statistics
 #include "gui/performance_overlay.hpp"
+//Necessary for serializing stuff from namespace config
+#include "distrib_settings.hpp"
+// Parent
+#include "pipe.hpp"
+// Need Renderer on Slaves
+#include "renderer.hpp"
 
 // Necessary for checking for stereo support
 // @todo should really be in the GLWindow implemetation
 #include <GL/gl.h>
 
-// Parent
-#include "renderer.hpp"
-
-#include <stdlib.h>
+//#include <stdlib.h>
 
 /// ----------------------------- Window -------------------------------------
 /// ----------------------------- Public -------------------------------------
 vl::Window::Window(vl::config::Window const &windowConf, 
-	vl::config::EnvSettingsRefPtr env, vl::RendererPtr parent)
+	vl::config::EnvSettingsRefPtr env, vl::PipePtr parent)
 	: _name(windowConf.name)
-	, _renderer( parent )
+	, _window_config(windowConf)
+	, _pipe(parent)
+	, _pipe_id(vl::ID_UNDEFINED)
+	, _renderer(0)
 	, _ogre_window(0)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
 {
-	assert( _renderer );
+	assert(_pipe);
+
+	_pipe->getSession()->registerObject(this, OBJ_WINDOW);
 
 	std::cout << vl::TRACE << "vl::Window::Window : " << getName() << std::endl;
-
-	_ogre_window = _createOgreWindow(windowConf);
-	if(windowConf.input_handler)
-	{ _createInputHandling(); }
 
 	if(windowConf.renderer.type == vl::config::Renderer::FBO)
 	{
@@ -76,62 +80,29 @@ vl::Window::Window(vl::config::Window const &windowConf,
 	{
 		std::cout << "Traditional Forward Renderer." << std::endl;
 	}
+}
 
-	/// @todo Channel creation should be in Renderer and we should 
-	/// attach channels to Windows. It's more logical.
-	/// This will also allow dynamic channel creation and destruction.
-	vl::config::Projection const &projection = windowConf.renderer.projection;
-	for(size_t i = 0; i < windowConf.get_n_channels(); ++i)
-	{
-		//config::EnvSettingsRefPtr env = _renderer->getEnvironment();
-		config::Channel channel_config = windowConf.get_channel(i);
-		
-		/// Find wall
-		Wall wall = env->findWall(channel_config.wall_name);
 
-		// Get the first wall definition if no named one was found
-		if(wall.empty() && env->getWalls().size() > 0)
-		{
-			wall = env->getWall(0);
-			std::cout << vl::TRACE << "No wall found : using the first one " << wall.name << std::endl;
-		}
-		else
-		{
-			std::cout << vl::TRACE << "Wall " << wall.name << " found." << std::endl;
-		}
-
-		// We already have a window so it should be safe to check for stereo
-		// quad buffer stereo
-		if(hasStereo())
-		{
-			_create_channel(channel_config, HS_LEFT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
-			_create_channel(channel_config, HS_RIGHT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
-		}
-		else if(windowConf.stereo_type == vl::config::ST_SIDE_BY_SIDE)
-		{
-			std::clog << "Using side by side stereo" << std::endl;
-			channel_config.area.w /= 2;
-			_create_channel(channel_config, HS_LEFT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
-			channel_config.area.x += channel_config.area.w;
-			_create_channel(channel_config, HS_RIGHT, projection, wall, windowConf.renderer.type, windowConf.fsaa);
-		}
-		// no stereo
-		else
-		{
-			_create_channel(windowConf.get_channel(i), HS_MONO, projection, wall, windowConf.renderer.type, windowConf.fsaa);
-		}
-	}
-
-	std::clog << "Window::Window : done" << std::endl;
+vl::Window::Window(vl::RendererPtr renderer, uint64_t id)
+	: _name()
+	, _pipe(0)
+	, _pipe_id(vl::ID_UNDEFINED)
+	, _renderer(renderer)
+	, _ogre_window(0)
+	, _input_manager(0)
+	, _keyboard(0)
+	, _mouse(0)
+{
+	_renderer->getSession()->registerObject(this, id);
 }
 
 vl::Window::~Window( void )
 {
-	std::cout << vl::TRACE << "vl::Window::~Window" << std::endl;
+	std::clog << "vl::Window::~Window" << std::endl;
 
 	if( _input_manager )
 	{
-		std::cout << vl::TRACE << "Destroy OIS input manager." << std::endl;
+		std::clog << "Destroy OIS input manager." << std::endl;
 		OIS::InputManager::destroyInputSystem(_input_manager);
 		_input_manager = 0;
 	}
@@ -145,7 +116,8 @@ vl::Window::~Window( void )
 	// context, this is a problem with Ogres GL system. 
 	// Or more specifically GLSL.
 	//getOgreRoot()->getNative()->destroyRenderTarget(_ogre_window);
-	_ogre_window->setHidden(true);
+	if(_ogre_window)
+	{ _ogre_window->setHidden(true); }
 }
 
 void
@@ -359,7 +331,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 
 		//Should the ipd argument be -_ipd/2 or 0?
 		e.view_projection = _channels.at(0)->getCamera().getFrustum().getProjectionMatrix();
-	
+
 		std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
 		stream << b_id << e;
@@ -536,7 +508,125 @@ vl::Window::getHandle(void) const
 void
 vl::Window::_sendEvent( vl::cluster::EventData const &event )
 {
+	// Should only be called on slaves where we have Renderer
+	assert(_renderer);
 	_renderer->sendEvent(event);
+}
+
+void
+vl::Window::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const
+{
+	if( DIRTY_NAME & dirtyBits )
+	{
+		msg << _name;
+	}
+
+	if( DIRTY_PIPE & dirtyBits )
+	{
+		assert(_pipe && _pipe->getID() != vl::ID_UNDEFINED);
+		msg << _pipe->getID();
+	}
+
+	if( DIRTY_CONFIG & dirtyBits )
+	{
+		msg << _window_config;
+	}
+
+	if( DIRTY_CHANNELS & dirtyBits )
+	{
+	}
+}
+
+void
+vl::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
+{
+	// Using create variable because we need to create the Window only after
+	// all the data has been gotten from the message.
+	bool create = false;
+	if( DIRTY_NAME & dirtyBits )
+	{
+		msg >> _name;
+		// Name can't be changed so if it's dirty this Window was just created
+		create = true;
+	}
+
+	if( DIRTY_PIPE & dirtyBits )
+	{
+		/// @todo should check that this is never reseted
+		msg >> _pipe_id;
+	}
+
+	if( DIRTY_CONFIG & dirtyBits )
+	{
+		msg >> _window_config;
+	}
+
+	if( DIRTY_CHANNELS & dirtyBits )
+	{
+	}
+
+	if(create)
+	{
+		assert(_renderer && _renderer->getPipe() 
+			&& _renderer->getPipe()->getID() != vl::ID_UNDEFINED
+			&& _pipe_id != vl::ID_UNDEFINED);
+
+		if(_renderer->getPipe()->getID() != _pipe_id)
+		{ return; }
+
+		_createNative();
+		_renderer->_initialiseGUI();
+	}
+}
+
+void
+vl::Window::_createNative(void)
+{
+	std::clog << "vl::Window::_createNative" << std::endl;
+
+	_ogre_window = _createOgreWindow(_window_config);
+	if(_window_config.input_handler)
+	{ _createInputHandling(); }
+
+	/// @todo Channel creation should be in Renderer and we should 
+	/// attach channels to Windows. It's more logical.
+	/// This will also allow dynamic channel creation and destruction.
+	vl::config::Projection const &projection = _window_config.renderer.projection;
+	for(size_t i = 0; i < _window_config.get_n_channels(); ++i)
+	{
+		config::Channel channel_config = _window_config.get_channel(i);
+
+		if(channel_config.wall.empty())
+		{ std::cout << vl::TRACE << "No wall for channel " << channel_config.name << std::endl; }
+
+		// We already have a window so it should be safe to check for stereo
+		// quad buffer stereo
+		if(hasStereo())
+		{
+			_create_channel(channel_config, HS_LEFT, projection, 
+				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+			_create_channel(channel_config, HS_RIGHT, projection, 
+				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+		}
+		else if(_window_config.stereo_type == vl::config::ST_SIDE_BY_SIDE)
+		{
+			std::clog << "Using side by side stereo" << std::endl;
+			channel_config.area.w /= 2;
+			_create_channel(channel_config, HS_LEFT, projection, 
+				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+			channel_config.area.x += channel_config.area.w;
+			_create_channel(channel_config, HS_RIGHT, projection, 
+				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+		}
+		// no stereo
+		else
+		{
+			_create_channel(_window_config.get_channel(i), HS_MONO, projection, 
+				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+		}
+	}
+
+	std::clog << "Window::_createNative : done" << std::endl;
 }
 
 Ogre::RenderWindow *
@@ -545,6 +635,8 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	Ogre::NameValuePairList params;
 
 	assert( !winConf.empty() );
+	// Should only be called on Slaves where we have Renderer available.
+	assert(_renderer);
 
 	params["left"] = vl::to_string(winConf.rect.x);
 	params["top"] = vl::to_string(winConf.rect.y);
@@ -602,11 +694,19 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		std::clog << "Adding user param : " << iter->first << " with value : " << iter->second << std::endl;
 		params[iter->first] = iter->second;
 	}
-	
+
 	Ogre::RenderWindow *win = _renderer->getRoot()->createWindow( "Hydra-"+getName(),
 			winConf.rect.w, winConf.rect.h, params );
 	win->setAutoUpdated(false);
 	
+	// If this is the first window we initialise resources here
+	// this is kinda wonky but since we need a RenderWindow before initialising
+	// initialise resources
+	// needs to be after Window creation because this needs OpenGL context (meh)
+	// @todo should not call this multiple times.
+	// actually we might move this to Ogre Window creation
+	_renderer->getRoot()->loadResources();
+
 	return win;
 }
 
