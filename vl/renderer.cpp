@@ -52,7 +52,6 @@ vl::Renderer::Renderer(vl::Session *session, std::string const &name)
 	: _name(name)
 	, _session(session)
 	, _pipe(0)
-	, _ogre_sm(0)
 	, _scene_manager(0)
 	, _player(0)
 	, _screenshot_num(0)
@@ -68,11 +67,6 @@ vl::Renderer::~Renderer(void)
 	// Necessary because this holds Ogre resources.
 	_material_manager.reset();
 
-	// Shouldn't be necessary anymore, if _root handles destruction cleanly
-	if( _root && _ogre_sm )
-	{ _root->getNative()->destroySceneManager(_root->getSceneManager()); }
-	_ogre_sm = 0;
-
 	_root.reset();
 
 	delete _scene_manager;
@@ -87,11 +81,9 @@ vl::Renderer::~Renderer(void)
 }
 
 void
-vl::Renderer::init(vl::config::EnvSettingsRefPtr env)
+vl::Renderer::init(void)
 {
 	std::cout << vl::TRACE << "vl::Renderer::init" << std::endl;
-
-	assert(env);
 
 	// Don't necessarily need the log level thingy
 	// Release version has horrible amount of empty lines if we use LL_NORMAL
@@ -419,13 +411,13 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 				if(_pipe)
 				{
 					std::clog << "Renderer : Creating SceneManager" << std::endl;
-					if(_scene_manager || _ogre_sm)
+					if(_scene_manager)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("SceneManager already created.")); }
 					if(!_mesh_manager)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No MeshManager.")); }
 
-					_ogre_sm = _root->createSceneManager("SceneManager");
-					_scene_manager = new SceneManager(_session, id, _ogre_sm, _mesh_manager);
+					Ogre::SceneManager *sm = _root->createSceneManager("SceneManager");
+					_scene_manager = new SceneManager(_session, id, sm, _mesh_manager);
 				}
 				// store for later
 				else
@@ -587,8 +579,8 @@ vl::Renderer::_syncData(void)
 			{
 				obj->unpack(stream);
 
-					// Check materials, needs to be here because we only have
-					// the correct name after first unpack
+				// Check materials, needs to be here because we only have
+				// the correct name after first unpack
 				_check_materials(iter->getId());
 			}
 			else

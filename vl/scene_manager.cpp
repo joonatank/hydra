@@ -270,7 +270,8 @@ vl::SceneManager::~SceneManager( void )
 	//delete _sky_sim;
 	//_sky_sim = 0;
 
-	// @todo destroy Ogre::SceneManager
+	// Can't destroy Ogre::SceneManager because it's owned by ogre::Root
+	// not sure if it's the best decission but for now.
 
 	// Root is already in the scene node list so don't double delete
 	_root = 0;

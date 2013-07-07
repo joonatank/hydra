@@ -45,10 +45,71 @@
 #include "base/sleep.hpp"
 // Necessary for spawning external processes
 #include "base/system_util.hpp"
+// Necessary for printing process vector
+#include "base/print.hpp"
 
 #include "pipe.hpp"
 
 #include "remote_launcher_helper.hpp"
+
+/// -------------------------------- Global ----------------------------------
+vl::config::EnvSettingsRefPtr
+vl::getMasterSettings( vl::ProgramOptions const &options )
+{
+	// Should never happen
+	if( options.slave() )
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
+
+	fs::path env_path = options.environment_file;
+	if( !fs::is_regular(env_path) )
+	{
+		// Valid names for the environment config:
+		// hydra_env.xml, hydra.env
+		// paths ${Program_dir}, ${Program_dir}/data, ${Program_dir}/../data
+		// ${Program_dir}/config, ${Program_dir}/../config
+		std::vector<fs::path> paths;
+		paths.push_back( options.program_directory );
+		paths.push_back( options.program_directory + "/data" );
+		paths.push_back( options.program_directory + "/../data" );
+		paths.push_back( options.program_directory + "/../config" );
+		paths.push_back( options.program_directory + "/config" );
+		for( size_t i = 0; i < paths.size(); ++i )
+		{
+			if( fs::exists(paths.at(i) / "hydra.env") )
+			{
+				env_path = paths.at(i) / "hydra.env";
+				break;
+			}
+			else if( fs::exists(paths.at(i) / "hydra_env.xml") )
+			{
+				env_path = paths.at(i) / "hydra_env.xml";
+				break;
+			}
+		}
+
+	}
+
+	vl::config::EnvSettingsRefPtr env( new vl::config::EnvSettings );
+
+	// Read the Environment config
+	// if there is no such file we return the default configuration
+	if( fs::is_regular(env_path) )
+	{
+		std::string env_data;
+		env_data = vl::readFileToString( env_path.string() );
+		// TODO check that the files are correct and we have good settings
+		vl::config::EnvSerializer env_ser( env );
+		env_ser.readString(env_data);
+		env->setFile( env_path.string() );
+	}
+
+	env->setLogDir( options.getLogDir() );
+	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
+
+	env->display_n = options.display_n;
+
+	return env;
+}
 
 /// ---------------------------------- Master --------------------------------
 vl::Master::Master(void)
@@ -101,7 +162,7 @@ vl::Master::init(std::string const &global_file, std::string const &project_file
 	if(_renderer)
 	{
 		t.reset();
-		_renderer->init(_env);
+		_renderer->init();
 		report["Initing Renderer"].push(t.elapsed());
 	}
 
@@ -277,12 +338,7 @@ vl::Master::createMsgEnvironment(void) const
 {
 	std::cout << vl::TRACE << "vl::Master::createMsgEnvironemnt" << std::endl;
 
-	vl::SettingsByteData data;
-	vl::cluster::ByteDataStream stream( &data );
-	stream << _env;
-
 	vl::cluster::Message msg(vl::cluster::MSG_ENVIRONMENT, _frame, getSimulationTime());
-	data.copyToMessage( &msg );
 
 	return msg;
 }
@@ -389,22 +445,25 @@ vl::Master::_mainloop(bool sleep)
 }
 
 void
-vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt)
+vl::Master::_do_init(ProgramOptions const &opt)
 {
-	_env = env;
-	assert(_env && _env->isMaster());
+	assert(opt.master());
+	_env = vl::getMasterSettings(opt);
+
+	if(!_env)
+	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 	if(opt.auto_fork)
 	{
-		for(size_t i = 0; i < env->getSlaves().size(); ++i)
+		for(size_t i = 0; i < _env->getSlaves().size(); ++i)
 		{
 #ifndef _WIN32
 			pid_t pid = ::fork();
 			// Reset the environment file for a slave
 			if(pid != 0)
 			{
-				env->setSlave();
-				env->getMaster().name = env->getSlaves().at(i).name;
+				_env->setSlave();
+				_env->getMaster().name = _env->getSlaves().at(i).name;
 				// Master needs to continue the loop and create the remaining slaves
 				break;
 			}
@@ -413,15 +472,24 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 			std::vector<std::string> params;
 			// Add slave param
 			params.push_back("--slave");
-			params.push_back(env->getSlaves().at(i).name);
+			params.push_back(_env->getSlaves().at(i).name);
 			// Add server param
 			params.push_back("--server");
 			std::stringstream ss;
-			ss << env->getServer().hostname << ":" << env->getServer().port;
+			std::string hostname(_env->getServer().hostname);
+			// Actually autolaunching is only useful on localhost
+			// but lets forget this for the moment.
+			if(hostname.empty())
+			{ hostname = "localhost"; }
+			uint16_t port = _env->getServer().port;
+
+			ss << hostname << ":" << port;
 			params.push_back(ss.str());
 			params.push_back("--log_dir");
-			params.push_back(env->getLogDir());
+			params.push_back(_env->getLogDir());
 			// Create the process
+			// @todo print the parameters
+			std::clog << "Auto launch parameters : " << params << std::endl;
 			uint32_t pid = create_process("hydra.exe", params, true);
 			_spawned_processes.push_back(pid);
 		}
@@ -430,25 +498,25 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 	
 	// Auto forking is incompatible with launchers so either or
 	// if we have no slaves there is no reason what so ever to send a message
-	if(!opt.auto_fork && !env->getSlaves().empty())
+	if(!opt.auto_fork && !_env->getSlaves().empty())
 	{
 		// Try to find launchers by broadcasting, 
 		// launchers will start automatically when they receive start command
 
 		/// @todo make port configurable
 		RemoteLauncherHelper launcher_helper(opt.launcher_port);
-		launcher_helper.send_start(env->getServer().port);
+		launcher_helper.send_start(_env->getServer().port);
 	}
 
 	/// Correct name has been set
-	std::cout << "vl::Master::Master : name = " << env->getMaster().name << std::endl;
+	std::cout << "vl::Master::Master : name = " << _env->getMaster().name << std::endl;
 
 	/// Parses the env config and creates all pipes and windows
-	_createWindows(env);
+	_createWindows(_env);
 
 	/// Only create local Renderer if we have Windows defined
-	if(env->getMaster().getNWindows())
-	{ _renderer = new Renderer(this, env->getMaster().name); }
+	if(_env->getMaster().getNWindows())
+	{ _renderer = new Renderer(this, _env->getMaster().name); }
 	else
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 
@@ -473,7 +541,7 @@ vl::Master::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &op
 
 	init(opt.global_file, opt.project_file);
 
-	std::vector<vl::config::Program> programs = env->getUsedPrograms();
+	std::vector<vl::config::Program> programs = _env->getUsedPrograms();
 	std::clog << "Should start " << programs.size() << " autolaunched programs."
 		<< std::endl;
 	for(size_t i = 0; i < programs.size(); ++i)
@@ -534,28 +602,28 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 {
 	// @todo we should combine these by using getNodes or something similar
 
-	if(_env->getMaster().getNWindows() > 0)
+	if(env->getMaster().getNWindows() > 0)
 	{
 		PipeRefPtr pipe(new Pipe(this, env->getMaster().name));
 		// Because the gui::Windows are distributed if we enable this for
 		// master we automatically enable it for slaves also.
 		// oh well doesn't matter.
 		pipe->enableDebugOverlay(true);
-		for(size_t i = 0; i < _env->getMaster().getNWindows(); ++i)
+		for(size_t i = 0; i < env->getMaster().getNWindows(); ++i)
 		{
-			pipe->createWindow(_env->getMaster().getWindow(i), env);
+			pipe->createWindow(env->getMaster().getWindow(i));
 		}
 		_pipes.push_back(pipe);
 	}
 
-	for(size_t i = 0; i < _env->getSlaves().size(); ++i)
+	for(size_t i = 0; i < env->getSlaves().size(); ++i)
 	{
-		config::Node const &slave = _env->getSlaves().at(i);
+		config::Node const &slave = env->getSlaves().at(i);
 		PipeRefPtr pipe(new Pipe(this, slave.name));
 		//slave.gui_enabled
 		for(size_t j = 0; j < slave.getNWindows(); ++j)
 		{
-			pipe->createWindow(slave.getWindow(j), env);
+			pipe->createWindow(slave.getWindow(j));
 		}
 		_pipes.push_back(pipe);
 	}

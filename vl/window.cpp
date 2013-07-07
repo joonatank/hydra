@@ -50,8 +50,7 @@
 
 /// ----------------------------- Window -------------------------------------
 /// ----------------------------- Public -------------------------------------
-vl::Window::Window(vl::config::Window const &windowConf, 
-	vl::config::EnvSettingsRefPtr env, vl::PipePtr parent)
+vl::Window::Window(vl::config::Window const &windowConf, vl::PipePtr parent)
 	: _name(windowConf.name)
 	, _window_config(windowConf)
 	, _pipe(parent)
@@ -668,6 +667,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 		params["swapBarrier"] = ss.str();
 	}
 
+	/// @todo replace with proper printing of Window options
 	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
 	{
 		std::cout << "\n with quad buffer stereo";

@@ -18,14 +18,8 @@
 
 // Necessary for checking architecture
 #include "defines.hpp"
-
-// Necessary for Settings
-#include "base/envsettings.hpp"
-
 // Necessary for creating the Logger
 #include "logger.hpp"
-
-
 
 #include "base/string_utils.hpp"
 
@@ -45,178 +39,6 @@
 
 // Necessary for printing Ogre exceptions
 #include <OGRE/OgreException.h>
-
-/// -------------------------------- Global ----------------------------------
-vl::config::EnvSettingsRefPtr
-vl::getMasterSettings( vl::ProgramOptions const &options )
-{
-	// Should never happen
-	if( options.slave() )
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
-	fs::path env_path = options.environment_file;
-	if( !fs::is_regular(env_path) )
-	{
-		// Valid names for the environment config:
-		// hydra_env.xml, hydra.env
-		// paths ${Program_dir}, ${Program_dir}/data, ${Program_dir}/../data
-		// ${Program_dir}/config, ${Program_dir}/../config
-		std::vector<fs::path> paths;
-		paths.push_back( options.program_directory );
-		paths.push_back( options.program_directory + "/data" );
-		paths.push_back( options.program_directory + "/../data" );
-		paths.push_back( options.program_directory + "/../config" );
-		paths.push_back( options.program_directory + "/config" );
-		for( size_t i = 0; i < paths.size(); ++i )
-		{
-			if( fs::exists(paths.at(i) / "hydra.env") )
-			{
-				env_path = paths.at(i) / "hydra.env";
-				break;
-			}
-			else if( fs::exists(paths.at(i) / "hydra_env.xml") )
-			{
-				env_path = paths.at(i) / "hydra_env.xml";
-				break;
-			}
-		}
-
-	}
-
-	vl::config::EnvSettingsRefPtr env;
-
-	env.reset( new vl::config::EnvSettings );
-
-	// Read the Environment config
-	// if there is no such file we return the default configuration
-	if( fs::is_regular(env_path) )
-	{
-		std::string env_data;
-		env_data = vl::readFileToString( env_path.string() );
-		// TODO check that the files are correct and we have good settings
-		vl::config::EnvSerializer env_ser( env );
-		env_ser.readString(env_data);
-		env->setFile( env_path.string() );
-	}
-
-	env->setLogDir( options.getLogDir() );
-	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
-
-	env->display_n = options.display_n;
-
-	return env;
-}
-
-/* This function is useless and depricated
- but it has quite a few nice default paths which should be incorporated into the GameManager
-
-vl::Settings
-vl::getProjectSettings( vl::ProgramOptions const &options )
-{
-	if( options.slave() )
-	{ return vl::Settings(); }
-
-	vl::Settings settings;
-
-	/// Read the Project Config
-	if( fs::is_regular( options.project_file ) )
-	{
-		vl::ProjSettings proj;
-
-		std::string proj_data;
-		proj_data = vl::readFileToString( options.project_file );
-		vl::ProjSettingsRefPtr proj_ptr( &proj, vl::null_deleter() );
-		vl::ProjSettingsSerializer proj_ser( proj_ptr );
-		proj_ser.readString(proj_data);
-		proj.setFile( options.project_file );
-
-		settings.setProjectSettings(proj);
-	}
-
-	std::string global_file = options.global_file;
-	/// If the user did not set the global, we try to find it
-	if( !fs::is_regular(global_file) )
-	{
-		// Try to find the global file from default paths
-		// ${program_dir}/hydra.prj, ${program_dir}/hydra.xml,
-		// ${program_dir}/data/hydra.xml, ${program_dir}/data/hydra.prj
-		// ${program_dir}/data/global/hydra.xml, ${program_dir}/data/global/hydra.prj
-		// ${program_dir}/../data ${program_dir}/../data/global
-		// @todo these should have steady file name (single filename)
-		// and they should have at the most two valid default paths
-		// or they could have a master directory "data" or "config" and recursively
-		// search it for all matching files. If more than one report to user conflicts.
-		std::vector<fs::path> paths;
-		paths.push_back( options.program_directory );
-		paths.push_back( options.program_directory + "/data" );
-		paths.push_back( options.program_directory + "/../data" );
-		paths.push_back( options.program_directory + "/data/global" );
-		paths.push_back( options.program_directory + "/../data/global" );
-		for( size_t i = 0; i < paths.size(); ++i )
-		{
-			if( fs::exists(paths.at(i) / "hydra.prj") )
-			{
-				global_file = fs::path(paths.at(i) / "hydra.prj").string();
-				break;
-			}
-			else if( fs::exists(paths.at(i) / "hydra.xml") )
-			{
-				global_file = fs::path(paths.at(i) / "hydra.xml").string();
-				break;
-			}
-		}
-	}
-
-
-	/// Read the global config
-	if( fs::is_regular(global_file) )
-	{
-		vl::ProjSettings global;
-
-		std::string global_data;
-		global_data = vl::readFileToString( global_file );
-		vl::ProjSettingsRefPtr glob_ptr( &global, vl::null_deleter() );
-		vl::ProjSettingsSerializer glob_ser( glob_ptr );
-		glob_ser.readString(global_data);
-		global.setFile( global_file );
-
-		settings.addAuxilarySettings(global);
-	}
-
-	return settings;
-}
-*/
-
-vl::config::EnvSettingsRefPtr
-vl::getSlaveSettings( vl::ProgramOptions const &options )
-{
-	if( options.master() )
-	{
-		return vl::config::EnvSettingsRefPtr();
-	}
-	if( options.slave_name.empty() || options.server_address.empty() )
-	{
-		return vl::config::EnvSettingsRefPtr();
-	}
-
-	uint16_t port = DEFAULT_HYDRA_PORT;
-	size_t pos = options.server_address.find_last_of(":");
-	std::string hostname = options.server_address.substr(0, pos);
-	if( pos != std::string::npos )
-	{
-		port = vl::from_string<uint16_t>( options.server_address.substr(pos+1) );
-	}
-
-	vl::config::EnvSettingsRefPtr env( new vl::config::EnvSettings );
-	env->setSlave();
-	vl::config::Server server(port, hostname);
-	env->setServer(server);
-	env->getMaster().name = options.slave_name;
-	env->display_n = options.display_n;
-
-	return env;
-}
-
 
 void
 vl::Hydra_Run(const int argc, char** argv, vl::ExceptionMessage *msg)
@@ -368,22 +190,10 @@ vl::Application::run(void)
 void
 vl::Application::init(ProgramOptions const &opt)
 {
-	vl::config::EnvSettingsRefPtr env;
-
-	if( opt.master() )
-	{ env = vl::getMasterSettings(opt); }
-	else
-	{ env = vl::getSlaveSettings(opt); }
-
-	if( !env )
-	{ BOOST_THROW_EXCEPTION(vl::exception()); }
-
 	// Needs to be created here because does not currently support
 	// changing the log file at run time.
 	_logger = new Logger;
 	_logger->setOutputFile(opt.getLogFile());
-
-	assert( env );
 
 	if(!opt.show_system_console)
 	{ hide_system_console(); }
@@ -416,5 +226,5 @@ vl::Application::init(ProgramOptions const &opt)
 #endif
 	}
 
-	_do_init(env, opt);
+	_do_init(opt);
 }

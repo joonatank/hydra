@@ -61,8 +61,8 @@ vl::ogre::Root::Root(vl::config::LogLevel level)
 
 vl::ogre::Root::~Root( void )
 {
-	// root and log manager point to same ogre singletons.
-	// destroy them only on the primary
+	_ogre_root->destroySceneManager(_scene_manager);
+
 	delete _ogre_root;
 	delete _log_manager;
 }

@@ -52,15 +52,14 @@ class HYDRA_API Window : public IWindow, public Distributed, public OIS::KeyList
 public:
 	/// @brief Constructor
 	/// @param windowConf config for this window
-	/// @param env Environment config (used for projection)
-	/// @param parent Renderer that created this window
-	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
-	Window(vl::config::Window const &windowConf, vl::config::EnvSettingsRefPtr env, vl::PipePtr parent);
+	/// @param parent Pipe that created this window
+	Window(vl::config::Window const &windowConf, vl::PipePtr parent);
 
 	/// Slave constructor
 	/// @param parent
 	/// @param renderer We need renderer for creating Ogre window
 	/// @param id 
+	/// pass Renderer as parent, not ref ptr because this shouldn't hold ownership
 	Window(vl::RendererPtr renderer, uint64_t id);
 
 	virtual ~Window( void );
@@ -178,7 +177,7 @@ private :
 	// Ogre
 	Ogre::RenderWindow *_ogre_window;
 
-	// OIS variables
+	// OIS
 	OIS::InputManager *_input_manager;
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;

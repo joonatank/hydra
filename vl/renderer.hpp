@@ -19,7 +19,6 @@
 // Necessary for HYDRA_API
 #include "defines.hpp"
 
-#include "base/envsettings.hpp"
 /// Owned objects
 #include "ogre_root.hpp"
 #include "player.hpp"
@@ -66,7 +65,7 @@ public :
 
 	virtual ~Renderer(void);
 
-	void init(vl::config::EnvSettingsRefPtr env);
+	void init(void);
 
 	/// Necessary for creating Ogre windows in Window
 	/// We could also have create window method here but that's confusing
@@ -214,7 +213,6 @@ protected :
 
 	/// Ogre data
 	vl::ogre::RootRefPtr _root;
-	Ogre::SceneManager *_ogre_sm;
 
 	/// Distributed data
 	vl::SceneManagerPtr _scene_manager;

@@ -42,7 +42,7 @@ public :
 private :
 	virtual void _mainloop(bool sleep);
 
-	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
+	virtual void _do_init(ProgramOptions const &opt);
 
 	// Data
 private :

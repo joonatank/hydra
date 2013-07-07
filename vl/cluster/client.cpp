@@ -244,18 +244,9 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				_state.environment = true;
 				assert(_renderer.get());
 
-				// Deserialize the environment settings
-				vl::config::EnvSettingsRefPtr env(new vl::config::EnvSettings);
-				// TODO needs a ByteData object for Environment settings
-				// @todo this should be changed to use MessageStream instead
-				// so no copying is necessary.
-				vl::SettingsByteData data;
-				data.copyFromMessage(&msg);
-				vl::cluster::ByteDataStream stream(&data);
-				stream >> env;
 				// Only single environment settings should be in the message
 				assert( 0 == msg.size() );
-				_renderer->init(env);
+				_renderer->init();
 			}
 			else
 			{

@@ -68,10 +68,7 @@ public :
 
 	/// @brief
 	/// @param winConf definition for the window
-	/// @param env
-	/// @todo this should not require EnvSettings, they are required now because Window
-	/// creates Channels based of them.
-	vl::IWindow *createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env);
+	vl::IWindow *createWindow(vl::config::Window const &winConf);
 
 	/// Slave function
 	/// Window has been created

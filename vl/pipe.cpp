@@ -96,24 +96,13 @@ vl::Pipe::enableGUI(bool enable)
 }
 
 vl::IWindow *
-vl::Pipe::createWindow(vl::config::Window const &winConf, vl::config::EnvSettingsRefPtr env)
+vl::Pipe::createWindow(vl::config::Window const &winConf)
 {
-	std::clog << "vl::Pipe::createWindow : " << winConf.name << " NOT IMPLEMENTED" << std::endl;
+	std::clog << "vl::Pipe::createWindow : " << winConf.name << std::endl;
 
 	setDirty(DIRTY_WINDOWS);
-	/// @todo this needs to be in _createNative or something
-	/// We create windows here and register them to Session so they can be created
-	/// in Renderer
-	// Destroy dummy window
-	/*	@fixme dummy
-	if(_windows.size() == 1 && _windows.at(0)->getName() == "dummy")
-	{
-		delete _windows.at(0);
-		_windows.clear();
-	}
-	*/
 	
-	vl::Window *window = new vl::Window(winConf, env, this);
+	vl::Window *window = new vl::Window(winConf, this);
 	_windows.push_back(window);
 	/*	@todo Player is not accessable here
 	if(_player)
@@ -122,9 +111,6 @@ vl::Pipe::createWindow(vl::config::Window const &winConf, vl::config::EnvSetting
 	*/
 
 	return window;
-	
-
-	return 0;
 }
 
 void

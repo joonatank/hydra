@@ -80,10 +80,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRefPtr const &env )
 {
-	msg << env->getLogLevel() << env->getCameraRotationAllowed()
-		<< env->getMaster() << env->getSlaves() << env->getIPD() 
-		<< env->getLogDir();
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "EnvSettings should never be serialised");
 	return msg;
 }
 
@@ -91,18 +90,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::EnvSettingsRefPtr &env )
 {
-	uint32_t rot_allowed(-1);
-	double ipd = 0;
-	std::string log_dir;
-	vl::config::LogLevel log_level;
-	msg >> log_level >> rot_allowed >> env->getMaster() >> env->getSlaves() >> ipd 
-		>> log_dir;
-
-	env->setCameraRotationAllowed( rot_allowed );
-	env->setIPD(ipd);
-	env->setLogDir(log_dir);
-	env->setLogLevel(log_level);
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "EnvSettings should never be deserialised");
 	return msg;
 }
 

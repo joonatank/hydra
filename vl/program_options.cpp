@@ -32,6 +32,8 @@
 // necessary for the version flag
 #include "revision_defines.hpp"
 
+#include "base/string_utils.hpp"
+
 namespace po = boost::program_options;
 
 vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
@@ -224,14 +226,14 @@ vl::ProgramOptions::parseOptions( int argc, char **argv )
 
 		if( vm.count("server") )
 		{
-			server_address = vm["server"].as<std::string>();
-		}
-
-		if( server_address.empty() )
-		{
-			std::cerr << "A slave without a server address to connect to is not allowed."
-				<< std::endl;
-			return false;
+			std::string server_str = vm["server"].as<std::string>();
+			server_port = DEFAULT_HYDRA_PORT;
+			size_t pos = server_str.find_last_of(":");
+			server_hostname = server_str.substr(0, pos);
+			if( pos != std::string::npos )
+			{
+				server_port = vl::from_string<uint16_t>( server_str.substr(pos+1) );
+			}
 		}
 	}
 

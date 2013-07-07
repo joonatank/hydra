@@ -35,17 +35,11 @@
 namespace vl
 {
 
-vl::config::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
-vl::config::EnvSettingsRefPtr getSlaveSettings( vl::ProgramOptions const &options );
-
-
 extern "C"
 {
 	// Application
 	HYDRA_API void Hydra_Run(const int argc, char** argv, vl::ExceptionMessage *msg);
 }
-
-class Config;
 
 class HYDRA_API Application
 {
@@ -84,7 +78,7 @@ public:
 private :
 	virtual void _mainloop(bool sleep) = 0;
 
-	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt) = 0;
+	virtual void _do_init(ProgramOptions const &opt) = 0;
 
 // Data
 protected :

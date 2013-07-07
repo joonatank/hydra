@@ -18,7 +18,8 @@
 
 #include "base/sleep.hpp"
 
-#include "base/envsettings.hpp"
+#include "base/exceptions.hpp"
+
 // Necessary for creating Renderer for slave and master
 #include "renderer.hpp"
 
@@ -91,24 +92,23 @@ vl::Slave::_mainloop(bool sleep)
 }
 
 void
-vl::Slave::_do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt)
+vl::Slave::_do_init(ProgramOptions const &opt)
 {
-	assert(env->isSlave());
+	if(opt.slave_name.empty())
+	{
+		assert(false);
+		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Empty Slave name not allowed"));
+	}
 
-	/// Correct name has been set
-	/// Meh because of the way the getEnvSetting functions work
-	/// on slaves the Master node of the settings is the slave
-	/// So confusing.
-	std::cout << "vl::Slave : name = " << env->getMaster().name << std::endl;
+	std::cout << "vl::Slave : name = " << opt.slave_name << std::endl;
 
 	// We should hand over the Renderer to either client or config
-	_renderer.reset( new Renderer(this, env->getMaster().name) );
-	//_renderer->enableDebugOverlay(opt.debug.overlay);
+	_renderer.reset( new Renderer(this, opt.slave_name) );
 
 	_renderer->addCommandListener(boost::bind(&Slave::injectCommand, this, _1));
 	_renderer->addEventListener(boost::bind(&Slave::injectEvent, this, _1));
 
-	char const *host = env->getServer().hostname.c_str();
-	uint16_t port = env->getServer().port;
-	_slave_client.reset(new vl::cluster::Client(host, port, _renderer));
+	std::string hostname = opt.server_hostname;
+	uint16_t port = opt.server_port;
+	_slave_client.reset(new vl::cluster::Client(hostname.c_str(), port, _renderer));
 }

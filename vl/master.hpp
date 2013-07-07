@@ -33,6 +33,8 @@
 namespace vl
 {
 
+vl::config::EnvSettingsRefPtr getMasterSettings( vl::ProgramOptions const & options );
+
 /**	@class Master
  *
  */
@@ -104,7 +106,7 @@ public:
 private :
 	virtual void _mainloop(bool sleep);
 
-	virtual void _do_init(vl::config::EnvSettingsRefPtr env, ProgramOptions const &opt);
+	virtual void _do_init(ProgramOptions const &opt);
 
 protected :
 	/// Parse the Environment file and create the approriate Pipes

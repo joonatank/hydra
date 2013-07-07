@@ -111,7 +111,8 @@ struct HYDRA_API ProgramOptions
 	/// Slave specific options
 	bool _slave;
 	std::string slave_name;
-	std::string server_address;
+	std::string server_hostname;
+	uint16_t server_port;
 
 	/// Master specific options
 	std::string environment_file;
