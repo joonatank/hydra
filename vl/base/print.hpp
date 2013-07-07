@@ -19,6 +19,9 @@
 #include <iostream>
 #include <vector>
 
+namespace std
+{
+
 template< typename T> inline
 std::ostream & operator<<( std::ostream &os, std::vector<T> const &vec )
 {
@@ -30,5 +33,7 @@ std::ostream & operator<<( std::ostream &os, std::vector<T> const &vec )
 
 	return os;
 }
+
+}	// namespace std
 
 #endif	// HYDRA_BASE_PRINT_HPP

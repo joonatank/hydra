@@ -1,6 +1,6 @@
 /**	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-06
- *	@file nv_swap_sync.cpp
+ *	@file serial_reader.cpp
  *
  *	This file is part of Hydra a VR game engine tests.
  *
@@ -22,6 +22,7 @@
 const char *DEFAULT_COM_PORT = "COM1";
 
 #include "input/serial_joystick.hpp"
+#include "base/exceptions.hpp"
 
 namespace po 
 {
@@ -67,7 +68,7 @@ struct options
 		{
 			input_file = vm["input-file"].as<std::string>();
 			std::cout << "Input file was set to " << input_file << "." << std::endl;
-			if( !fs::exists(input_file) )
+			if( !boost::filesystem::exists(input_file) )
 			{
 				std::cout << "No " << input_file << " found." << std::endl;
 				return false;

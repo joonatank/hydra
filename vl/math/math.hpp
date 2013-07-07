@@ -27,13 +27,8 @@
 // all functions from here are in our namespace
 #include <boost/math/special_functions/fpclassify.hpp>
 
-// Necessary for the Wall configuration needed for calculating view and frustum matrices
-#include "base/envsettings.hpp"
-
 #include "types.hpp"
 #include "transform.hpp"
-
-#include <OGRE/OgreVector2.h>
 
 namespace vl
 {

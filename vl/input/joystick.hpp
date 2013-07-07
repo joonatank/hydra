@@ -22,6 +22,8 @@
 // Event stucture
 #include "joystick_event.hpp"
 
+#include "typedefs.hpp"
+
 namespace vl
 {
 

@@ -61,6 +61,8 @@
 #include "hsf_writer.hpp"
 
 #include "game_object.hpp"
+// Necessary for reading parameters from EnvSettings
+#include "base/envsettings.hpp"
 
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt)
 	: _session(session)
