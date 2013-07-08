@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
  *	@file distrib_settings.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -16,65 +16,6 @@
 #include "distrib_settings.hpp"
 
 #include <iostream>
-#include "settings.hpp"
-
-vl::SettingsByteData::SettingsByteData( void )
-{}
-
-vl::SettingsByteData::~SettingsByteData( void )
-{}
-
-void
-vl::SettingsByteData::read( char* mem, vl::msg_size size )
-{
-	assert( mem );
-	if( 0 == size )
-	{ return; }
-
-	assert( _data.size() >= size );
-
-	::memcpy( mem, &_data[0], size );
-	_data.erase( _data.begin(), _data.begin()+size );
-}
-
-void
-vl::SettingsByteData::write( const char* mem, vl::msg_size size )
-{
-	assert( mem );
-	if( 0 == size )
-	{ return; }
-
-	size_t pos = _data.size();
-	_data.resize( _data.size() + size );
-	::memcpy( &_data[pos], mem, size);
-}
-
-void
-vl::SettingsByteData::copyToMessage( vl::cluster::Message* msg )
-{
-	assert(msg);
-
-	assert( _data.size() < msg_size(-1) );
-	msg_size size = _data.size();
-	msg->write(size);
-	msg->write( &_data[0], size );
-}
-
-
-void
-vl::SettingsByteData::copyFromMessage( vl::cluster::Message* msg )
-{
-	assert(msg);
-
-	msg_size size;
-	// Check that there is more data than the size
-	assert( msg->size() > sizeof(size)-1 );
-	msg->read(size);
-	assert( msg->size() > size-1 );
-	_data.resize(size);
-
-	msg->read( &_data[0], size );
-}
 
 template<>
 vl::cluster::ByteStream &
@@ -239,8 +180,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::Settings& settings )
 {
-	msg << settings.getProjectSettings() << settings.getAuxilarySettings();
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "Settings should never be deserialised");
 	return msg;
 }
 
@@ -250,18 +192,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::Settings& settings )
 {
-	vl::ProjSettings proj;
-	msg >> proj;
-	settings.setProjectSettings(proj);
-	size_t size;
-	msg >> size;
-	for( size_t i = 0; i < size; ++i )
-	{
-		vl::ProjSettings aux;
-		msg >> aux;
-		settings.addAuxilarySettings(aux);
-	}
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "Settings should never be deserialised");
 	return msg;
 }
 
@@ -270,8 +203,9 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
 {
-	msg << proj.getFile() << proj.getName();
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "ProjSettings should never be deserialised");
 	return msg;
 }
 
@@ -279,12 +213,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
 {
-	std::string file;
-	std::string name;
-	msg >> file >> name;
-
-	proj.setFile(file);
-	proj.setName(name);
-
+	// For some reason we can't use static_assert here even though this shouldn't 
+	// be used used anywhere
+	assert(false, "ProjSettings should never be deserialised");
 	return msg;
 }

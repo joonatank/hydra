@@ -23,7 +23,6 @@
 #include "window.hpp"
 #include "base/string_utils.hpp"
 #include "base/sleep.hpp"
-#include "distrib_settings.hpp"
 #include "material_manager.hpp"
 
 #include "gui/gui.hpp"
@@ -196,12 +195,10 @@ vl::Renderer::swap(void)
 /// --------------------------------------------------------------------------
 /// ----------------------- Project management -------------------------------
 void
-vl::Renderer::setProject(vl::Settings const &settings)
+vl::Renderer::setResources(std::vector<std::string> const &paths)
 {
-	std::clog << "vl::Renderer::setProject" << std::endl;
-
-	if(!_root)
-	{ return; }
+	assert(_root);
+	assert(_pipe);
 	
 	// remove all old resources
 	// Needs to be here because we need the global resources to be available 
@@ -209,16 +206,6 @@ vl::Renderer::setProject(vl::Settings const &settings)
 	// shadow materials and Gorilla resources are available till new project
 	// is loaded.
 	_root->removeResources();
-
-	// Add resources
-	std::vector<std::string> paths;
-	if(!settings.getProjectDir().empty())
-	{ paths.push_back(settings.getProjectDir()); }
-	for(size_t i = 0; i < settings.getAuxDirectories().size(); ++i)
-	{
-		if(!settings.getAuxDirectories().at(i).empty())
-		{ paths.push_back(settings.getAuxDirectories().at(i)); }
-	}
 
 	std::clog << "Setting up the Ogre resources." << std::endl;
 
@@ -606,6 +593,7 @@ vl::Renderer::_syncData(void)
 			{
 				std::clog << "Renderer Found a Pipe" << std::endl;
 				_pipe = _all_pipes.at(i);
+				_pipe->setRenderer(this);
 				break;
 			}
 		}	

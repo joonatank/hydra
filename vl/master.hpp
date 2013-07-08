@@ -77,10 +77,6 @@ public:
 	/// @todo these can be moved to private as we are using requests now
 	vl::cluster::Message createMsgInit(void) const;
 
-	vl::cluster::Message createMsgEnvironment(void) const;
-
-	vl::cluster::Message createMsgProject(void) const;
-
 	vl::cluster::Message createResourceMessage(
 			vl::cluster::RESOURCE_TYPE type, std::string const &name) const;
 

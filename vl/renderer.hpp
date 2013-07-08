@@ -25,7 +25,6 @@
 #include "scene_manager.hpp"
 #include "window_interface.hpp"
 
-#include "settings.hpp"
 // Necessary for callbacks
 #include <boost/signal.hpp>
 // Base class
@@ -108,20 +107,8 @@ public :
 	void printToConsole(std::string const &text, double time,
 						std::string const &type = std::string(),
 						vl::LOG_MESSAGE_LEVEL lvl = vl::LML_NORMAL);
-
-	/** @todo
-	 * Problematic because the Project config should be
-	 * updatable during the application run
-	 * And this one will create them anew, so that we need to invalidate
-	 * the scene and reload everything
-	 * NOTE
-	 * Combining the project configurations is not done automatically
-	 * so they either need special structure or we need to iterate over
-	 * all of them always.
-	 */
-	void setProject(vl::Settings const &settings);
 	
-	/// @brief clears project settings
+	/// @brief clears project and created objects
 	void clearProject(void);
 
 	/// @todo everything with a Message in it should be moved to Slave
@@ -153,6 +140,8 @@ public :
 	/// NOP if GUI has already been initialised
 	/// @return true if initialised, false otherwise
 	bool _initialiseGUI(void);
+
+	void setResources(std::vector<std::string> const &paths);
 
 	/// Hack for getting current view and projection matrices
 	/// This is a hack because these don't take into account

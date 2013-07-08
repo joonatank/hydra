@@ -20,7 +20,6 @@
 #include "console.hpp"
 #include "performance_overlay.hpp"
 
-#include "settings.hpp"
 // Necessary for init GUI
 #include "window.hpp"
 // Necessary for creating the Canvas

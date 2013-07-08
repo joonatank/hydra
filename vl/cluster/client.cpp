@@ -18,14 +18,10 @@
 #include "base/exceptions.hpp"
 #include "base/sleep.hpp"
 
-#include "distrib_settings.hpp"
-
 #include "logger.hpp"
 
 /// Necessary because we create MeshManager here and set it to Renderer
 #include "mesh_manager.hpp"
-/// Necessary for parsing the settings structure from a message
-#include "settings.hpp"
 
 #include "renderer.hpp"
 
@@ -447,6 +443,7 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 		case vl::cluster::MSG_ACK:
 			break;
 
+		/// @todo MSG_PROJECT should be removed it's not used anymore
 		case vl::cluster::MSG_PROJECT :
 		{
 			/// Only single project is supported, discards the rest
@@ -455,16 +452,6 @@ vl::cluster::Client::_handle_message(vl::cluster::Message &msg)
 				std::clog << "vl::cluster::Client::_handleMessage : "
 					<< "MSG_PROJECT received." << std::endl;
 				_state.project = true;
-
-				/// @todo replace ByteDataStream with MessageStream, reduces copying
-				vl::SettingsByteData data;
-				data.copyFromMessage(&msg);
-				vl::cluster::ByteDataStream stream(&data);
-				vl::Settings settings;
-				stream >> settings;
-
-				assert(_renderer.get());
-				_renderer->setProject(settings);
 			}
 			else
 			{

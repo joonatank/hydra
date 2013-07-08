@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-02
  *	@file distrib_settings.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -29,27 +29,6 @@
 
 namespace vl
 {
-
-class SettingsByteData : public vl::cluster::ByteData
-{
-public :
-	SettingsByteData( void );
-
-	virtual ~SettingsByteData( void );
-
-	virtual void read( char *mem, msg_size size );
-	virtual void write( char const *mem, msg_size size );
-
-	virtual void open( void ) {}
-	virtual void close( void ) {}
-
-	virtual void copyToMessage( vl::cluster::Message *msg );
-	virtual void copyFromMessage( vl::cluster::Message *msg );
-
-private :
-	std::vector<char> _data;
-
-};	// class EnvSettingsByteCopy
 
 namespace cluster
 {

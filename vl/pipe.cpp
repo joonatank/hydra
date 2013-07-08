@@ -17,6 +17,9 @@
 #include <iostream>
 
 #include "window.hpp"
+// Necessary for adding resource paths
+#include "settings.hpp"
+#include "renderer.hpp"
 
 /// Master constructor
 vl::Pipe::Pipe(vl::Session *session, std::string const &name)
@@ -32,10 +35,10 @@ vl::Pipe::Pipe(vl::Session *session, std::string const &name)
 /// Slave constructor
 vl::Pipe::Pipe(vl::Session *session, uint64_t id)
 	: _session(session)
+	, _renderer(0)
 	, _gui_enabled(false)
 	, _debug_overlay_enabled(false)
 {
-	// @todo check that the ID is valid and map it
 	assert(_session);
 	_session->registerObject(this, id);
 }
@@ -93,6 +96,29 @@ vl::Pipe::enableGUI(bool enable)
 		setDirty(DIRTY_PARAMS);
 		_gui_enabled = enable;
 	}
+}
+
+void
+vl::Pipe::addResources(vl::Settings const &settings)
+{
+	setDirty(DIRTY_RESOURCES);
+
+	// Add resources
+	if(!settings.getProjectDir().empty())
+	{ _resource_paths.push_back(settings.getProjectDir()); }
+	for(size_t i = 0; i < settings.getAuxDirectories().size(); ++i)
+	{
+		if(!settings.getAuxDirectories().at(i).empty())
+		{ _resource_paths.push_back(settings.getAuxDirectories().at(i)); }
+	}
+}
+
+void
+vl::Pipe::clearResources(void)
+{
+	setDirty(DIRTY_RESOURCES);
+
+	_resource_paths.clear();
 }
 
 vl::IWindow *
@@ -159,6 +185,11 @@ vl::Pipe::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) con
 	{
 		msg << _gui_enabled << _debug_overlay_enabled;
 	}
+
+	if( DIRTY_RESOURCES & dirtyBits )
+	{
+		msg << _resource_paths;
+	}
 }
 
 void
@@ -203,7 +234,27 @@ vl::Pipe::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 	{
 		msg >> _gui_enabled >> _debug_overlay_enabled;
 	}
+
+	if( DIRTY_RESOURCES & dirtyBits )
+	{
+		msg >> _resource_paths;
+
+		// Reset ogre resources if already added
+		if(_renderer)
+		{ _renderer->setResources(_resource_paths); }
+	}
 }
+
+void
+vl::Pipe::setRenderer(vl::Renderer *renderer)
+{
+	assert(!_renderer && renderer);
+	_renderer = renderer;
+
+	// Copy variables
+	_renderer->setResources(_resource_paths);
+}
+
 
 bool
 vl::Pipe::_hasWindow(uint64_t id)

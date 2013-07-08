@@ -34,8 +34,6 @@
 #include "input/joystick_event.hpp"
 #include "input/mouse_event.hpp"
 
-// Necessary for sending Environment and Project configs
-#include "distrib_settings.hpp"
 // Necessary for loading meshes to Server
 #include "mesh_manager.hpp"
 
@@ -333,33 +331,6 @@ vl::Master::createMsgInit(void) const
 	return msg;
 }
 
-vl::cluster::Message 
-vl::Master::createMsgEnvironment(void) const
-{
-	std::cout << vl::TRACE << "vl::Master::createMsgEnvironemnt" << std::endl;
-
-	vl::cluster::Message msg(vl::cluster::MSG_ENVIRONMENT, _frame, getSimulationTime());
-
-	return msg;
-}
-
-/// @todo this should be replace by sending of a vector of paths
-/// that's the only thing needed in the Renderer
-vl::cluster::Message 
-vl::Master::createMsgProject(void) const
-{
-	std::cout << vl::TRACE << "vl::Master::createMsgProject" << std::endl;
-
-	vl::SettingsByteData data;
-	vl::cluster::ByteDataStream stream( &data );
-	stream << _proj;
-
-	vl::cluster::Message msg(vl::cluster::MSG_PROJECT, _frame, getSimulationTime());
-	data.copyToMessage( &msg );
-
-	return msg;
-}
-
 vl::cluster::Message
 vl::Master::createResourceMessage(vl::cluster::RESOURCE_TYPE type, std::string const &name) const
 {
@@ -392,19 +363,11 @@ void
 vl::Master::settingsChanged(void)
 {
 	_proj = _game_manager->getSettings();
-	// Notify server
-	if(_server)
+	
+	for(size_t i = 0; i < _pipes.size(); ++i)
 	{
-		// @todo this needs changes in the Server so that it does not
-		// create the Project (or Resource path messages) using callbacks
-		// but we update it when necessary.
-		//vl::cluster::Message msg = createMsgProject();
-		//_server->sendMessage(msg);
-	}
-	// Notify local renderer
-	if(_renderer)
-	{
-		_renderer->setProject(_proj);
+		_pipes.at(i)->clearResources();
+		_pipes.at(i)->addResources(_game_manager->getSettings());
 	}
 }
 
@@ -560,12 +523,15 @@ vl::Master::messageRequested(vl::cluster::RequestedMessage const &req_msg)
 	{
 	case vl::cluster::MSG_ENVIRONMENT :
 		{
-			_server->sendMessage(createMsgEnvironment());
+			vl::cluster::Message msg(vl::cluster::MSG_ENVIRONMENT, _frame, getSimulationTime());
+			_server->sendMessage(msg);
 		}
 		break;
 	case vl::cluster::MSG_PROJECT :
 		{
-			_server->sendMessage(createMsgProject());
+			/// @todo MSG_PROJECT should be removed, it's not used anymore
+			vl::cluster::Message msg(vl::cluster::MSG_PROJECT, _frame, getSimulationTime());
+			_server->sendMessage(msg);
 		}
 		break;
 	case vl::cluster::MSG_SG_INIT :

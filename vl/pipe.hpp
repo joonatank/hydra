@@ -42,6 +42,7 @@ public :
 	
 	/// Slave constructor
 	/// @todo I think we need to pass Renderer here on slaves right?
+	/// yeah we need it for when data is changed
 	Pipe(vl::Session *session, uint64_t id);
 
 	~Pipe(void);
@@ -66,6 +67,13 @@ public :
 	{ return _gui_enabled; }
 	void enableGUI(bool enable);
 
+	void addResources(vl::Settings const &settings);
+
+	std::vector<std::string> const &getResourcePaths(void) const
+	{ return _resource_paths; }
+
+	void clearResources();
+
 	/// @brief
 	/// @param winConf definition for the window
 	vl::IWindow *createWindow(vl::config::Window const &winConf);
@@ -85,12 +93,17 @@ public :
 	Session *getSession(void)
 	{ return _session; }
 
+	/// Need renderer on the Pipe that is active on a Slave
+	/// This is used for callbacks to Renderer when new data is received
+	void setRenderer(vl::Renderer *renderer);
+
 	enum DirtyBits
 	{
 		DIRTY_NAME = vl::Distributed::DIRTY_CUSTOM << 0,
 		DIRTY_WINDOWS = vl::Distributed::DIRTY_CUSTOM << 1,
 		DIRTY_PARAMS = vl::Distributed::DIRTY_CUSTOM << 2,
-		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_RESOURCES = vl::Distributed::DIRTY_CUSTOM << 3,
+		DIRTY_CUSTOM = vl::Distributed::DIRTY_CUSTOM << 4,
 	};
 
 private :
@@ -102,6 +115,7 @@ private :
 	Window *_findWindow(uint64_t id);
 
 	Session *_session;
+	vl::Renderer *_renderer;
 
 	std::string _name;
 
@@ -112,6 +126,8 @@ private :
 	/// Configuration
 	bool _gui_enabled;
 	bool _debug_overlay_enabled;
+
+	std::vector<std::string> _resource_paths;
 
 };	// class Pipe
 
