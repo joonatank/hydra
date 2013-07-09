@@ -235,29 +235,20 @@ vl::Renderer::clearProject(void)
 }
 
 /// --------------------------------------------------------------------------
-bool
-vl::Renderer::_initialiseGUI(void)
+void
+vl::Renderer::initialiseGUI(vl::ChannelPtr channel)
 {
 	assert(_gui);
 
 	// NOP if already initialised
-	if(_gui->initialised())
-	{ return true; }
+	if(_gui->initialised() || _gui->getChannel())
+	{ return; }
 
 	std::clog << "vl::Renderer::_initialiseGUI" << std::endl;
 
-	// Only initialise if we have a window
-	assert(_pipe);
-	// Oh fuck, this is called from Renderer where Window has been created
-	// but it has no Channels
-	if(!_pipe->getWindows().empty() && !_pipe->getWindows().at(0)->getChannels().empty())
-	{
-		_gui->initGUI(_pipe->getWindows().at(0)->getChannels().at(0));
-
-		return true;
-	}
-
-	return false;
+	assert(channel);
+	
+	_gui->setChannel(channel);
 }
 
 /// ----------------------- Syncing -----------------------------------------
@@ -364,8 +355,6 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
 					_gui.reset(new vl::gui::GUI(_session, id));
-
-					_initialiseGUI();
 				}
 				// store for later
 				else

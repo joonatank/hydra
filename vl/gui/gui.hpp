@@ -65,7 +65,12 @@ public :
 
 	gui::WindowRefPtr getWindow(std::string const &name);
 
-	void initGUI(vl::Channel *view);
+	vl::Channel *getChannel(void)
+	{ return _channel; }
+
+	void setChannel(vl::Channel *view);
+	
+	void initGUI(void);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -112,6 +117,8 @@ private :
 	std::vector<vl::gui::WindowRefPtr> _windows;
 
 	vl::Session *_session;
+
+	vl::Channel *_channel;
 
 	Gorilla::Silverback *_gorilla;
 	Ogre::Viewport *mViewport;

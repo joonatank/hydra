@@ -29,6 +29,7 @@
 
 vl::gui::GUI::GUI(vl::Session *session)
 	: _session(session)
+	, _channel(0)
 	, _gorilla(0)
 	, mViewport(0)
 {
@@ -38,6 +39,7 @@ vl::gui::GUI::GUI(vl::Session *session)
 
 vl::gui::GUI::GUI(vl::Session *session, uint64_t id)
 	: _session(session)
+	, _channel(0)
 	, _gorilla(0)
 	, mViewport(0)
 {
@@ -152,21 +154,28 @@ vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 	// Nothing uses these for now
 }
 
-
 void
-vl::gui::GUI::initGUI(vl::Channel *view)
+vl::gui::GUI::setChannel(vl::Channel *view)
 {
 	assert(view);
 	if(!view->getNative())
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No Ogre::Viewport")); }
+	if(_channel)
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting Channel is not supported.")); }
 
+	_channel = view;
+	mViewport = _channel->getNative();
+}
+
+void
+vl::gui::GUI::initGUI()
+{
 	std::clog << "vl::gui::GUI::_initGUI" << std::endl;
 
-	// @todo Gorilla::Silverback should be in the GUI
+	// Can not create Gorilla in Constructor because we don't have the resources yet
 	assert(!_gorilla);
 	_gorilla = new Gorilla::Silverback();
 	_gorilla->loadAtlas("dejavu");
-	mViewport = view->getNative();
 }
 
 bool
@@ -174,6 +183,10 @@ vl::gui::GUI::isVisible(void) const
 {
 	/// @todo should iterate over all windows, and check all that have
 	/// value wantsInput in them
+	/// Actually we need two visibility settings in Windows
+	/// to determine if it counts as GUI visible or not.
+	/// For example performance overlay (or anyother overlay) should not be
+	/// counted as a GUI visibility.
 	return( initialised() && _console && _console->isVisible() );
 }
 
@@ -202,4 +215,9 @@ vl::gui::GUI::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits 
 void 
 vl::gui::GUI::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 {
+	if( DIRTY_ALL & dirtyBits )
+	{
+		// Should be fine here when GUI is created
+		initGUI();
+	}
 }

@@ -138,8 +138,7 @@ public :
 	/// @brief Helper function for creating GUI when window is initalised
 	/// should not be called elsewhere than Window and GUI creation
 	/// NOP if GUI has already been initialised
-	/// @return true if initialised, false otherwise
-	bool _initialiseGUI(void);
+	void initialiseGUI(vl::ChannelPtr channel);
 
 	void setResources(std::vector<std::string> const &paths);
 

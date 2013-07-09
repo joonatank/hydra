@@ -574,7 +574,13 @@ vl::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 		{ return; }
 
 		_createNative();
-		_renderer->_initialiseGUI();
+
+		// Needs to be after Channels and Ogre::Viewports are created
+		// for the of change that window does not have Channel
+		if(_channels.size() > 0)
+		{
+			_renderer->initialiseGUI(_channels.at(0));
+		}
 	}
 }
 
