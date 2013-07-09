@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-05
  *	@file settings.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -22,13 +22,13 @@
 #include "base/envsettings.hpp"
 
 
-vl::Settings::Settings( ProjSettings const &proj, ProjSettings const &global )
+vl::Settings::Settings(vl::config::ProjSettings const &proj, vl::config::ProjSettings const &global)
 	: _proj(proj)
 {
 	addAuxilarySettings(global);
 }
 
-vl::Settings::Settings( const vl::ProjSettings& proj )
+vl::Settings::Settings(vl::config::ProjSettings const &proj)
 	: _proj(proj)
 {}
 
@@ -40,7 +40,7 @@ vl::Settings::~Settings( void )
 {}
 
 void
-vl::Settings::addAuxilarySettings ( vl::ProjSettings const &proj )
+vl::Settings::addAuxilarySettings(vl::config::ProjSettings const &proj)
 {
 	// TODO should check that the same is not added twice
 	_aux_projs.push_back(proj);
@@ -52,10 +52,10 @@ vl::Settings::getProjectName( void ) const
 	return _proj.getCase().getName();
 }
 
-std::vector< vl::ProjSettings::Scene>
+std::vector<vl::config::ProjSettings::Scene>
 vl::Settings::getScenes( void ) const
 {
-	std::vector<ProjSettings::Scene> scenes;
+	std::vector<vl::config::ProjSettings::Scene> scenes;
 
 	for( size_t i = 0; i < _aux_projs.size(); ++i )
 	{ _addScenes( scenes, _aux_projs.at(i).getCase() ); }
@@ -126,7 +126,7 @@ vl::Settings::hasProject(const std::string& name) const
 	if( _proj.getName() == name )
 	{ return true; }
 
-	std::vector<ProjSettings>::const_iterator iter;
+	std::vector<vl::config::ProjSettings>::const_iterator iter;
 	for( iter = _aux_projs.begin(); iter != _aux_projs.end(); ++iter )
 	{
 		if( iter->getName() == name )
@@ -136,13 +136,13 @@ vl::Settings::hasProject(const std::string& name) const
 	return false;
 }
 
-vl::ProjSettings const &
+vl::config::ProjSettings const &
 vl::Settings::findProject( std::string const &name ) const
 {
 	if( _proj.getName() == name )
 	{ return _proj; }
 
-	std::vector<ProjSettings>::const_iterator iter;
+	std::vector<vl::config::ProjSettings>::const_iterator iter;
 	for( iter = _aux_projs.begin(); iter != _aux_projs.end(); ++iter )
 	{
 		if( iter->getName() == name )
@@ -155,7 +155,7 @@ vl::Settings::findProject( std::string const &name ) const
 }
 
 std::string
-vl::Settings::getDir( vl::ProjSettings const &proj ) const
+vl::Settings::getDir(vl::config::ProjSettings const &proj) const
 {
 	fs::path projFile( proj.getFile() );
 	fs::path projDir = projFile.parent_path();
@@ -167,11 +167,11 @@ vl::Settings::getDir( vl::ProjSettings const &proj ) const
 /// -------------------- Settings Protected ------------------------------------
 void
 vl::Settings::_addScripts( std::vector< std::string > &vec,
-						   ProjSettings::Case const &cas ) const
+						   vl::config::ProjSettings::Case const &cas ) const
 {
 	for( size_t i = 0; i < cas.getNscripts(); ++i )
 	{
-		vl::ProjSettings::Script const &script = cas.getScript(i);
+		vl::config::ProjSettings::Script const &script = cas.getScript(i);
 		if( script.getUse() )
 		{
 			vec.push_back( script.getFile() );
@@ -181,12 +181,12 @@ vl::Settings::_addScripts( std::vector< std::string > &vec,
 
 
 void
-vl::Settings::_addScenes( std::vector< vl::ProjSettings::Scene> &vec,
-						 ProjSettings::Case const &cas ) const
+vl::Settings::_addScenes(std::vector<vl::config::ProjSettings::Scene> &vec,
+						 vl::config::ProjSettings::Case const &cas ) const
 {
 	for( size_t i = 0; i < cas.getNscenes(); ++i )
 	{
-		ProjSettings::Scene const &scene = cas.getScene(i);
+		vl::config::ProjSettings::Scene const &scene = cas.getScene(i);
 		if( scene.getUse() )
 		{
 			vec.push_back( scene );

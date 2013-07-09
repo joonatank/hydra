@@ -45,7 +45,7 @@
 
 #include "logger.hpp"
 
-// Necessary for SceneInfo
+// Necessary for Project settings
 #include "base/projsettings.hpp"
 
 #include <boost/signal.hpp>
@@ -297,10 +297,10 @@ public :
 
 	// @todo loadScene should be removed and use the load state instead
 	/// @brief Load all scenes for the project configuration
-	void loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags = LOADER_FLAG_NONE);
+	void loadScenes(vl::config::ProjSettings const &proj, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
 	/// @brief Load a scene from the scene configuration
-	void loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags = LOADER_FLAG_NONE);
+	void loadScene(vl::config::SceneInfo const &scene_info, LOADER_FLAGS flags = LOADER_FLAG_NONE);
 
 	/// @brief filename based scene loading
 	/// @param file_name
@@ -339,10 +339,10 @@ public :
 	vl::ProgramOptions &getOptions(void)
 	{ return _options; }
 
-	vl::ProjSettings const &getProjectSettings(void) const
+	vl::config::ProjSettings const &getProjectSettings(void) const
 	{ return _loaded_project; }
 
-	vl::ProjSettings const &getGlobalSettings(void) const
+	vl::config::ProjSettings const &getGlobalSettings(void) const
 	{ return _global_project; }
 
 	template<typename T>
@@ -413,11 +413,11 @@ private :
 
 	void _setupResources(vl::config::EnvSettings const &env);
 
-	void _addResources(vl::ProjSettings const &proj);
+	void _addResources(vl::config::ProjSettings const &proj);
 
-	void _removeResources(vl::ProjSettings const &proj);
+	void _removeResources(vl::config::ProjSettings const &proj);
 	
-	void _addPythonScripts(vl::ProjSettings const &proj);
+	void _addPythonScripts(vl::config::ProjSettings const &proj);
 
 	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);
@@ -469,8 +469,8 @@ private :
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
 
-	vl::ProjSettings _loaded_project;
-	vl::ProjSettings _global_project;
+	vl::config::ProjSettings _loaded_project;
+	vl::config::ProjSettings _global_project;
 
 	bool _auto_start;
 

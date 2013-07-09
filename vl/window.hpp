@@ -21,13 +21,12 @@
 
 // Interface
 #include "window_interface.hpp"
-
-#include "typedefs.hpp"
-
+// Base class
 #include "cluster/distributed.hpp"
-
+// Typedefs
+#include "typedefs.hpp"
 // Necessary for Window config and Wall
-#include "base/envsettings.hpp"
+#include "base/config.hpp"
 // Child
 #include "channel.hpp"
 

@@ -43,7 +43,8 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 {
 	assert(_viewport);
  
-	_viewport->setBackgroundColour(config.background_colour);
+	Ogre::ColourValue col(config.background_colour.r, config.background_colour.g, config.background_colour.b, config.background_colour.a);
+	_viewport->setBackgroundColour(col);
 	_viewport->setAutoUpdated(false);
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;

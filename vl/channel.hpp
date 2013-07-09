@@ -15,7 +15,7 @@
 
 
 // Necessary for Window config and Wall
-#include "base/envsettings.hpp"
+#include "base/config.hpp"
 
 #include <OGRE/OgreViewport.h>
 #include <OGRE/OgreTexture.h>

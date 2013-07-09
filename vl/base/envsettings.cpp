@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-11
  *	@file base/envsettings.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  */
@@ -15,10 +15,12 @@
 /// Declaration
 #include "envsettings.hpp"
 
-
-#include "filesystem.hpp"
+// Necessary for Exceptions
 #include "exceptions.hpp"
+// Necessary for string conversions
 #include "string_utils.hpp"
+// Parsin helpers
+#include "xml_helpers.hpp"
 
 #include <iostream>
 
@@ -501,8 +503,8 @@ vl::config::EnvSettings::getUsedPrograms(void) const
 ////////////////////// --- EnvSettingsSerializer --- //////////////////
 ///////////////////////////////////////////////////////////////////////
 
-vl::config::EnvSerializer::EnvSerializer(vl::config::EnvSettingsRefPtr env)
-    : _env(env), _xml_data(0)
+vl::config::EnvSerializer::EnvSerializer()
+    : _env(0), _xml_data(0)
 {}
 
 
@@ -512,14 +514,21 @@ vl::config::EnvSerializer::~EnvSerializer(void)
 }
 
 bool
-vl::config::EnvSerializer::readString(std::string const &str)
+vl::config::EnvSerializer::readString(vl::config::EnvSettings &env, std::string const &str)
 {
-    delete[] _xml_data;
-    size_t length = str.length() + 1;
-    _xml_data = new char[length];
-    memcpy(_xml_data, str.c_str(), length);
+	size_t length = str.length() + 1;
+	_xml_data = new char[length];
+	memcpy(_xml_data, str.c_str(), length);
 
-    return readXML();
+	_env = &env;
+
+	bool retval = readXML();
+	// If this object is reused
+	delete [] _xml_data;
+	_xml_data = 0;
+	_env = 0;
+
+	return retval;
 }
 
 bool
@@ -936,12 +945,12 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 	if(attrib)
 	{ r.y = vl::from_string<double>(attrib->value()); }
 
-	Ogre::ColourValue background_col(0, 0, 0);
+	vl::Colour background_col(0, 0, 0);
 	rapidxml::xml_node<> *background = xml_node->first_node("background");
 	if(background)
 	{
-		std::clog << "EnvConfig : Processing channel" << std::endl;
-		background_col = parseColour(background);
+		Ogre::ColourValue col = parseColour(background);
+		background_col = vl::Colour(col.r, col.g, col.b, col.a);
 	}
 
 	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");

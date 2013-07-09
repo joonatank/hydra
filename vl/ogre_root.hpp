@@ -33,9 +33,8 @@
 #include <OGRE/OgreRenderWindow.h>
 
 #include "typedefs.hpp"
-#include "base/filesystem.hpp"
-
-#include "base/envsettings.hpp"
+// Necessary for LogLevel
+#include "base/config.hpp"
 
 namespace vl
 {
@@ -65,7 +64,7 @@ class Root
 
 		Ogre::SceneManager *createSceneManager(std::string const &name);
 
-			Ogre::SceneManager *getSceneManager(void) const;
+		Ogre::SceneManager *getSceneManager(void) const;
 
 		/// Method which will define the source of resources (other than current folder)
 		void setupResources(std::vector<std::string> const &paths);
@@ -85,8 +84,8 @@ class Root
 
 		Ogre::LogManager *_log_manager;
 
+		Ogre::SceneManager *_scene_manager;
 
-			Ogre::SceneManager *_scene_manager;
 };	// class Root
 
 }	// namespace ogre

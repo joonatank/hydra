@@ -483,7 +483,7 @@ vl::GameManager::getSettings(void) const
 }
 
 void
-vl::GameManager::loadScenes(vl::ProjSettings const &proj, LOADER_FLAGS flags)
+vl::GameManager::loadScenes(vl::config::ProjSettings const &proj, LOADER_FLAGS flags)
 {
 	for( size_t i = 0; i < proj.getCase().getNscenes(); ++i )
 	{
@@ -501,7 +501,7 @@ vl::GameManager::createAnalogClient(std::string const &name)
 }
 
 void
-vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
+vl::GameManager::loadScene(vl::config::SceneInfo const &scene_info, LOADER_FLAGS flags)
 {
 	std::cout << vl::TRACE << "Loading scene file = " << scene_info.getName() << std::endl;
 
@@ -553,7 +553,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 
 			// Default to true
 			bool use_mesh = true;
-			if(scene_info.getUseNewMeshManager() == CFG_OFF)
+			if(scene_info.getUseNewMeshManager() == config::CFG_OFF)
 			{ use_mesh = false; }
 
 			if(scene_info.getUsePhysics())
@@ -604,7 +604,7 @@ vl::GameManager::loadScene(vl::SceneInfo const &scene_info, LOADER_FLAGS flags)
 void
 vl::GameManager::loadScene(std::string const &file_name, LOADER_FLAGS flags)
 {
-	vl::SceneInfo scene_info;
+	vl::config::SceneInfo scene_info;
 	scene_info.setUse(true);
 	scene_info.setFile(file_name);
 	scene_info.setName(file_name);
@@ -699,8 +699,8 @@ vl::GameManager::_do_load(vl::load const &evt)
 	// load the project
 	if(!evt.project.empty())
 	{
-		vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&_loaded_project, vl::null_deleter()));
-		if(!ser.readFile(evt.project))
+		vl::config::ProjSettingsSerializer ser;
+		if(!ser.readFile(_loaded_project, evt.project))
 		{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
 		std::clog << "Loading project " << _loaded_project.getName() << std::endl;
@@ -802,10 +802,10 @@ vl::GameManager::_loadGlobal(std::string const &file_name)
 	_python->reset();
 
 	// reset the global
-	vl::ProjSettings global;
-	vl::ProjSettingsSerializer ser(ProjSettingsRefPtr(&global, vl::null_deleter()));
+	vl::config::ProjSettings global;
+	vl::config::ProjSettingsSerializer ser;
 	// We must have a global file because we need resources for the GUI.
-	if(!ser.readFile(file_name))
+	if(!ser.readFile(global, file_name))
 	{
 		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Global project file"));
 	}
@@ -865,8 +865,8 @@ vl::GameManager::_removeAll(void)
 	// not a good idea, created from env so it's not affected by project loading
 
 	// @todo clean projects
-	_loaded_project = vl::ProjSettings();
-	_global_project = vl::ProjSettings();
+	_loaded_project = vl::config::ProjSettings();
+	_global_project = vl::config::ProjSettings();
 
 	// Recordings???
 
@@ -943,7 +943,7 @@ vl::GameManager::_setupResources(vl::config::EnvSettings const &env)
 }
 
 void
-vl::GameManager::_addResources(vl::ProjSettings const &proj)
+vl::GameManager::_addResources(vl::config::ProjSettings const &proj)
 {
 	if(proj.empty())
 	{
@@ -970,7 +970,7 @@ vl::GameManager::_addResources(vl::ProjSettings const &proj)
 }
 
 void
-vl::GameManager::_removeResources(vl::ProjSettings const &proj)
+vl::GameManager::_removeResources(vl::config::ProjSettings const &proj)
 {
 	if(proj.empty())
 	{
@@ -989,12 +989,12 @@ vl::GameManager::_removeResources(vl::ProjSettings const &proj)
 }
 
 void
-vl::GameManager::_addPythonScripts(vl::ProjSettings const &proj)
+vl::GameManager::_addPythonScripts(vl::config::ProjSettings const &proj)
 {
 	for( size_t i = 0; i < proj.getCase().getNscripts(); ++i )
 	{
 		// Load the python scripts
-		ProjSettings::Script const &script = proj.getCase().getScript(i);
+		vl::config::ProjSettings::Script const &script = proj.getCase().getScript(i);
 		
 		// scripts that are in use are set to be auto ran others are just stored.
 		vl::TextResource script_resource;

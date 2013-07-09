@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
-  *	Copyright (c) 2011 - 2012 Savant Simulators
+  *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-05
  *	@file settings.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -33,9 +33,6 @@
 #ifndef HYDRA_SETTINGS_HPP
 #define HYDRA_SETTINGS_HPP
 
-// Necessary because most parameters are strings
-#include <string>
-
 // Necessary for ProjSettings::Scene
 #include "base/projsettings.hpp"
 
@@ -55,26 +52,26 @@ class Settings
 		 *	Default constructor is provided for slave nodes
 		 *	Same behaviour would result also with omiting either env or proj.
 		 */
-		Settings( ProjSettings const &proj, ProjSettings const &global );
+		Settings(vl::config::ProjSettings const &proj, vl::config::ProjSettings const &global);
 
-		Settings( ProjSettings const &proj );
+		Settings(vl::config::ProjSettings const &proj);
 
 		Settings( void );
 
 		virtual ~Settings( void );
 
-		ProjSettings const &getProjectSettings( void ) const
+		vl::config::ProjSettings const &getProjectSettings(void) const
 		{ return _proj; }
 
-		void setProjectSettings( ProjSettings const &proj )
+		void setProjectSettings(vl::config::ProjSettings const &proj)
 		{ _proj = proj; }
 
 		/// This supports multiple Project settings using the auxilary function
 		/// multiple settings can be added and they are automatically used
 		/// when retrieving resource paths, scripts or scenes.
-		void addAuxilarySettings( ProjSettings const &proj );
+		void addAuxilarySettings(vl::config::ProjSettings const &proj);
 
-		std::vector<ProjSettings> const &getAuxilarySettings( void ) const
+		std::vector<vl::config::ProjSettings> const &getAuxilarySettings( void ) const
 		{ return _aux_projs; }
 
 		/// Returns the name of the project
@@ -90,7 +87,7 @@ class Settings
 		/// - name of the SceneNode to whom this scene should be attached
 		///
 		/// Returns a vector of Scene info structures.
-		std::vector<ProjSettings::Scene> getScenes( void ) const;
+		std::vector<vl::config::ProjSettings::Scene> getScenes( void ) const;
 
 		/// Combines Global, the Project and the Case scripts to one vector
 		/// Only scripts that are in use are added
@@ -110,22 +107,22 @@ class Settings
 
 		bool hasProject( std::string const &name ) const;
 
-		vl::ProjSettings const &findProject( std::string const &name ) const;
+		vl::config::ProjSettings const &findProject(std::string const &name) const;
 
-		std::string getDir( vl::ProjSettings const &proj ) const;
+		std::string getDir(vl::config::ProjSettings const &proj) const;
 
 	protected :
 		void _addScripts( std::vector<std::string> &vec,
-						  vl::ProjSettings::Case const &cas ) const;
+						  vl::config::ProjSettings::Case const &cas ) const;
 
-		void _addScenes( std::vector<ProjSettings::Scene> &vec,
-						vl::ProjSettings::Case const &cas ) const;
+		void _addScenes( std::vector<vl::config::ProjSettings::Scene> &vec,
+						vl::config::ProjSettings::Case const &cas ) const;
 
 		// Project specific settings
-		ProjSettings _proj;
+		vl::config::ProjSettings _proj;
 
 		// Global project settings
-		std::vector<ProjSettings> _aux_projs;
+		std::vector<vl::config::ProjSettings> _aux_projs;
 
 		// Name of the current case or empty if doesn't have a case
 		std::string _case;

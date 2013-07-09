@@ -22,7 +22,7 @@
 // Necessary for creating windows
 #include "window_interface.hpp"
 // Necessary for config::Window struct
-#include "base/envsettings.hpp"
+#include "base/config.hpp"
 
 namespace vl
 {

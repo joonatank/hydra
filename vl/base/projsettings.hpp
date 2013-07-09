@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-10
  *	@file base/projsettings.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -30,26 +30,22 @@
  *	Removed ActionMaps
  */
 
-#ifndef VL_PROJSETTINGS_HPP
-#define VL_PROJSETTINGS_HPP
+#ifndef HYDRA_PROJSETTINGS_HPP
+#define HYDRA_PROJSETTINGS_HPP
 
 #include <string>
 #include <vector>
 
+// Config types
+#include "config.hpp"
+// Parser
 #include "rapidxml.hpp"
-#include "typedefs.hpp"
 
 namespace vl
 {
 
-// Three value configs
-enum CFG
+namespace config
 {
-	// Uses parents settings, might be global config settings or program defaults
-	CFG_DEFAULT,
-	CFG_OFF,
-	CFG_ON,
-};
 
 struct SceneInfo
 {
@@ -162,7 +158,7 @@ public :
 
 	};	// class Script
 
-	typedef vl::SceneInfo Scene;
+	typedef SceneInfo Scene;
 
 	struct Case
 	{
@@ -271,11 +267,11 @@ public :
 	/// Will completely over-ride the provided ProjSettings
 	/// when XML data is readed.
 	/// Any error in reading will result to defaulting ProjSettings.
-	ProjSettingsSerializer( ProjSettingsRefPtr );
+	ProjSettingsSerializer(void);
 
 	~ProjSettingsSerializer( void );
 
-	bool readFile(std::string const &file_path);
+	bool readFile(ProjSettings &proj, std::string const &file_path);
 
 	// Read data from string buffer. Buffer is not modified.
 	// @depricated because this doesn't save the file path
@@ -311,7 +307,7 @@ protected :
 
 	const char *bool2char( bool b ) const;
 
-	ProjSettingsRefPtr _projSettings;
+	ProjSettings *_proj;
 
 	// file content needed for rapidxml
 	char *_xml_data;
@@ -321,6 +317,8 @@ protected :
 
 };	// class ProjSettingsSerializer
 
+}	// namespace config
+
 }	// namespace vl
 
-#endif // VL_PROJSETTINGS_HPP
+#endif // HYDRA_PROJSETTINGS_HPP

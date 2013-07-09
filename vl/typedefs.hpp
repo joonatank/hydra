@@ -40,13 +40,9 @@ namespace vl
 
 	/// Settings
 	class Settings;
-	class ProjSettings;
-
-	typedef boost::shared_ptr<Settings> SettingsRefPtr;
-	typedef boost::shared_ptr<ProjSettings> ProjSettingsRefPtr;
-	
 	namespace config
 	{
+		class ProjSettings;
 		class EnvSettings;
 		typedef boost::shared_ptr<EnvSettings> EnvSettingsRefPtr;
 	}

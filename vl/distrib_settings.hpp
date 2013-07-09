@@ -82,10 +82,10 @@ template<>
 ByteStream &operator>>( ByteStream &msg, vl::Settings &settings );
 
 template<>
-ByteStream &operator<<( ByteStream &msg, vl::ProjSettings const &proj );
+ByteStream &operator<<( ByteStream &msg, vl::config::ProjSettings const &proj );
 
 template<>
-ByteStream &operator>>( ByteStream &msg, vl::ProjSettings &proj );
+ByteStream &operator>>( ByteStream &msg, vl::config::ProjSettings &proj );
 
 }	// namespace cluster
 

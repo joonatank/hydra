@@ -731,7 +731,7 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 
 	/// We don't yet have a valid SceneManager
 	/// So we need to wait till the camera is set here
-	vl::config::Rect<double> const &rect = channel_config.area;
+	vl::Rect<double> const &rect = channel_config.area;
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 

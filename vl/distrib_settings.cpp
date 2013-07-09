@@ -201,7 +201,7 @@ vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::Settings& settings )
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &proj )
+vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::ProjSettings const &proj )
 {
 	// For some reason we can't use static_assert here even though this shouldn't 
 	// be used used anywhere
@@ -211,7 +211,7 @@ vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::ProjSettings const &p
 
 template<>
 vl::cluster::ByteStream &
-vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::ProjSettings &proj )
+vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::ProjSettings &proj )
 {
 	// For some reason we can't use static_assert here even though this shouldn't 
 	// be used used anywhere

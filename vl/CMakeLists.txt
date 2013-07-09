@@ -73,6 +73,7 @@ set(MATH_HEADERS
 	math/math.hpp
 	math/transform.hpp
 	math/types.hpp
+	math/colour.hpp
 	math/frustum.hpp
 	math/frustum.cpp
 	)
@@ -108,6 +109,8 @@ set(BASE_HEADERS
 	base/system_util.hpp
 	base/envsettings.hpp
 	base/projsettings.hpp
+	base/config.hpp
+	base/rect.hpp
 	base/exceptions.hpp
 	base/filesystem.hpp
 	base/print.hpp
@@ -127,6 +130,7 @@ set(BASE_SRC
 	base/filesystem.cpp
 	base/envsettings.cpp
 	base/projsettings.cpp
+	base/config.cpp
 	base/string_utils.cpp
 	base/time.cpp
 	base/chrono.cpp

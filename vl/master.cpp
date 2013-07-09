@@ -45,6 +45,8 @@
 #include "base/system_util.hpp"
 // Necessary for printing process vector
 #include "base/print.hpp"
+// Necessary for EnvSettings
+#include "base/envsettings.hpp"
 
 #include "pipe.hpp"
 
@@ -96,8 +98,8 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 		std::string env_data;
 		env_data = vl::readFileToString( env_path.string() );
 		// TODO check that the files are correct and we have good settings
-		vl::config::EnvSerializer env_ser( env );
-		env_ser.readString(env_data);
+		vl::config::EnvSerializer env_ser;
+		env_ser.readString(*env, env_data);
 		env->setFile( env_path.string() );
 	}
 
