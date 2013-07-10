@@ -60,9 +60,6 @@ public :
 	/// Destructor
 	~EnvSettings( void );
 
-	/// Clear the settings structure to default values
-	void clear( void );
-
 	/** @brief Is this configuration for a slave node
 	 *	@return true if this is slave configuration false if not
 	 *
@@ -93,10 +90,12 @@ public :
 	void setMaster( void )
 	{ _slave = false; }
 
-	/** @brief Get the relative path to the file this configuration was in
+	/**	@brief Get the relative path to the file this configuration was in
 	 *	@return string to relative path
 	 *
-	 *	@TODO is this a necessary function
+	 *	Used when reading a env file so we can retrieve it's path
+	 *	for tracking files.
+	 *
 	 *	@TODO possibility to return an absolute path
 	 */
 	std::string const &getFile( void ) const
@@ -104,23 +103,6 @@ public :
 
 	void setFile( std::string const &file )
 	{ _file_path = file; }
-
-	std::string getPluginsDirFullPath( void ) const;
-
-	///// PLUGINS /////////////////////////////////////////////////
-	/// get vector containing plugin names and which are active
-	std::vector<std::pair<std::string, bool> > const &getPlugins( void ) const
-	{ return _plugins; }
-
-	/// Add a plugin by name and boolean wether it's in use or not
-	/// Checks that the same plugin is not added twice, NOP if the plugin is
-	/// already in the plugins stack.
-	void addPlugin( std::pair<std::string, bool> const &plugin );
-
-	/// set the plugin named pluginName use to on or off
-	/// returns true if plugin found
-	/// prints an error message and returns false if no such plugin found
-	bool pluginOnOff( std::string const &pluginName, bool newState );
 
 	///// TRACKING /////////////////////////////////////////////////
 	/// Returns a vector of tracking configs
@@ -158,14 +140,6 @@ public :
 	 *	not found in these settings this function is a NOP.
 	 */
 	void removeTracking( Tracking const &track );
-
-	/// Returns a flags of around which axes the camera rotations are allowed
-	/// Fist bit is the x axis, second y axis, third z axis
-	uint32_t getCameraRotationAllowed( void ) const
-	{ return _camera_rotations_allowed; }
-
-	void setCameraRotationAllowed( uint32_t const flags )
-	{ _camera_rotations_allowed = flags; }
 
 	void addWall(vl::Wall const &wall);
 
@@ -236,57 +210,16 @@ public :
 	void setServer( Server const &server )
 	{ _server = server; }
 
-	/**	@brief get the configuration of stereo
-	 *	@return true if should use stereo false otherwise
-	 */
-	StereoType getStereoType( void ) const
-	{ return _stereo_type; }
-
-	/**	@brief set if we use stereo or not
-	 *	@param stereo true if should use stereo false otherwise
-	 */
-	void setStereoType(StereoType type)
-	{ _stereo_type = type; }
-
-	bool hasHardwareGamma(void) const
-	{ return _renderer.hardware_gamma; }
-
-	void setHardwareGamma(bool g)
-	{ _renderer.hardware_gamma = g; }
-
-
-	/**	@brief using NVidia swap sync or not
-	 *	@return true if should use NVidia swap sync false otherwise
-	 */
-	bool hasNVSwapSync(void) const
-	{ return _nv_swap_sync; }
-
-	/**	@brief set wether or not to use NVidia swap sync
-	 *	@param val true if should use NVidia swap sync false otherwise
-	 */
-	void setNVSwapSync(bool val)
-	{ _nv_swap_sync = val; }
-
-	uint32_t getNVSwapGroup(void) const
-	{ return _swap_group; }
-	
-	void setNVSwapGroup(uint32_t val)
-	{ _swap_group = val; }
-
-	uint32_t getNVSwapBarrier(void) const
-	{ return _swap_barrier; }
-	
-	void setNVSwapBarrier(uint32_t val)
-	{ _swap_barrier = val; }
-
 	/**	@brief set the amount of interpupilar distance used for stereo
 	 *	@param ipd the distance in meters
+	 *	@todo move to Renderer
 	 */
 	void setIPD( double ipd )
 	{ _ipd = ipd; }
 
 	/**	@brief get the amount of interpupilar distance used for stereo
 	 *	@return interpupilar distance in meters
+	 *	@todo move to Renderer
 	 */
 	double getIPD( void ) const
 	{ return _ipd; }
@@ -300,10 +233,7 @@ public :
 	void setLogLevel(vl::config::LogLevel level)
 	{ _level = level; }
 
-	/**	@brief How much information user wants
-	 *	@return
-	 *
-	 */
+	/// @brief How much information user wants
 	vl::config::LogLevel getLogLevel( void ) const
 	{ return _level; }
 
@@ -328,16 +258,6 @@ public :
 	 */
 	std::string getLogDir( vl::PATH_TYPE const type = vl::PATH_ABS ) const;
 
-	/** @brief Set the exe path i.e. the command used to start the program.
-	 *	@param path the command used to start program, usually argv[0]
-	 *	@TODO Is this necessary? Where is it used?
-	 *		  We would need this for launching out of the exe directory
-	 *		  or adding the exe directory to PATH to be used for dlls.
-	 *	@TODO should be replaced with exe_name or program_name
-	 *		  and program directory
-	 */
-// 	void setExePath( std::string const &path );
-
 	/** @brief Get the directory where this environment file is stored.
 	 *	@return valid path to the file where this configuration is stored.
 	 *			empty string if this is not stored into a file.
@@ -353,10 +273,6 @@ public :
 
 	void setFPS(uint32_t fps)
 	{ _fps = fps; }
-
-	/// @brief the display number to use
-	/// Only useful for X11 for now and needs to be a valid X11 display
-	int display_n;
 	
 	void addProgram(Program const &prog);
 	
@@ -371,27 +287,23 @@ private :
 
 	std::string _file_path;
 
-	std::vector<std::pair<std::string, bool> > _plugins;
 	std::vector<Tracking> _tracking;
 
 	std::vector<Program> _programs;
 
-	uint32_t _camera_rotations_allowed;
-
 	Server _server;
 
 	Node _master;
+	
+	Renderer _renderer;
+
 	std::vector<Node> _slaves;
 
+	// @todo walls can be removed they are now stored in Window
 	std::vector<Wall> _walls;
 
-	StereoType _stereo_type;
-
-	bool _nv_swap_sync;
-	uint32_t _swap_group;
-	uint32_t _swap_barrier;
-
 	// Inter pupilar distance
+	// @todo should be in Renderer
 	double _ipd;
 
 	// Is this structure for a slave or a master
@@ -403,14 +315,11 @@ private :
 
 	uint32_t _fps;
 
-	Renderer _renderer;
-
 };	// class EnvSettings
 
 
-
-
-
+/**	@class EnvSerializer
+ */
 class HYDRA_API EnvSerializer
 {
 public :
@@ -435,8 +344,6 @@ protected :
 
 	void processTracking( rapidxml::xml_node<>* XMLNode );
 
-	void processCameraRotations( rapidxml::xml_node<>* XMLNode );
-
 	void processWalls( rapidxml::xml_node<>* XMLNode );
 
 	void processServer( rapidxml::xml_node<>* XMLNode );
@@ -448,8 +355,6 @@ protected :
 	void processChannel( rapidxml::xml_node<>* XMLNode, vl::config::Window &window );
 
 	void processStereo(rapidxml::xml_node<> *xml_node);
-
-	void processNVSwapSync(rapidxml::xml_node<> *xml_node);
 
 	void processIPD(rapidxml::xml_node<> *xml_node);
 

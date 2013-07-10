@@ -801,22 +801,17 @@ vl::GameManager::_loadGlobal(std::string const &file_name)
 	// reset the python context
 	_python->reset();
 
-	// reset the global
-	vl::config::ProjSettings global;
-	vl::config::ProjSettingsSerializer ser;
-	// We must have a global file because we need resources for the GUI.
-	if(!ser.readFile(global, file_name))
-	{
-		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Global project file"));
-	}
-
-	std::clog << "Loading Global : " << global.getName() << std::endl;
-
 	/// Should never already have a global config here
 	if(!_global_project.empty())
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	_global_project = global;
+	// reset the global
+	vl::config::ProjSettingsSerializer ser;
+	// We must have a global file because we need resources for the GUI.
+	if(!ser.readFile(_global_project, file_name))
+	{
+		BOOST_THROW_EXCEPTION(vl::missing_file() << vl::desc("Global project file"));
+	}
 
 	_addResources(_global_project);
 

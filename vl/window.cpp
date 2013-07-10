@@ -590,8 +590,8 @@ vl::Window::_createNative(void)
 	std::clog << "vl::Window::_createNative" << std::endl;
 
 	_ogre_window = _createOgreWindow(_window_config);
-	if(_window_config.input_handler)
-	{ _createInputHandling(); }
+
+	_createInputHandling();
 
 	/// @todo Channel creation should be in Renderer and we should 
 	/// attach channels to Windows. It's more logical.
@@ -643,11 +643,13 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	// Should only be called on Slaves where we have Renderer available.
 	assert(_renderer);
 
-	params["left"] = vl::to_string(winConf.rect.x);
-	params["top"] = vl::to_string(winConf.rect.y);
+	params["left"] = vl::to_string(winConf.area.x);
+	params["top"] = vl::to_string(winConf.area.y);
 	params["border"] = "none";
 	params["gamma"] = vl::to_string(winConf.renderer.hardware_gamma);
-	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
+	// Default to Quad buffer stereo
+	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER
+		|| winConf.stereo_type == vl::config::ST_DEFAULT)
 	{
 		params["stereo"] = vl::to_string(true);
 	}
@@ -655,23 +657,8 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	params["FSAA"] = vl::to_string(winConf.fsaa);
 
 	std::cout << vl::TRACE << "Creating Ogre RenderWindow : " 
-		<< "left = " << winConf.rect.x << " top = " << winConf.rect.y
-		<< " width = " << winConf.rect.w << " height = " << winConf.rect.h;
-
-	// @todo we should overload print operator for window config
-	if( winConf.nv_swap_sync )
-	{
-		std::cout << "with NV swap sync, group ";
-		params["nvSwapSync"] = "true";
-		std::stringstream ss;
-		ss << winConf.nv_swap_group;
-		std::cout << ss.str() << ", barrier ";
-		params["swapGroup"] = ss.str();
-		ss.str("");
-		ss << winConf.nv_swap_barrier;
-		std::cout << ss.str() << " : ";
-		params["swapBarrier"] = ss.str();
-	}
+		<< "left = " << winConf.area.x << " top = " << winConf.area.y
+		<< " width = " << winConf.area.w << " height = " << winConf.area.h;
 
 	/// @todo replace with proper printing of Window options
 	if(winConf.stereo_type == vl::config::ST_QUAD_BUFFER)
@@ -702,7 +689,7 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 	}
 
 	Ogre::RenderWindow *win = _renderer->getRoot()->createWindow( "Hydra-"+getName(),
-			winConf.rect.w, winConf.rect.h, params );
+			winConf.area.w, winConf.area.h, params );
 	win->setAutoUpdated(false);
 	
 	// If this is the first window we initialise resources here

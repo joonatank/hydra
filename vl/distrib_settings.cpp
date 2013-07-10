@@ -41,7 +41,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Node const &node )
 {
-	msg << node.name << node.windows << node.gui_enabled;
+	msg << node.name << node.windows;
 
 	return msg;
 }
@@ -50,7 +50,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Node& node )
 {
-	msg >> node.name >> node.windows >> node.gui_enabled;
+	msg >> node.name >> node.windows;
 
 	return msg;
 }
@@ -80,10 +80,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
-	msg << window.name << window.get_channels() << window.rect
-		<< window.n_display << window.stereo_type << window.nv_swap_sync 
-		<< window.nv_swap_group << window.nv_swap_barrier << window.vert_sync
-		<< window.renderer << window.input_handler;
+	msg << window.name << window.get_channels() << window.area 
+		<< window.stereo_type << window.vert_sync << window.renderer;
 
 	msg << window.params.size();
 	for(NamedParamList::const_iterator iter = window.params.begin(); 
@@ -99,10 +97,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
-	msg >> window.name >> window.get_channels() >> window.rect
-		>> window.n_display >> window.stereo_type >> window.nv_swap_sync
-		>> window.nv_swap_group >> window.nv_swap_barrier >> window.vert_sync
-		>> window.renderer >> window.input_handler;
+	msg >> window.name >> window.get_channels() >> window.area
+		>> window.stereo_type >> window.vert_sync >> window.renderer;
 
 	size_t params_size;
 	msg >> params_size;
@@ -157,8 +153,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Projection const &projection)
 {
 	msg << projection.type << projection.perspective_type << projection.fov 
-		<< projection.horizontal << projection.head_x << projection.head_y << projection.head_z 
-		<< projection.modify_transformations;
+		<< projection.horizontal;
 
 	return msg;
 }
@@ -168,8 +163,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Projection &projection)
 {
 	msg >> projection.type >> projection.perspective_type >> projection.fov
-		>> projection.horizontal >> projection.head_x >> projection.head_y >> projection.head_z 
-		>> projection.modify_transformations;
+		>> projection.horizontal;
 
 	return msg;
 }

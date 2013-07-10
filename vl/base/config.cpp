@@ -15,32 +15,73 @@
 #include "config.hpp"
 
 #include "exceptions.hpp"
+#include "string_utils.hpp"
 
+/// ------------------------- Global -----------------------------------------
+std::string
+vl::config::convert_stereo(vl::config::StereoType const &stereo)
+{
+	switch(stereo)
+	{
+	case ST_OFF :
+		return std::string("off");
+	case ST_DEFAULT :
+		return std::string("default");
+	case ST_QUAD_BUFFER :
+		return std::string("quad_buffer");
+	case ST_SIDE_BY_SIDE :
+		return std::string("side_by_side");
+	case ST_TOP_BOTTOM : 
+		return std::string("top_bottom");
+	case ST_OCULUS : 
+		return std::string("oculus");
+	}
+}
+
+vl::config::StereoType
+vl::config::convert_stereo(std::string const &stereo)
+{
+	std::string const str = vl::to_lower(stereo);
+	if(str == "off")
+	{ return ST_OFF; }
+	else if(str == "quad_buffer")
+	{ return ST_QUAD_BUFFER; }
+	else if(str == "side_by_side")
+	{ return ST_SIDE_BY_SIDE; }
+	else if(str == "top_bottom")
+	{ return ST_TOP_BOTTOM; }
+	else if(str == "oculus")
+	{ return ST_OCULUS; }
+	else
+	{ return ST_DEFAULT; }
+}
+
+/// ------------------------- Window -----------------------------------------
 vl::config::Window::Window(std::string const &nam, int width, int height, int px, int py,
 		StereoType stereo_t)	
 {
 	clear();
 
 	name = nam;
-	rect = Rect<int>(width, height, px, py);
+	area = Rect<int>(width, height, px, py);
 	stereo_type = stereo_t;
 
-	if( rect.h < 0 || rect.w < 0 )
+	if(area.h < 0 || area.w < 0)
 	{
 		std::string desc("Width or height of a Window can not be negative");
 		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
 	}
 }
 
-vl::config::Window::Window(std::string const &nam, Rect<int> area, StereoType stereo_t)
+vl::config::Window::Window(std::string const &nam, Rect<int> a, StereoType stereo_t)
 {
 	clear();
 	
 	name = nam;
-	rect = area;
+	area = a;
 	stereo_type = stereo_t;
 
-	if( rect.h < 0 || rect.w < 0 )
+	if(area.h < 0 || area.w < 0)
 	{
 		std::string desc("Width or height of a Window can not be negative");
 		BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc(desc) );
@@ -52,15 +93,9 @@ vl::config::Window::clear(void)
 {
 	stereo_type = ST_OFF;
 	vert_sync = false;
-	input_handler = true;
-
-	n_display = -1;
 
 	fsaa = 0;
-
-	nv_swap_sync = false;
-	nv_swap_group = 0;
-	nv_swap_barrier = 0;
+	area.clear();
 }
 
 void
@@ -83,3 +118,26 @@ vl::config::Window::has_channel(std::string const &name) const
 
 	return false;
 }
+
+/// ------------------------ Node --------------------------------------------
+void
+vl::config::Node::addWindow(vl::config::Window const &window)
+{
+	// Check that there is not already a Window with the same name
+	std::vector<Window>::iterator iter;
+	for( iter = windows.begin(); iter != windows.end(); ++iter )
+	{
+		if( iter->name == window.name )
+		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() ); }
+	}
+
+	windows.push_back(window);
+}
+
+vl::config::Window &
+vl::config::Node::getWindow(size_t i)
+{ return windows.at(i); }
+
+vl::config::Window const &
+vl::config::Node::getWindow( size_t i ) const
+{ return windows.at(i); }

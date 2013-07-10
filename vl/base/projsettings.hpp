@@ -275,7 +275,7 @@ public :
 
 	// Read data from string buffer. Buffer is not modified.
 	// @depricated because this doesn't save the file path
-	bool readString( std::string const &str );
+	bool readString(ProjSettings &proj, std::string const &str);
 
 	void writeString( std::string &str );
 

@@ -24,99 +24,15 @@
 
 #include <iostream>
 
-/// ------------------------ vl::EnvSettings::Node -----------------------------
-void
-vl::config::Node::addWindow(vl::config::Window const &window)
-{
-	// Check that there is not already a Window with the same name
-	std::vector<Window>::iterator iter;
-	for( iter = windows.begin(); iter != windows.end(); ++iter )
-	{
-		if( iter->name == window.name )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() ); }
-	}
-
-	windows.push_back(window);
-}
-
-vl::config::Window &
-vl::config::Node::getWindow(size_t i)
-{ return windows.at(i); }
-
-vl::config::Window const &
-vl::config::Node::getWindow( size_t i ) const
-{ return windows.at(i); }
-
-/// ------------------------------ vl::EnvSettings -----------------------------
+/// ------------------------- EnvSettings ------------------------------------
 vl::config::EnvSettings::EnvSettings( void )
-	: _camera_rotations_allowed( 1 | 1<<1 | 1<<2 )
-	, _stereo_type(ST_OFF)
-	, _nv_swap_sync(false)
-	, _swap_group(0)
-	, _swap_barrier(0)
-	, _ipd(0)
+	: _ipd(0)
 	, _slave(false)
-	, display_n(0)
 	, _fps(60)
 {}
 
 vl::config::EnvSettings::~EnvSettings( void )
 {}
-
-void
-vl::config::EnvSettings::clear( void )
-{
-	_plugins.clear();
-	_tracking.clear();
-
-	_camera_rotations_allowed = 0;
-}
-
-std::string
-vl::config::EnvSettings::getPluginsDirFullPath( void ) const
-{
-	fs::path env_path = getFile();
-	fs::path env_dir = env_path.parent_path();
-	fs::path path =  env_dir / "plugins";
-
-	return path.string();
-}
-
-void
-vl::config::EnvSettings::addPlugin(const std::pair< std::string, bool >& plugin)
-{
-	std::vector< std::pair<std::string, bool> >::iterator iter;
-	for( iter = _plugins.begin(); iter != _plugins.end(); ++iter )
-	{
-		if( iter->first == plugin.first )
-		{ return; }
-	}
-
-	_plugins.push_back( plugin );
-}
-
-bool
-vl::config::EnvSettings::pluginOnOff(const std::string &pluginName, bool newState)
-{
-	bool found = false;
-	for( unsigned int i = 0; i < _plugins.size(); i++ )
-	{
-		if( _plugins.at(i).first == pluginName )
-		{
-			_plugins.at(i).second = newState;
-			found = true;
-			// TODO should return here
-			// but there can be same plugin multiple times o_O
-		}
-	}
-	if(!found)
-	{
-		std::cerr << "Tried to toggle plugin " << pluginName
-			<< " which is not present" << std::endl;
-		return false;
-	}
-	return true;
-}
 
 std::vector< std::string >
 vl::config::EnvSettings::getTrackingFiles( void ) const
@@ -556,17 +472,9 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 {
 	rapidxml::xml_node<>* xml_elem;
 
-	xml_elem = xml_root->first_node("plugins");
-	if( xml_elem )
-	{ processPlugins( xml_elem ); }
-
 	xml_elem = xml_root->first_node("tracking");
 	if( xml_elem )
 	{ processTracking( xml_elem ); }
-
-	xml_elem = xml_root->first_node("camera_rotations");
-	if( xml_elem )
-	{ processCameraRotations( xml_elem ); }
 
 	xml_elem = xml_root->first_node("walls");
 	if( xml_elem )
@@ -577,13 +485,10 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	{ processServer( xml_elem ); }
 
 	// These need to be befoce processing Windows e.g. master and slave
+	// because stereo is copied to Window
 	xml_elem = xml_root->first_node("stereo");
 	if( xml_elem )
 	{ processStereo( xml_elem ); }
-
-	xml_elem = xml_root->first_node("nv_swap_sync");
-	if( xml_elem )
-	{ processNVSwapSync( xml_elem ); }
 
 	xml_elem = xml_root->first_node("ipd");
 	if( xml_elem )
@@ -605,10 +510,7 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
-	{
-		processNode( xml_elem, _env->getMaster() );
-		_env->getMaster().gui_enabled = true;
-	}
+	{ processNode( xml_elem, _env->getMaster() ); }
 
 	xml_elem = xml_root->first_node("programs");
 	if(xml_elem)
@@ -622,71 +524,6 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 		_env->getSlaves().push_back(slave);
 
 		xml_elem = xml_elem->next_sibling("slave");
-	}
-
-	if( _env->getMaster().getNWindows() == 0 )
-	{
-		std::clog << "Warning! : Master without windows." << std::endl;
-		// GUI is available on master (because it has no window) 
-		// so enable it on first slave that has a Window
-		for(size_t i = 0; i < _env->getSlaves().size(); ++i)
-		{
-			if(_env->getSlaves().at(i).getNWindows() > 0)
-			{
-				std::clog << "Enabling GUI on slave : " << _env->getSlaves().at(i).name << std::endl;
-				_env->getSlaves().at(i).gui_enabled = true;
-				break;
-			}
-		}
-	}
-
-}
-
-
-void
-vl::config::EnvSerializer::processPlugins( rapidxml::xml_node<>* xml_node )
-{
-	rapidxml::xml_node<> *pElement = xml_node->first_node("plugin");
-
-	if( !pElement )
-	{
-		std::cerr << "Plugins list missing from env_config node." << std::endl;
-		return;
-	}
-
-	std::pair<std::string, bool> plugin;
-	std::string useStr;
-	std::string name;
-	bool use;
-	rapidxml::xml_attribute<> *attrib;
-
-	while( pElement )
-	{
-		attrib = pElement->first_attribute("use");
-		if( !attrib )
-		{
-			std::cerr << "Missing use attrib. Defaulting to false." << std::endl;
-			useStr = "false";
-		}
-		else
-		{
-			useStr = attrib->value();
-		}
-
-		if( useStr == "true" )
-		{ use = true; }
-		else if( useStr == "false" )
-		{ use = false; }
-		else
-		{
-			std::cerr << "One plugin has errenous use attribute. Defaulting to false." << std::endl;
-			use = false;
-		}
-		name = pElement->value();
-		plugin = std::make_pair( name, use );
-		_env->addPlugin(plugin);
-
-		pElement = pElement->next_sibling("plugin");
 	}
 }
 
@@ -707,30 +544,6 @@ vl::config::EnvSerializer::processTracking( rapidxml::xml_node<>* xml_node )
 		_env->addTracking( vl::config::Tracking(pElement->value(), use) );
 		pElement = pElement->next_sibling("file");
 	}
-}
-
-void
-vl::config::EnvSerializer::processCameraRotations(rapidxml::xml_node<> *xml_node)
-{
-	uint32_t flags = 0;
-	std::string const F("false");
-
-	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("x");
-	// Defautls to true
-	if( !attrib || std::string(attrib->value()) != F )
-	{ flags |= 1; }
-
-	attrib = xml_node->first_attribute("y");
-	// Defautls to true
-	if( !attrib || std::string(attrib->value()) != F )
-	{ flags |= 1<<1; }
-
-	attrib = xml_node->first_attribute("z");
-	// Defautls to true
-	if( !attrib || std::string(attrib->value()) != F )
-	{ flags |= 1<<2; }
-
-	_env->setCameraRotationAllowed(flags);
 }
 
 void
@@ -852,41 +665,16 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 		vl::config::Window window(name, area);
 		
 		// Copy env settings values
-		window.stereo_type = _env->getStereoType();
+		window.stereo_type = _env->getRenderer().stereo_type;
 		// @todo we can override stereo type in window config
-		// xml node stereo, attribute "type" and "use"
+		// xml node stereo, attribute "type"
 		rapidxml::xml_node<> *xml_stereo = pWindow->first_node("stereo");
 		if(xml_stereo)
 		{
 			attrib = xml_stereo->first_attribute("type");
 			if(attrib)
-			{
-				std::string type_str(attrib->value());
-				vl::to_lower(type_str);
-				if(type_str == "side_by_side")
-				{ window.stereo_type = ST_SIDE_BY_SIDE; }
-				else if(type_str == "quad_buffer" || type_str.empty())
-				{ window.stereo_type = ST_QUAD_BUFFER; }
-				else if(type_str == "top_bottom")
-				{
-					std::clog << "EnvConfig : stereo type is top bottom" << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Top bottom stereo is not supported."));
-				}
-				else
-				{
-					std::clog << "EnvConfig : stereo type " << type_str << std::endl;
-					BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Stereo type not recognised."));
-				}
-			}
-			// @todo add use attrib
+			{ window.stereo_type = convert_stereo(attrib->value()); }
 		}
-
-		window.nv_swap_sync = _env->hasNVSwapSync();
-		window.nv_swap_group = _env->getNVSwapGroup();
-		window.nv_swap_barrier = _env->getNVSwapBarrier();
-		attrib = pWindow->first_attribute("display");
-		if(attrib)
-		{ window.n_display = vl::from_string<int>( attrib->value() ); }
 
 		attrib = pWindow->first_attribute("vert_sync");
 		if(attrib)
@@ -970,38 +758,25 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 void
 vl::config::EnvSerializer::processStereo( rapidxml::xml_node<>* xml_node )
 {
+	// We are using the value to determine on or off state
+	// and type attribute for the stereo
+	// if no type attribute is defined default to ST_DEFAULT for ON
+	// and ST_OFF for OFF
+	// if no value is defined default to ON
+
+	StereoType type = ST_DEFAULT;
+	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
+	if(attrib)
+	{ type = convert_stereo(attrib->value()); }
+
 	bool stereo = vl::from_string<bool>(xml_node->value());
 
-	// @todo this is bad it's confusing when side-by-side stereo is used
-	if(stereo)
-	{ _env->setStereoType(ST_QUAD_BUFFER); }
-	else
-	{ _env->setStereoType(ST_OFF); }
+	if(stereo && type == ST_OFF)
+	{ type = ST_DEFAULT; }
+	else if(!stereo)
+	{ type = ST_OFF; }
 
-	_checkUniqueNode(xml_node);
-}
-
-void 
-vl::config::EnvSerializer::processNVSwapSync(rapidxml::xml_node<> *xml_node)
-{
-	rapidxml::xml_node<> *group_elem = xml_node->first_node("swap_group");
-	rapidxml::xml_node<> *barrier_elem = xml_node->first_node("swap_barrier");
-
-	if(group_elem)
-	{
-		_env->setNVSwapSync(true);
-		uint32_t group = vl::from_string<uint32_t>(group_elem->value());
-		std::cout << "Setting swap group to = " << group << std::endl;
-		_env->setNVSwapGroup(group);
-	}
-
-	if(barrier_elem)
-	{
-		_env->setNVSwapSync(true); 
-		uint32_t barrier = vl::from_string<uint32_t>(barrier_elem->value());
-		std::cout << "Setting swap barrier to = " << barrier << std::endl;
-		_env->setNVSwapBarrier(barrier);
-	}
+	_env->getRenderer().stereo_type = type;
 
 	_checkUniqueNode(xml_node);
 }
@@ -1159,30 +934,6 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 
 		rapidxml::xml_node<> *wall = xml_pers->first_node("wall");
 		rapidxml::xml_node<> *fov = xml_pers->first_node("fov");
-		if(wall)
-		{
-			rapidxml::xml_node<> *head = wall->first_node("head");
-			if(head)
-			{
-				attrib = head->first_attribute("x");
-				if(attrib)
-				{ projection.head_x = vl::from_string<bool>(attrib->value()); }
-				attrib = head->first_attribute("y");
-				if(attrib)
-				{ projection.head_y = vl::from_string<bool>(attrib->value()); }
-				attrib = head->first_attribute("z");
-				if(attrib)
-				{ projection.head_z = vl::from_string<bool>(attrib->value()); }
-			}
-
-			rapidxml::xml_node<> *modify = wall->first_node("modify_transformations");
-			if(modify)
-			{
-				attrib = modify->first_attribute("use");
-				if(attrib)
-				{ projection.modify_transformations = vl::from_string<bool>(attrib->value()); }
-			}
-		}
 
 		if(fov)
 		{

@@ -71,6 +71,20 @@ namespace vl
 		}
 	}
 
+	inline std::string to_lower(std::string const &str)
+	{
+		std::string tmp(str);
+		to_lower(tmp);
+		return tmp;
+	}
+	
+	inline std::string to_upper(std::string const &str)
+	{
+		std::string tmp(str);
+		to_upper(tmp);
+		return tmp;
+	}
+
 	/// Breaks a string containing multiple substrings separated by a delimiter
 	/// to those substrings and adds them to the broken_path vector parameter
 	HYDRA_API void break_string_down( std::vector<std::string> &broken_path,

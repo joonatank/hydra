@@ -106,8 +106,6 @@ vl::getMasterSettings( vl::ProgramOptions const &options )
 	env->setLogDir( options.getLogDir() );
 	env->setLogLevel( (vl::config::LogLevel)(options.log_level) );
 
-	env->display_n = options.display_n;
-
 	return env;
 }
 
@@ -588,7 +586,6 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 	{
 		config::Node const &slave = env->getSlaves().at(i);
 		PipeRefPtr pipe(new Pipe(this, slave.name));
-		//slave.gui_enabled
 		for(size_t j = 0; j < slave.getNWindows(); ++j)
 		{
 			pipe->createWindow(slave.getWindow(j));

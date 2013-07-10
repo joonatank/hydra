@@ -53,10 +53,16 @@ enum LogLevel
 enum StereoType
 {
 	ST_OFF,
+	ST_DEFAULT,
 	ST_QUAD_BUFFER,
 	ST_SIDE_BY_SIDE,
 	ST_TOP_BOTTOM,
+	ST_OCULUS,
 };
+
+std::string convert_stereo(StereoType const &stereo);
+
+StereoType convert_stereo(std::string const &stereo);
 
 struct Tracking
 {
@@ -74,7 +80,8 @@ struct Tracking
 
 	std::string file;
 	bool use;
-};
+
+};	// struct Tracking
 
 /// @todo Channel should have projection parameter
 /// At the moment we need to use wall if we want to set projection
@@ -128,9 +135,6 @@ struct HYDRA_API Projection
 		, perspective_type(FOV)
 		, fov(60)
 		, horizontal(-1)
-		, head_x(false)
-		, head_y(true)
-		, head_z(false)
 		, use_asymmetric_stereo(false)
 	{}
 
@@ -144,14 +148,9 @@ struct HYDRA_API Projection
 	// Horizontal in percentage zero is floor and one is ceiling
 	double horizontal;
 
-	bool head_x;
-	bool head_y;
-	bool head_z;
-
-	bool modify_transformations;
-
 	bool use_asymmetric_stereo;
-};
+
+};	// struct Projection
 
 /// The rendering element that can be individually rendered
 /// usually either a window or a FBO
@@ -170,13 +169,22 @@ struct HYDRA_API Renderer
 		: type(WINDOW)
 		, projection()
 		, hardware_gamma(false)
+		, stereo_type(ST_DEFAULT)
 	{}
 
 	Type type;
 	Projection projection;
 
 	bool hardware_gamma;
-};
+
+	// Stereo type
+	// Provides a global default for all Windows
+	// Window overrides the default value here.
+	// Having window specific values allows us to mix and match
+	// stereo types, windows with stereo and without, HMDs and projectors.
+	StereoType stereo_type;
+
+};	// struct Renderer
 
 struct HYDRA_API Window
 {
@@ -196,28 +204,25 @@ struct HYDRA_API Window
 	// Wether or not the Window has been initialised
 	bool empty( void ) const
 	{
-		return( name.empty() && _channels.empty() && rect.empty() );
+		return( name.empty() && _channels.empty() && area.empty() );
 	}
 
 	// Name of the window
 	std::string name;
 
+	// @todo why is Renderer in Window and not the otherway around?
 	Renderer renderer;
 
-	Rect<int> rect;
-
+	// Window size
+	Rect<int> area;
+	// Extra parameters to pass to window
 	NamedParamList params;
-
+	// What kind of stereo if any we are using
 	StereoType stereo_type;
-
-	bool nv_swap_sync;
-	uint32_t nv_swap_group;
-	uint32_t nv_swap_barrier;
-
+	// Not tested that much, but should be working
 	bool vert_sync;
-	bool input_handler;
-	int n_display;
-
+	// Fullscreen antialising
+	// @todo should this be window or Renderer specific?
 	int fsaa;
 
 	void add_channel(Channel const &channel);
@@ -232,7 +237,6 @@ struct HYDRA_API Window
 
 	size_t get_n_channels(void) const
 	{ return _channels.size(); }
-
 
 	/// @internal distribution access
 	std::vector<Channel> const &get_channels(void) const
@@ -250,12 +254,10 @@ struct HYDRA_API Node
 {
 	Node( std::string const &nam )
 		: name(nam)
-		, gui_enabled(false)
 	{}
 
 	// Default constructor to allow vector resize
 	Node( void )
-		: gui_enabled(false)
 	{}
 
 	bool empty( void ) const
@@ -275,8 +277,8 @@ struct HYDRA_API Node
 
 	std::string name;
 	std::vector<Window> windows;
-	bool gui_enabled;
-};
+
+};	// struct Node
 
 struct HYDRA_API Server
 {
@@ -290,7 +292,8 @@ struct HYDRA_API Server
 
 	uint16_t port;
 	std::string hostname;
-};
+
+};	// struct Server
 
 /// External program description
 struct HYDRA_API Program
@@ -306,7 +309,8 @@ struct HYDRA_API Program
 		: use(false)
 		, new_console(false)
 	{}
-};
+
+};	// struct Program
 
 }	// namespace config
 

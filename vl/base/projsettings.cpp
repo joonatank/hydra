@@ -329,26 +329,33 @@ vl::config::ProjSettingsSerializer::~ProjSettingsSerializer(void)
 bool
 vl::config::ProjSettingsSerializer::readFile(ProjSettings &proj, std::string const &file_path)
 {
+	proj.setFile(file_path);
+
 	std::string file;
 	vl::readFileToString(file_path, file);
-	bool retval = readString(file);
-	_proj = &proj;
-	assert(_proj);
-	_proj->setFile(file_path);
-	_proj = 0;
-
+	bool retval = readString(proj, file);
+	
 	return retval;
 }
 
 bool
-vl::config::ProjSettingsSerializer::readString(std::string const &str)
+vl::config::ProjSettingsSerializer::readString(ProjSettings &proj, std::string const &str)
 {
-	delete[] _xml_data;
+	_proj = &proj;
+	assert(_proj);
+	
+	assert(!_xml_data);
 	size_t length = str.length() + 1;
 	_xml_data = new char[length];
 	memcpy(_xml_data, str.c_str(), length);
 
-	return readXML();
+	bool retval = readXML();
+
+	_proj = 0;
+	delete[] _xml_data;
+	_xml_data = 0;
+
+	return retval;
 }
 
 bool
