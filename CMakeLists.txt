@@ -109,15 +109,13 @@ endif()
 
 find_package( Boost COMPONENTS system filesystem program_options signals REQUIRED )
 
-find_package(Bullet)
-find_package(Newton)
+find_package(Bullet REQUIRED)
 
 find_package(OgreProcedural REQUIRED)
 find_package(OpenCollada REQUIRED)
 
 # TODO Sky plugisn should be optional and only one of them should be used
 find_package(SkyX REQUIRED)
-find_package(Caelum REQUIRED)
 
 ######### Add include and link directories ###########
 include_directories( SYSTEM
@@ -131,11 +129,11 @@ include_directories( SYSTEM
 	${Boost_INCLUDE_DIRS}
 	${OgreProcedural_INCLUDE_DIR}
 	${SkyX_INCLUDE_DIR}
-	${Caelum_INCLUDE_DIR}
 	${OPENCOLLADA_INCLUDE_DIR}
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
+	${BULLET_INCLUDE_DIRS}
 	)
 
 # Libraries that Hydra library depends on
@@ -152,7 +150,7 @@ set( HYDRA_DEP_LIBS
 	${OgreProcedural_LIBRARIES}
 	${OPENCOLLADA_LIBRARIES}
 	${SkyX_LIBRARIES}
-	${Caelum_LIBRARIES}
+	${BULLET_LIBRARIES}
 	)
 
 # Libraries used to build project binaries
@@ -166,29 +164,6 @@ include( CopyScripts )
 
 set(HYDRA_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests.")
 set(HYDRA_BUILD_DEMOS TRUE CACHE BOOL "Build the demos.")
-
-set(HYDRA_PHYSICS "Bullet" CACHE STRING
-	"Physics library to use: Bullet, Newton or None")
-
-
-# TODO check that the physics library has been found
-if(HYDRA_PHYSICS STREQUAL "Bullet")
-	if(BULLET_FOUND)
-		add_definitions(-DUSE_BULLET)
-		include_directories(SYSTEM ${BULLET_INCLUDE_DIRS})
-		list(APPEND HYDRA_DEP_LIBS ${BULLET_LIBRARIES})
-	else()
-		message(FATAL_ERROR "Requested to use Bullet for physics but didn't find the library.")
-	endif()
-elseif(HYDRA_PHYSICS STREQUAL "Newton")
-	if(Newton_FOUND)
-		add_definitions(-DUSE_NEWTON)
-		list(APPEND HYDRA_DEP_LIBS ${Newton_LIBRARY})
-		include_directories(SYSTEM ${Newton_INCLUDE_DIRS})
-	else()
-		message(FATAL_ERROR "Requested to use Newton for physics but didn't find the library.")
-	endif()
-endif()
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 

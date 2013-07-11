@@ -15,12 +15,8 @@
 /// Interface
 #include "physics_constraints.hpp"
 
-/// Concrete implementations
-#ifdef USE_BULLET
+/// Concrete implementation
 #include "physics_constraints_bullet.hpp"
-#else if USE_NEWTON
-#include "physics_constraints_newton.hpp"
-#endif
 
 std::ostream &
 vl::physics::operator<<(std::ostream &os, vl::physics::Constraint const &c)
@@ -125,11 +121,7 @@ vl::physics::SixDofConstraintRefPtr
 vl::physics::SixDofConstraint::_create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
 {
-	SixDofConstraintRefPtr constraint;
-#ifdef USE_BULLET
-	constraint.reset(new BulletSixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
-#else if USE_NEWTON
-#endif
+	SixDofConstraintRefPtr constraint(new BulletSixDofConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 	return constraint;
 }
 
@@ -151,11 +143,7 @@ vl::physics::SliderConstraintRefPtr
 vl::physics::SliderConstraint::_create(vl::physics::RigidBodyRefPtr rbA, vl::physics::RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
 {
-	SliderConstraintRefPtr constraint;
-#ifdef USE_BULLET
-	constraint.reset(new BulletSliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
-#else if USE_NEWTON
-#endif
+	SliderConstraintRefPtr constraint(new BulletSliderConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 	return constraint;
 }
 
@@ -177,10 +165,6 @@ vl::physics::HingeConstraintRefPtr
 vl::physics::HingeConstraint::_create(RigidBodyRefPtr rbA, RigidBodyRefPtr rbB, 
 	Transform const &frameInA, Transform const &frameInB, bool useLinearReferenceFrameA, bool dynamic)
 {
-	HingeConstraintRefPtr  constraint;
-#ifdef USE_BULLET
-	constraint.reset(new BulletHingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
-#else if USE_NEWTON
-#endif
+	HingeConstraintRefPtr  constraint(new BulletHingeConstraint(rbA, rbB, frameInA, frameInB, useLinearReferenceFrameA, dynamic));
 	return constraint;
 }

@@ -14,23 +14,11 @@
 
 #include "motion_state.hpp"
 
-/// Concrete implementations
-#ifdef USE_BULLET
+/// Concrete implementation
 #include "motion_state_bullet.hpp"
-#else if USE_NEWTON
-#include "motion_state_newton.hpp"
-#endif
 
 vl::physics::MotionState *
 vl::physics::MotionState::create(vl::Transform const &t, vl::ObjectInterface *node)
 {
-#if defined USE_BULLET
 	return new BulletMotionState(t, node);
-#else 
-#if defined USE_NEWTON
-#error "Newton Motion State not yet implemented"
-#else
-	return new MotionState(t, node);
-#endif
-#endif
 }

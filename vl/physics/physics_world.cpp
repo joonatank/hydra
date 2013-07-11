@@ -24,12 +24,8 @@
 // Necessary for creating tubes
 #include "game_manager.hpp"
 
-/// Concrete implementations
-#ifdef USE_BULLET
+/// Concrete implementation
 #include "physics_world_bullet.hpp"
-#else if USE_NEWTON
-#include "physics_world_newton.hpp"
-#endif
 
 /// -------------------------------- Global ----------------------------------
 std::ostream &
@@ -59,11 +55,7 @@ vl::physics::operator<<(std::ostream &os, vl::physics::World const &w)
 vl::physics::WorldRefPtr
 vl::physics::World::create(GameManager *man)
 {
-	WorldRefPtr world;
-#ifdef USE_BULLET
-	world.reset(new BulletWorld);
-#else if USE_NEWTON
-#endif
+	WorldRefPtr world(new BulletWorld);
 	world->_game = man;
 	return world;
 }

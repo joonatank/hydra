@@ -58,7 +58,6 @@ set(SRC
 	ray_object.cpp
 	ray_cast_ogre.cpp
 	sky_skyx.cpp
-	sky_caelum.cpp
 	ogre_axes.cpp
 	remote_launcher_helper.cpp
 	game_object.cpp
@@ -163,6 +162,11 @@ set(PHYSICS_HEADERS
 	physics/physics_world.hpp
 	physics/tube.hpp
 	physics/ray_picking.hpp
+	physics/physics_world_bullet.hpp
+	physics/rigid_body_bullet.hpp
+	physics/shapes_bullet.hpp
+	physics/physics_constraints_bullet.hpp
+	physics/mesh_bullet.hpp
 	)
 set(PHYSICS_SRC
 	physics/motion_state.cpp
@@ -172,31 +176,10 @@ set(PHYSICS_SRC
 	physics/rigid_body.cpp
 	physics/tube.cpp
 	physics/ray_picking.cpp
+	physics/physics_world_bullet.cpp
+	physics/physics_constraints_bullet.cpp
+	physics/mesh_bullet.cpp
 	)
-if(HYDRA_PHYSICS STREQUAL "Bullet")
-	list(APPEND PHYSICS_HEADERS
-		physics/physics_world_bullet.hpp
-		physics/rigid_body_bullet.hpp
-		physics/shapes_bullet.hpp
-		physics/physics_constraints_bullet.hpp
-		physics/mesh_bullet.hpp
-		)
-	list(APPEND PHYSICS_SRC
-		physics/physics_world_bullet.cpp
-		physics/physics_constraints_bullet.cpp
-		physics/mesh_bullet.cpp
-		)
-elseif(HYDRA_PHYSICS STREQUAL "Newton")
-	list(APPEND PHYSICS_HEADERS
-		physics/physics_world_newton.hpp
-		physics/rigid_body_newton.hpp
-		physics/shapes_newton.hpp
-		physics/physics_constraints_newton.hpp
-		)
-	list(APPEND PHYSICS_SRC
-		physics/physics_world_newton.cpp
-		)
-endif()
 
 source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
@@ -281,7 +264,6 @@ set( HEADERS
 	ray_cast_ogre.hpp
 	sky_interface.hpp
 	sky_skyx.hpp
-	sky_caelum.hpp
 	game_object.hpp
 	hsf_loader.hpp
 	hsf_writer.hpp

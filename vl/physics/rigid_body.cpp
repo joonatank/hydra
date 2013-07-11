@@ -17,12 +17,8 @@
 
 #include "shapes.hpp"
 
-/// Concrete implementations
-#ifdef USE_BULLET
+/// Concrete implementation
 #include "rigid_body_bullet.hpp"
-#else if USE_NEWTON
-#include "rigid_body_newton.hpp"
-#endif
 
 /// --------------------------------- Global ---------------------------------
 std::ostream &
@@ -53,11 +49,7 @@ vl::physics::operator<<(std::ostream &os, std::vector<vl::physics::RigidBodyRefP
 vl::physics::RigidBodyRefPtr
 vl::physics::RigidBody::create(vl::physics::RigidBody::ConstructionInfo const &info)
 {
-	RigidBodyRefPtr body;
-#ifdef USE_BULLET
-	body.reset(new BulletRigidBody(info));
-#else if USE_NEWTON
-#endif
+	RigidBodyRefPtr body(new BulletRigidBody(info));
 	return body;
 }
 

@@ -34,7 +34,6 @@
 
 // Necessary for Different sky plugins
 #include "sky_skyx.hpp"
-#include "sky_caelum.hpp"
 
 #include "math/math.hpp"
 
@@ -1424,7 +1423,6 @@ vl::SceneManager::_initialiseSky(vl::SkySettings const &preset)
 	{ return; }
 
 	_sky_sim = new vl::SkySkyX(this);
-	//_sky_sim = new vl::SkyCaelum(this);
 
 	_changeSkyPreset(preset);
 }

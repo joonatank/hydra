@@ -15,22 +15,13 @@
 // Declaration
 #include "shapes.hpp"
 
-/// Concrete implementations
-#ifdef USE_BULLET
+/// Concrete implementation
 #include "shapes_bullet.hpp"
-#else if USE_NEWTON
-#include "shapes_newton.hpp"
-#endif
 
-// @todo the create methods should return concrete bullet or newton objects
 vl::physics::BoxShapeRefPtr
 vl::physics::BoxShape::create(Ogre::Vector3 const &bounds)
 {
-	BoxShapeRefPtr box;
-#ifdef USE_BULLET
-	box.reset(new BulletBoxShape(bounds));
-#else if USE_NEWTON
-#endif
+	BoxShapeRefPtr box(new BulletBoxShape(bounds));
 	return box;
 }
 
@@ -38,100 +29,63 @@ vl::physics::BoxShape::create(Ogre::Vector3 const &bounds)
 vl::physics::SphereShapeRefPtr
 vl::physics::SphereShape::create(vl::scalar radius)
 {
-	SphereShapeRefPtr sphere;
-#ifdef USE_BULLET
-	sphere.reset(new BulletSphereShape(radius));
-#else if USE_NEWTON
-#endif
+	SphereShapeRefPtr sphere(new BulletSphereShape(radius));
 	return sphere;
 }
 
 vl::physics::StaticPlaneShapeRefPtr
 vl::physics::StaticPlaneShape::create(Ogre::Vector3 const &normal, vl::scalar constant)
 {
-	StaticPlaneShapeRefPtr plane;
-#ifdef USE_BULLET
-	plane.reset(new BulletStaticPlaneShape(normal, constant));
-#else if USE_NEWTON
-#endif
+	StaticPlaneShapeRefPtr plane(new BulletStaticPlaneShape(normal, constant));
 	return plane;
 }
 
 vl::physics::StaticTriangleMeshShapeRefPtr
 vl::physics::StaticTriangleMeshShape::create(vl::MeshRefPtr mesh)
 {
-	StaticTriangleMeshShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletStaticTriangleMeshShape(mesh));
-#else if USE_NEWTON
-#endif
+	StaticTriangleMeshShapeRefPtr shape(new BulletStaticTriangleMeshShape(mesh));
 	return shape;
 }
 
 vl::physics::ConvexHullShapeRefPtr
 vl::physics::ConvexHullShape::create(vl::MeshRefPtr mesh)
 {
-	ConvexHullShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletConvexHullShape(mesh));
-#else if USE_NEWTON
-#endif
+	ConvexHullShapeRefPtr shape(new BulletConvexHullShape(mesh));
 	return shape;
 }
 
 vl::physics::ConcaveHullShapeRefPtr
 vl::physics::ConcaveHullShape::create(vl::MeshRefPtr mesh)
 {
-	ConcaveHullShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletConcaveHullShape(mesh));
-#else if USE_NEWTON
-#endif
+	ConcaveHullShapeRefPtr shape(new BulletConcaveHullShape(mesh));
 	return shape;
 }
 
 vl::physics::CompoundShapeRefPtr
 vl::physics::CompoundShape::create(bool dynamicTree)
 {
-	CompoundShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletCompoundShape(dynamicTree));
-#else if USE_NEWTON
-#endif
+	CompoundShapeRefPtr shape(new BulletCompoundShape(dynamicTree));
 	return shape;
-
 }
 
 vl::physics::CylinderShapeRefPtr
 vl::physics::CylinderShape::create(Ogre::Vector3 const &bounds)
 {
-CylinderShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletCylinderShape(bounds));
-#else if USE_NEWTON
-#endif
+	CylinderShapeRefPtr shape(new BulletCylinderShape(bounds));
 	return shape;
 }
 
 vl::physics::CylinderShapeRefPtr
 vl::physics::CylinderShape::create(vl::scalar radius, vl::scalar height)
 {
-CylinderShapeRefPtr shape;
-#ifdef USE_BULLET
 	// convert to bounds
-	shape.reset(new BulletCylinderShape(Ogre::Vector3(radius*2, height, radius)));
-#else if USE_NEWTON
-#endif
+	CylinderShapeRefPtr shape(new BulletCylinderShape(Ogre::Vector3(radius*2, height, radius)));
 	return shape;
 }
 
 vl::physics::CapsuleShapeRefPtr
 vl::physics::CapsuleShape::create(vl::scalar radius, vl::scalar height)
 {
-CapsuleShapeRefPtr shape;
-#ifdef USE_BULLET
-	shape.reset(new BulletCapsuleShape(radius, height));
-#else if USE_NEWTON
-#endif
+	CapsuleShapeRefPtr shape(new BulletCapsuleShape(radius, height));
 	return shape;
 }
