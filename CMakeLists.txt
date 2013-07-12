@@ -52,6 +52,9 @@ if(DEFINED CMAKE_CONFIGURATION_TYPES)
 	endif()
 endif()
 
+# Set the default install directory to be the build dir since we are using
+# install just to gather all the necessary files in one place.
+set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
 
 # Add our local scripts to CMake path
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
@@ -61,25 +64,20 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
 set(HYDRA_DEPENDENCIES_LIB_DIR "" CACHE PATH "Dependency library directory")
 
 if(NOT HYDRA_DEPENDENCIES_LIB_DIR)
-	message(FATAL_ERROR, "Hydra dependencies lib dir needs to be defined.")
+	message(FATAL_ERROR "Hydra dependencies lib dir needs to be defined.")
 elseif(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
-	message(FATAL_ERROR, "Hydra dependencies lib dir doesn't exist.")
+	message(FATAL_ERROR "Hydra dependencies lib dir doesn't exist.")
 endif()
 
-# TODO move these up to a central location because of error checking
-# Add error checking if the lib dir is not valid or is not set
-# Shouldn't need this anymore since we don't process if it's not defined
-if(HYDRA_DEPENDENCIES_LIB_DIR)
-	set(ENV{VRPN_DIR} ${HYDRA_DEPENDENCIES_LIB_DIR}/VRPN)
-	set(ENV{Ogre_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/")
-	set(ENV{OIS_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OIS/")
-	set(BOOST_ROOT ${HYDRA_DEPENDENCIES_LIB_DIR})
-	set(BULLET_ROOT "${HYDRA_DEPENDENCIES_LIB_DIR}/Bullet/")
-	set(ENV{OgreProcedural_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OgreProcedural/")
-	set(ENV{SkyX_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/SkyX/")
-	set(ENV{OPENCOLLADA_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OpenCollada/")
-	set(ENV{TURTLE_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/")
-endif()
+set(ENV{VRPN_DIR} ${HYDRA_DEPENDENCIES_LIB_DIR}/VRPN)
+set(ENV{Ogre_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/")
+set(ENV{OIS_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OIS/")
+set(BOOST_ROOT ${HYDRA_DEPENDENCIES_LIB_DIR})
+set(BULLET_ROOT "${HYDRA_DEPENDENCIES_LIB_DIR}/Bullet/")
+set(ENV{OgreProcedural_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OgreProcedural/")
+set(ENV{SkyX_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/SkyX/")
+set(ENV{OPENCOLLADA_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OpenCollada/")
+set(ENV{TURTLE_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/")
 
 # TODO add Runtime lib definition to any find_package that has dlls.
 # <module>_RUNTIME_LIBRARY_DIRS 
@@ -213,8 +211,7 @@ endif()
 
 include( Packaging )
 
-# TODO this doesn't work yet
-#include( InstallResources )
+include( InstallResources )
 
-# TODO this doesn't work yet
-#include( InstallDependencies )
+include( InstallDependencies )
+

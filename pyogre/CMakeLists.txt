@@ -71,3 +71,5 @@ add_custom_command(TARGET pyogre POST_BUILD
 		copy $<TARGET_FILE:pyogre>
 			 ${demos_BINARY_DIR}/$<CONFIGURATION>/$<TARGET_FILE_NAME:pyogre>)
 
+install( TARGETS pyogre DESTINATION bin CONFIGURATIONS Release )
+

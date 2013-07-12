@@ -353,3 +353,8 @@ target_link_libraries(HydraMain ${HYDRA_DEP_LIBS})
 
 set_target_properties(HydraMain PROPERTIES DEBUG_POSTFIX _d)
 
+# Only install the dynamic library, no headers because install is for runtime
+# not for SDK.
+# TODO this also copies libs which we don't need
+install( TARGETS HydraMain DESTINATION bin CONFIGURATIONS Release )
+

@@ -10,6 +10,7 @@
 #  Ogre_LIBRARY		- Ogre library both debug and optimized versions.
 #  Ogre_LIBRARY_RELEASE	- Ogre library, optimized version.
 #  Ogre_LIBRARY_DEBUG	- Ogre library, debug version.
+#  Ogre_BINARY_RELEASE	- Ogre dll
 #  Ogre_FOUND		- True if Ogre found.
 # TODO should define OGRE_LIBRARIES containing all of the Ogre libs
 
@@ -48,6 +49,14 @@ find_library(Ogre_LIBRARY_DEBUG
 	PATHS
 	${LIBRARY_SEARCH_PATHS}
 	${Ogre_INCLUDE_DIR}/../lib/debug
+	)
+
+# TODO this only works on Windows
+find_file(Ogre_BINARY_RELEASE
+	NAMES OgreMain.dll
+	PATHS
+	${Ogre_INCLUDE_DIR}/../bin/release
+	NO_DEFAULT_PATH
 	)
 
 if( Ogre_LIBRARY_DEBUG AND Ogre_LIBRARY_RELEASE )

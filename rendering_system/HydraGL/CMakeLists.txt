@@ -169,14 +169,11 @@ set_target_properties(HydraGL PROPERTIES DEBUG_POSTFIX _d)
 
 if (APPLE AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
     # Set the INSTALL_PATH so that Plugins can be installed in the application package
-    set_target_properties(RenderSystem_GL
+    set_target_properties(HydraGL
        PROPERTIES BUILD_WITH_INSTALL_RPATH 1
        INSTALL_NAME_DIR "@executable_path/../Plugins"
     )
 endif()
 
-#ogre_config_plugin(RenderSystem_GL)
-#install(FILES ${HEADER_FILES} DESTINATION include/OGRE/RenderSystems/GL)
-#install(FILES ${PLATFORM_HEADERS} DESTINATION include/OGRE/RenderSystems/GL/${PLATFORM_HEADER_INSTALL})
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/GL DESTINATION include/OGRE/RenderSystems/GL)
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/GLSL/include/ DESTINATION include/OGRE/RenderSystems/GL)
+install( TARGETS HydraGL DESTINATION bin CONFIGURATIONS Release )
+

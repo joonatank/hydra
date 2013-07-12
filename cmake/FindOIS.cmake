@@ -9,6 +9,7 @@
 #  OIS_LIBRARY		- OIS library both debug and optimized versions.
 #  OIS_LIBRARY_RELEASE	- OIS library, optimized version.
 #  OIS_LIBRARY_DEBUG	- OIS library, debug version.
+#  OIS_BINARY_RELEASE	- OIS dll
 #  OIS_FOUND		- True if OIS found.
 #
 
@@ -47,6 +48,13 @@ find_library(OIS_LIBRARY_DEBUG
 	PATHS
 	${LIBRARY_SEARCH_PATHS}
 	${OIS_INCLUDE_DIR}/../lib/debug
+	)
+
+# TODO this only works on Windows
+find_file(OIS_BINARY_RELEASE 
+	NAMES OIS.dll
+	PATHS ${OIS_INCLUDE_DIR}/../bin/release/
+	NO_DEFAULT_PATH
 	)
 
 # if( OIS_LIBRARY_DEBUG AND NOT OIS_LIBRARY_RELEASE )

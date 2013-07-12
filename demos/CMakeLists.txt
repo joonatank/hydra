@@ -129,7 +129,7 @@ set(HYDRA_GL_BINARY_DIR \"${HydraGL_BINARY_DIR}\")
 set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 
 if(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
-	message(FATAL_ERROR, "Hydra dependencies lib dir doesn't exist.")
+	message(FATAL_ERROR "Hydra dependencies lib dir doesn't exist.")
 endif()
 
 set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/bin\"")
@@ -192,5 +192,7 @@ add_custom_command(TARGET hydra POST_BUILD
 		${vl_SOURCE_DIR}/data/hydra.ini
 		${demos_BINARY_DIR}/$<CONFIGURATION>/hydra.ini )
 
-# install
-# install( TARGETS renderer fake_tracking_server DESTINATION ./ )
+# Install
+install( TARGETS hydra DESTINATION bin CONFIGURATIONS Release )
+install( FILES ${vl_SOURCE_DIR}/data/hydra.ini DESTINATION bin CONFIGURATIONS Release )
+

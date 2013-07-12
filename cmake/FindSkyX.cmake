@@ -56,6 +56,15 @@ set( INCLUDE_DIR ${SkyX_INCLUDE_DIR} )
 set( LIB_HELP_STRING "SkyX library" )
 lib_finder("SkyX" SkyX)
 
+
+# TODO this only works on Windows
+find_file(SkyX_BINARY_RELEASE
+	NAMES SkyX.dll
+	PATHS
+	${SkyX_INCLUDE_DIR}/../bin/release
+	NO_DEFAULT_PATH
+	)
+
 set( SkyX_LIBRARIES ${SkyX_LIBRARY})
 
 if( SkyX_LIBRARIES AND SkyX_INCLUDE_DIR )

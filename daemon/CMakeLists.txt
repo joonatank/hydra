@@ -49,3 +49,5 @@ target_link_libraries(hydra_daemon
 	${Boost_ASIO_LIBRARIES}
 	)
 
+install( TARGETS hydra_daemon DESTINATION bin CONFIGURATIONS Release )
+
