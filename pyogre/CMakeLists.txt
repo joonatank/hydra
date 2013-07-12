@@ -65,6 +65,9 @@ if( WIN32 )
 	set(EXTE "pyd")
 endif()
 
-
-copy_binaries(${PYOGRE_MODULE_NAME} ${pyogre_BINARY_DIR} ${demos_BINARY_DIR} ${EXTE} )
+# Copy pyogre to demos binary dir
+add_custom_command(TARGET pyogre POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E
+		copy $<TARGET_FILE:pyogre>
+			 ${demos_BINARY_DIR}/$<CONFIGURATION>/$<TARGET_FILE_NAME:pyogre>)
 

@@ -56,8 +56,36 @@ endif()
 # Add our local scripts to CMake path
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/cmake )
 
+# set the bin dir variable
+# TODO these should be auto resolved
+set(HYDRA_DEPENDENCIES_LIB_DIR "" CACHE PATH "Dependency library directory")
+
+if(NOT HYDRA_DEPENDENCIES_LIB_DIR)
+	message(FATAL_ERROR, "Hydra dependencies lib dir needs to be defined.")
+elseif(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
+	message(FATAL_ERROR, "Hydra dependencies lib dir doesn't exist.")
+endif()
+
+# TODO move these up to a central location because of error checking
+# Add error checking if the lib dir is not valid or is not set
+# Shouldn't need this anymore since we don't process if it's not defined
+if(HYDRA_DEPENDENCIES_LIB_DIR)
+	set(ENV{VRPN_DIR} ${HYDRA_DEPENDENCIES_LIB_DIR}/VRPN)
+	set(ENV{Ogre_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/")
+	set(ENV{OIS_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OIS/")
+	set(BOOST_ROOT ${HYDRA_DEPENDENCIES_LIB_DIR})
+	set(BULLET_ROOT "${HYDRA_DEPENDENCIES_LIB_DIR}/Bullet/")
+	set(ENV{OgreProcedural_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OgreProcedural/")
+	set(ENV{SkyX_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/SkyX/")
+	set(ENV{OPENCOLLADA_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OpenCollada/")
+	set(ENV{TURTLE_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/")
+endif()
+
+# TODO add Runtime lib definition to any find_package that has dlls.
+# <module>_RUNTIME_LIBRARY_DIRS 
+
 ###### Find VRPN ########
-find_package( VRPN REQUIRED )
+find_package(VRPN REQUIRED)
 
 
 # Way to test if the platform is 64 bit or 32 bit
@@ -89,11 +117,11 @@ endif()
 
 find_package(Boost COMPONENTS python REQUIRED )
 
-# Python version 3.2 for Windows
+# Python version 3.3 for Windows
 # Linux has some problems with multiple pythons and boost installed from
 # package manager, so we can not compile boost python to use Python 3
 if(WIN32)
-	set( PYTHON_VERSION 3.2 CACHE STRING "Python version" )
+	set( PYTHON_VERSION 3.3 CACHE STRING "Python version" )
 else()
 	set( PYTHON_VERSION 2.7 CACHE STRING "Python version" )
 endif()
@@ -163,7 +191,6 @@ link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 include( CopyScripts )
 
 set(HYDRA_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests.")
-set(HYDRA_BUILD_DEMOS TRUE CACHE BOOL "Build the demos.")
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 
@@ -174,18 +201,15 @@ include_directories(extern)
 include_directories(vl)
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/vl )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/rendering_system )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
+add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/daemon )
+# Needs to be last since we need demos binary path for this
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/pyogre )
 
 if(HYDRA_BUILD_TESTS)
 	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/test )
 endif()
-
-if(HYDRA_BUILD_DEMOS)
-	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/demos )
-	add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/daemon )
-endif()
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/rendering_system)
 
 include( Packaging )
 

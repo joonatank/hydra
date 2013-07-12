@@ -21,7 +21,7 @@ if( Vorbis_INCLUDE_DIR )
 endif( Vorbis_INCLUDE_DIR )
 
 find_path(Vorbis_INCLUDE_DIR vorbis/vorbisenc.h
-	$ENV{VORBIS_HOME}/include
+	$ENV{Vorbis_DIR}/include
 	/opt/local/include
 	/usr/local/include
 	/usr/include
@@ -31,7 +31,7 @@ set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
-	$ENV{VORBIS_HOME}/lib
+	$ENV{Vorbis_DIR}/lib
 	${Vorbis_INCLUDE_DIR}/../lib
 	)
 

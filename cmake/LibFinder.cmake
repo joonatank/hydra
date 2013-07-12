@@ -42,7 +42,7 @@ MACRO( lib_finder variable_name lib_name )
 ENDMACRO()
 
 MACRO(set_include_paths variable lib_name)
-	list(APPEND variable
+	list(APPEND ${variable}
 		$ENV{${lib_name}_DIR}/include
 		$ENV{${lib_name}_HOME}/include
 		/usr/local/include
@@ -55,7 +55,7 @@ MACRO(set_include_paths variable lib_name)
 ENDMACRO()
 
 MACRO(set_lib_paths variable lib_name)
-	list(APPEND variable
+	list(APPEND ${variable}
 		$ENV{${lib_name}_DIR}/lib
 		$ENV{${lib_name}_HOME}/lib
 		/usr/local/lib

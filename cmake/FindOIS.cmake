@@ -17,8 +17,8 @@ if( OIS_INCLUDE_DIR )
 	set(OIS_FIND_QUIETLY TRUE)
 endif( OIS_INCLUDE_DIR )
 
-find_path(OIS_INCLUDE_DIR ogg/ogg.h
-	$ENV{OIS_HOME}/include
+find_path(OIS_INCLUDE_DIR ois/ois.h
+	$ENV{OIS_DIR}/include
 	/opt/local/include
 	/usr/local/include
 	/usr/include
@@ -29,8 +29,7 @@ set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
-	$ENV{OIS_HOME}/lib
-	$ENV{OIS_HOME}
+	$ENV{OIS_DIR}/lib
 	${OIS_INCLUDE_DIR}/../lib
 	)
 

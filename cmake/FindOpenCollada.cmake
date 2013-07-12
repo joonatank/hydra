@@ -39,8 +39,11 @@ endif( OPENCOLLADA_LIBRARIES AND OPENCOLLADA_INCLUDE_DIR )
 
 include( ${vl_SOURCE_DIR}/cmake/LibFinder.cmake )
 
+# TODO for some reason other FindXXX scripts leave these variables set.
+unset(INCLUDE_PATHS)
 set_include_paths(INCLUDE_PATHS OPENCOLLADA)
 
+unset(LIBRARY_PATHS)
 set_lib_paths(LIBRARY_PATHS OPENCOLLADA)
 
 find_path( OPENCOLLADA_INCLUDE_DIR

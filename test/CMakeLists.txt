@@ -26,7 +26,12 @@ set( TEST_LIB ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 
 find_path( TURTLE_INCLUDE_DIR
 	NAMES turtle/mock.hpp
-	PATHS $ENV{TURTLE_HOME} $ENV{TURTLE_ROOT} $ENV{TURTLE_ROOT} $ENV{TURTLE_HOME}
+	PATHS $ENV{TURTLE_DIR}/include
+	$ENV{TURTLE_ROOT}/include
+	$ENV{TURTLE_HOME}/include
+	$ENV{TURTLE_DIR}
+	$ENV{TURTLE_ROOT}
+	$ENV{TURTLE_HOME}
 	)
 
 # TODO add link variable so not all programs will link to these

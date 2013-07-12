@@ -19,7 +19,7 @@ if( Ogre_INCLUDE_DIR AND Ogre_LIBRARY )
 endif( Ogre_INCLUDE_DIR AND Ogre_LIBRARY )
 
 find_path(Ogre_INCLUDE_DIR OGRE/Ogre.h
-	$ENV{Ogre_HOME}/include
+	$ENV{Ogre_DIR}/include
 	/opt/local/include
 	/usr/local/include
 	/usr/include
@@ -30,8 +30,7 @@ set( LIBRARY_SEARCH_PATHS
 	/usr/lib
 	/usr/local/lib
 	/opt/local/lib
-	$ENV{Ogre_HOME}/lib
-	$ENV{Ogre_HOME}
+	$ENV{Ogre_DIR}/lib
 	${Ogre_INCLUDE_DIR}/../lib
 	)
 

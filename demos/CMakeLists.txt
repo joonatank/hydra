@@ -128,28 +128,17 @@ include_directories(${demos_BINARY_DIR})
 set(HYDRA_GL_BINARY_DIR \"${HydraGL_BINARY_DIR}\")
 set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 
-# set the bin dir variable
-# TODO these should be auto resolved
-set(HYDRA_DEPENDENCIES_BIN_DIR ""
-	CACHE PATH "Dependency library directory")
+if(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
+	message(FATAL_ERROR, "Hydra dependencies lib dir doesn't exist.")
+endif()
 
-set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Ogre/bin\"")
-set(CEGUI_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/CEGUI/bin\"")
-set(OIS_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/OIS/bin\"")
-set(BOOST_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
-set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/bin\"")
-Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/expat/bin\"")
-set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/SkyX/bin\"")
-set(CAELUM_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/Caelum/bin\"")
-
-# Get the CameraSDK binary dir
-# TODO the above should also be replaced with this system for other libraries
-# TODO this should use the LIBRARY_DEBUG and LIBRARY_RELEASE
-# because LIBRARY contains both (debug and optimazed)
-#get_filename_component(file_name "${CameraSDK_LIBRARY}" NAME)
-#set(bin_dir "\"${CameraSDK_LIBRARY}\"")
-#string(REPLACE ${file_name} "" CAMERASDK_BINARY_DIR ${bin_dir})
-
+set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/bin\"")
+set(CEGUI_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/CEGUI/bin\"")
+set(OIS_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/OIS/bin\"")
+set(BOOST_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/bin\"")
+set(GENERAL_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/bin\"")
+Set(EXPAT_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/expat/bin\"")
+set(SKYX_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/SkyX/bin\"")
 
 configure_file(${demos_SOURCE_DIR}/build_defines_template.hpp
 	${demos_BINARY_DIR}/build_defines.hpp )
@@ -189,6 +178,19 @@ target_link_libraries( timestamp_client ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRA
 
 add_executable(timestamp_server timestamp_server.cpp ${SRC})
 target_link_libraries( timestamp_server ${Boost_SYSTEM_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARIES} )
+
+# add copying ini file from data to binary dir
+# Using custom command instead of configure_file because we need to copy
+# ini file to every binary dir only if the ini file template has been changed
+#
+# We want to run this even when hydra.exe has not changed HydraMain.dll has.
+# This is problematic since either we add it to hydra compile or we add it to
+# CMake processing, since hydra compile will occure more often assuming
+# frequent rebuilds we'll add it there.
+add_custom_command(TARGET hydra POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		${vl_SOURCE_DIR}/data/hydra.ini
+		${demos_BINARY_DIR}/$<CONFIGURATION>/hydra.ini )
 
 # install
 # install( TARGETS renderer fake_tracking_server DESTINATION ./ )
