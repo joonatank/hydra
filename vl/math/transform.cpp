@@ -152,6 +152,7 @@ vl::operator*( Ogre::Matrix4 const &m, vl::Transform const &t )
 	return vl::Transform( res.getTrans(), q );
 }
 
+
 Ogre::Vector3
 vl::operator*( vl::Transform const &t, Ogre::Vector3 const &v)
 {

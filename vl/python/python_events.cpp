@@ -40,7 +40,7 @@
 #include "input/joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 #include "input/joystick.hpp"
-
+//#include "input/mouse_event.hpp"
 
 #include "vrpn_analog_client.hpp"
 
@@ -85,6 +85,8 @@ void export_managers(void)
 			python::return_value_policy<python::reference_existing_object>()) )
 		.def("getJoystick", &vl::EventManager::getJoystick, getJoystick_ov())
 		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
+			python::return_value_policy<python::reference_existing_object>())
+		.def("createMouseTrigger", &vl::EventManager::createMouseTrigger,
 			python::return_value_policy<python::reference_existing_object>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -147,10 +149,26 @@ void export_managers(void)
 		.def_readonly("axis_y", &vl::MouseEvent::Y)
 		.def_readonly("axis_z", &vl::MouseEvent::Z)
 		.def_readonly("buttons", &vl::MouseEvent::buttons)
-		.def_readonly("head_position", &vl::MouseEvent::head_position)
-		.def_readonly("head_orientation", &vl::MouseEvent::head_orientation)
-		.def_readonly("view_matrix", &vl::MouseEvent::view_projection)
+		//.def_readonly("head_position", &vl::MouseEvent::head_position)
+		//.def_readonly("head_orientation", &vl::MouseEvent::head_orientation)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::MouseEvent::Axis>("Axis", python::init<>())
+		.add_property("abs", &vl::MouseEvent::Axis::abs)
+		.add_property("rel", &vl::MouseEvent::Axis::rel)
+		.def("clear", &vl::MouseEvent::Axis::clear)
+	;
+
+	python::enum_<vl::MouseEvent::BUTTON>("MOUSEBUTTON_ID")
+		.value("MB_L", vl::MouseEvent::MB_L)
+		.value("MB_R", vl::MouseEvent::MB_R)
+		.value("MB_M", vl::MouseEvent::MB_M)
+		.value("MB_3", vl::MouseEvent::MB_3)
+		.value("MB_4", vl::MouseEvent::MB_4)
+		.value("MB_5", vl::MouseEvent::MB_5)
+		.value("MB_6", vl::MouseEvent::MB_6)
+		.value("MB_7", vl::MouseEvent::MB_7)
 	;
 
 	/// Input
@@ -248,6 +266,17 @@ void export_triggers(void)
 		.def("addKeyDownListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyDownListener))
 		.def("addListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addListener))
 	;
+
+	
+	python::class_<vl::MouseTrigger, boost::noncopyable, python::bases<Trigger> >("MouseTrigger", python::no_init )
+		.def("addMovedListener", toast::python::signal_connect<void(vl::MouseEvent const &)>(&vl::MouseTrigger::addMovedListener))
+		.def("addButtonDownListener", toast::python::signal_connect<void(vl::MouseEvent const &, vl::MouseEvent::BUTTON)>(&vl::MouseTrigger::addButtonPressedListener))
+		.def("addButtonUpListener", toast::python::signal_connect<void(vl::MouseEvent const &, vl::MouseEvent::BUTTON)>(&vl::MouseTrigger::addButtonReleasedListener))
+	;	
+		
+
+
+
 }
 
 

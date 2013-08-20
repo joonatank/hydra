@@ -98,6 +98,7 @@ public :
 	/// mouse related:
 	// What's this? 
 	vl::MouseTrigger *createMouseTrigger(void);
+	void vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger);
 
 	
 	void mouseMoved(vl::MouseEvent const &evt);

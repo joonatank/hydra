@@ -195,16 +195,16 @@ public :
 
 
 // @warning added due mouse and raycast picking test purposes:
-class MouseTrigger : public BasicActionTrigger
+class MouseTrigger : public Trigger
 {
 typedef boost::signal<void (vl::MouseEvent const &, vl::MouseEvent::BUTTON)> Tripped_button;
 typedef boost::signal<void (vl::MouseEvent const &)> Tripped_moved;
 public:
 	enum MOUSE_STATE
 	{
+		MS_MOVED = 0,
 		MS_PRESSED,
-		MS_RELEASED,
-		MS_MOVED
+		MS_RELEASED
 	};
 	
 	MouseTrigger(void)
@@ -231,6 +231,7 @@ private:
 	Tripped_button _button_released_signal;
 	Tripped_moved _mouse_moved_signal;
 	
+	//@todo: Is state really needed? For what?
 	vl::MouseTrigger::MOUSE_STATE _mstate;
 
 };

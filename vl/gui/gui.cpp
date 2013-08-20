@@ -112,9 +112,27 @@ Gorilla::Screen *
 vl::gui::GUI::createScreen(void)
 {
 	if(mViewport && mViewport->getCamera())
-	{ return _gorilla->createScreen(mViewport, "dejavu"); }
+	{	
+		return _gorilla->createScreen(mViewport, "dejavu"); 
+	}
 	
 	return 0;
+}
+
+void
+vl::gui::GUI::createMouseCursor(Gorilla::Screen *screen)
+{
+	_mouse_cursor_layer = screen->createLayer(15);
+	_mouse_cursor = _mouse_cursor_layer->createRectangle(0, 0, 10, 18);
+	_mouse_cursor->background_image("mousepointer");
+}
+
+void
+vl::gui::GUI::hideMouseCursor(void)
+{
+	if(_mouse_cursor_layer)
+	{ _mouse_cursor_layer->hide(); }
+	
 }
 
 bool
@@ -146,7 +164,14 @@ vl::gui::GUI::injectKeyUp(OIS::KeyEvent const &key)
 void
 vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 {
-	// Nothing uses these for now
+	if(_mouse_cursor)
+	{
+	_mouse_cursor->position(evt.state.X.abs,evt.state.Y.abs);
+	}
+	else
+	{
+	std::clog << "JOKIN MENI VITUSTI PIELEEN!";
+	}
 }
 
 
@@ -160,7 +185,9 @@ vl::gui::GUI::initGUI(Ogre::Viewport *view)
 	assert(!_gorilla);
 	_gorilla = new Gorilla::Silverback();
 	_gorilla->loadAtlas("dejavu");
+	
 	mViewport = view;
+
 }
 
 bool

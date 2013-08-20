@@ -118,4 +118,3 @@ vl::lookAt(Ogre::Vector3 const &target, Ogre::Vector3 const &current, Ogre::Vect
 
 	return pointToTarget;
 }
-

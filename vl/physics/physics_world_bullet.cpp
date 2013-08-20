@@ -123,10 +123,10 @@ vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 co
 	btCollisionWorld::AllHitsRayResultCallback resultcb(from, to);
 	//Run the native bullet raytest:
 	_dynamicsWorld->rayTest(from,to,resultcb);
-	std::cerr << "Ammutaan sade!" << std::endl;
+	
 	if(resultcb.hasHit())
 	{
-		std::cerr << "Osui" << std::endl;
+		
 		
 		//Now we shall parse through all hits and convert bullet's result format to hydra:
 		for(unsigned int i = 0; i < resultcb.m_collisionObjects.size(); ++i)
@@ -140,18 +140,16 @@ vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 co
 			btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
 
 			if(btrb) {
-				std::cerr << "Bullet rigidbody on olemassa." << std::endl;
+				
 				// cast custom void pointer as string const and push it into our objectlist
 				// @todo: check if reinterpret userpointer is null! Also take account if collision
 				//object is a compound. Then the pointer is automatically null and not pointing to the root object.
 				std::string const *udata = reinterpret_cast<std::string const *>(btrb->getUserPointer());
 				if(udata)
 				{ 
-					std::cerr << "UserData pointteri toimii!" << std::endl;
 					RigidBodyRefPtr rb = this->_findRigidBody(*udata);
 					if(rb)
 					{
-						std::cerr << "Rigidbody toimii!" << std::endl;
 						rres.hit_objects.push_back(rb);
 					}
 				}
@@ -160,7 +158,7 @@ vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 co
 	}
 	else
 	{
-		std::cerr << "Ei osumaa." << std::endl;
+		//What else?
 	}
 	return rres;
 }

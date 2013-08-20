@@ -36,6 +36,10 @@ struct HYDRA_API Transform
 		: position(pos), quaternion(rot)
 	{}
 
+	Transform(Ogre::Matrix4 const &mat)
+		: position(mat.getTrans()), quaternion(mat.extractQuaternion())
+	{}
+
 	bool isValid(void) const
 	{ return !quaternion.isNaN() && !position.isNaN(); }
 

@@ -285,24 +285,29 @@ vl::Window::keyReleased( OIS::KeyEvent const &key )
 bool
 vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 {
-	if( _renderer->guiShown() )
-	{
+	//if( _renderer->guiShown() )
+	//{
 		_renderer->getGui()->injectMouseEvent(evt);
-	}
-	else
-	{
-		/*
+	//}
+	//else
+	//{
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_MOVED );
 		
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
 		
+		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		
+		// @todo: where to get cyclop position and orientation?:
+		//e.head_position = vl::Vector3::ZERO;
+		//e.head_orientation = vl::Quaternion::IDENTITY;
+		
+		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		
 		stream << e;
 		_sendEvent( data );
-		*/
-	}
+	//}
 
 	return true;
 }
@@ -312,21 +317,28 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		_renderer->getGui()->injectMouseEvent(evt);
+		//_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
 		
-		/*
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
 		
+		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
+		vl::MouseEvent::BUTTON b_id = vl::MouseEvent::BUTTON(id);
+				
+		// @todo: where to get cyclop position and orientation?:
+		//e.head_position = vl::Vector3::ZERO;
+		//e.head_orientation = vl::Quaternion::IDENTITY;
 		
-		stream << id << e;
+		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
+		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
+		stream << b_id << e;
 		_sendEvent( data );
-		*/
+		
 	}
 
 	return true;
@@ -337,7 +349,7 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 {
 	if( _renderer->guiShown() )
 	{
-		_renderer->getGui()->injectMouseEvent(evt);
+		//_renderer->getGui()->injectMouseEvent(evt);
 	}
 	else
 	{
@@ -348,15 +360,12 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
 		vl::MouseEvent::BUTTON b_id = vl::MouseEvent::BUTTON(id);
-
-		CameraPtr cam = _channels.at(0)->getCamera().getCamera();
-		e.head_position = cam->getPosition();
-		e.head_orientation = cam->getOrientation();
-
-		//Should the ipd argument be -_ipd/2 or 0?
-		e.view_projection = _channels.at(0)->getCamera().getFrustum().getProjectionMatrix();
-	
-		std::clog << " SENT EVENT: " << std::endl << e << std::endl;
+				
+		// @todo: where to get cyclop position and orientation?:
+		//e.head_position = vl::Vector3::ZERO;
+		//e.head_orientation = vl::Quaternion::IDENTITY;
+		
+		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
 		stream << b_id << e;
 		_sendEvent( data );

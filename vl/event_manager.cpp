@@ -186,9 +186,22 @@ vl::EventManager::keyReleased(OIS::KeyCode kc)
 vl::MouseTrigger*
 vl::EventManager::createMouseTrigger(void)
 {
-	vl::MouseTrigger *trigu = new vl::MouseTrigger();
-	_mouse_triggers.push_back(trigu);
-	return trigu;
+	vl::MouseTrigger *trigger = new vl::MouseTrigger();
+	_mouse_triggers.push_back(trigger);
+	return trigger;
+}
+
+void
+vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger)
+{
+	std::vector<vl::MouseTrigger *>::iterator iter 
+		= std::find(_mouse_triggers.begin(), _mouse_triggers.end(), trigger);
+
+	if(iter != _mouse_triggers.end())
+	{
+		delete *iter;
+		_mouse_triggers.erase(iter);
+	}
 }
 
 void
@@ -197,7 +210,7 @@ vl::EventManager::mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON
 	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_PRESSED, b_id);
+		(*iter)->update(evt, vl::MouseTrigger::MS_PRESSED, b_id);
 	}
 	
 }
@@ -208,7 +221,7 @@ vl::EventManager::mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTO
 	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_RELEASED, b_id);
+		(*iter)->update(evt, vl::MouseTrigger::MS_RELEASED, b_id);
 	}
 	
 }
@@ -219,7 +232,7 @@ vl::EventManager::mouseMoved(vl::MouseEvent const &evt)
 	
 	for(std::vector<vl::MouseTrigger *>::iterator iter = _mouse_triggers.begin(); iter != _mouse_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, vl::MouseTrigger::MOUSE_STATE::MS_MOVED);
+		(*iter)->update(evt, vl::MouseTrigger::MS_MOVED);
 	}
 	
 }
@@ -302,7 +315,16 @@ vl::EventManager::removeAll(void)
 	_time_triggers.clear();
 
 	_game_joystick.reset();
+
+	for(std::vector<MouseTrigger *>::iterator iter = _mouse_triggers.begin();
+		iter != _mouse_triggers.end(); ++iter)
+	{
+		delete *iter;
+	}
+	_mouse_triggers.clear();
+
 }
+
 
 vl::JoystickRefPtr
 vl::EventManager::_getSerialJoystick(std::string const &name)

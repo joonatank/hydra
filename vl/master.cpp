@@ -714,7 +714,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> b_id >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 			
 			_game_manager->getEventManager()->mousePressed(evt, b_id);
 
@@ -732,7 +732,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> b_id >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 			
 			_game_manager->getEventManager()->mouseReleased(evt, b_id);
 
@@ -746,7 +746,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 
 			_game_manager->getEventManager()->mouseMoved(evt);
 			

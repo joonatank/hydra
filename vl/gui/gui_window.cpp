@@ -44,6 +44,7 @@ vl::gui::Window::setVisible(bool visible)
 	}
 }
 
+
 void
 vl::gui::Window::update(void)
 {
@@ -54,6 +55,9 @@ vl::gui::Window::update(void)
 		// Create Gorilla window
 		mScreen = _creator->createScreen();
 		assert(mScreen);
+		
+		// @warning: Create mouse cursor (this is so wrong!)
+		_creator->createMouseCursor(mScreen);
 
 		// Copy parameters
 		mScreen->setVisible(_visible);

@@ -34,12 +34,56 @@ namespace py
     using namespace boost::python;
 }
 
+namespace hackwrappers
+{
+	
+	//Are these two functions safe in any way?!? It's assumed that the multidimensional c array
+	//of ogre Matrix4 is in continuous memoryspace.
+	inline Ogre::Real
+	getMatrix4Item(Ogre::Matrix4 &mat, size_t index)
+	{
+		if(index >= 0 && index < 16)
+		{
+			Ogre::Real* p = &mat[0][0];
+			p = p + index;
+			return *p;
+		}
+		else
+		{
+			//Throw an "index out of range" -exception here!
+			std::cerr << "INDEX OUT OF RANGE, use indices 0-15 only!" << std::endl;
+			return Ogre::Real(0.0);
+		}
+	}
+	
+	inline
+	void setMatrix4Item(Ogre::Matrix4 &mat, size_t index, Ogre::Real item)
+	{
+		if(index >= 0 && index < 16)
+		{
+			Ogre::Real* p = &mat[0][0];
+			p = p + index;
+			*p = item;
+		}
+		else
+		{
+			//Add an exception here!
+			std::cerr << "INDEX OUT OF RANGE, use indices 0-15 only!" << std::endl;
+		}
+	}
+
+} //namespace hackwrappers
+
 namespace math
 {
 	inline
 	Ogre::Matrix4 buildReflectionMatrix(Ogre::Plane const &p)
 	{ return Ogre::Math::buildReflectionMatrix(p); }
+	
+	
+	
 }
+
 
 BOOST_PYTHON_MODULE(pyogre)
 {
@@ -83,6 +127,7 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def_readwrite("z", &Ogre::Vector3::z)
 		.def("length", &Ogre::Vector3::length)
 		.def("normalise", &Ogre::Vector3::normalise)
+		.def("normalised_copy", &Ogre::Vector3::normalisedCopy)
 		.def("dot", &Ogre::Vector3::dotProduct)
 		.def("abs_dot", &Ogre::Vector3::absDotProduct)
 		.def("angle_between", &Ogre::Vector3::angleBetween)
@@ -115,7 +160,40 @@ BOOST_PYTHON_MODULE(pyogre)
 		.add_static_property("unit_z", py::make_getter(&Ogre::Vector3::UNIT_Z, py::return_value_policy<py::return_by_value>()) )
 		.add_static_property("zero", py::make_getter(&Ogre::Vector3::ZERO, py::return_value_policy<py::return_by_value>()) )
 	;
-
+	class_<Ogre::Vector4>("Vector4", init<>())
+		.def(py::init< Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
+		.def(py::init<Ogre::Real>())
+		.def(py::init<Ogre::Vector3>())
+		.def_readwrite("x", &Ogre::Vector4::x)
+		.def_readwrite("y", &Ogre::Vector4::y)
+		.def_readwrite("z", &Ogre::Vector4::z)
+		.def_readwrite("w", &Ogre::Vector4::w)
+		.def("dot", &Ogre::Vector4::dotProduct)
+		.def("is_NaN", &Ogre::Vector4::isNaN)
+		.def("swap", &Ogre::Vector4::swap)
+		// Operators
+		.def(-self )
+		.def(self + self )
+		.def(self - self )
+		.def(self * self )
+		.def(Ogre::Real() * self)
+		.def(self * Ogre::Real())
+		.def(self / self )
+		.def(self / Ogre::Real() )
+		.def(self += self )
+		.def(self += Ogre::Real() )
+		.def(self -= self )
+		.def(self -= Ogre::Real() )
+		.def(self *= self )
+		.def(self *= Ogre::Real() )
+		.def(self /= self )
+		.def(self /= Ogre::Real() )
+		// Comparison
+		.def(self == self )
+		.def(self != self )
+		.def(self_ns::str(self_ns::self))
+		.add_static_property("zero", py::make_getter(&Ogre::Vector4::ZERO, py::return_value_policy<py::return_by_value>()) )
+	;
 	py::class_<Ogre::ColourValue>("ColourValue", py::init<>())
 		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real, Ogre::Real>())
 		.def(py::init<Ogre::Real, Ogre::Real, Ogre::Real>())
@@ -171,14 +249,18 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def(py::init<Ogre::Quaternion>())
 		.def(py::init<Ogre::Matrix4>())
 		.def("transpose", &Ogre::Matrix4::transpose)
+		.def("inverse", &Ogre::Matrix4::inverse)
 		.add_property("has_scale", &Ogre::Matrix4::hasScale)
 		.add_property("has_negative_scale", &Ogre::Matrix4::hasNegativeScale)
 		.add_property("to_quaternion", &Ogre::Matrix4::extractQuaternion)
+		.def("__getitem__", &hackwrappers::getMatrix4Item)
+		.def("__setitem__", &hackwrappers::setMatrix4Item)
 		// Operators
 		.def(py::self + py::self)
 		.def(py::self - py::self)
 		.def(py::self * py::self)
 		.def(py::self * Ogre::Plane())
+		.def(py::self * Ogre::Vector4())
 		.def(py::self * Ogre::Vector3())
 		.def(py::self * Ogre::Real())
 		.def(py::self == py::self)

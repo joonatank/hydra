@@ -26,6 +26,7 @@
 // Necessary for vl::scalar and uintX_t types
 #include "math/math.hpp"
 
+
 namespace vl
 {
 
@@ -153,6 +154,8 @@ operator!=(JoystickEvent const &a, JoystickEvent const &b)
 	return !(a==b);
 }
 
+
 }	// namespace vl
+
 
 #endif	// HYDRA_INPUT_JOYSTICK_EVENT_HPP

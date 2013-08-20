@@ -340,7 +340,7 @@ void export_physics_objects(void)
 		
 		// @warning: this was added due ray cast testing, first commented line is used when returning a reference to rayresults:
 		//.def("castRay", &vl::physics::World::castRay, python::return_value_policy<python::reference_existing_object>())
-		.def("castRay", &vl::physics::World::castRay)
+		.def("cast_ray", &vl::physics::World::castRay)
 		;
 
 	python::class_<vl::physics::Tube::ConstructionInfo>("TubeConstructionInfo", python::init<>())
