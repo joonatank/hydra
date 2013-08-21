@@ -108,13 +108,13 @@ public :
 
 private :
 
-	JoystickEvent _parse(std::vector<char> msg, size_t bytes, size_t offset);
+	SerialJoystickEvent _parse(std::vector<char> msg, size_t bytes, size_t offset);
 
 	void _request_multi_data(void);
 
-	bool _read_multi_data(std::vector<vl::JoystickEvent> &evt, bool blocking = true);
+	bool _read_multi_data(std::vector<vl::SerialJoystickEvent> &evt, bool blocking = true);
 
-	void _parse_joystick_msg(std::vector<vl::JoystickEvent> &evt, std::vector<char> msg);
+	void _parse_joystick_msg(std::vector<vl::SerialJoystickEvent> &evt, std::vector<char> msg);
 
 	Serial _serial;
 
@@ -125,7 +125,7 @@ private :
 
 	std::vector<JoystickRefPtr> _joysticks;
 
-	std::vector<JoystickEvent> _zeros;
+	std::vector<SerialJoystickEvent> _zeros;
 
 };	// Class SerialJoystickReader
 

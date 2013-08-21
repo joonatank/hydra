@@ -27,7 +27,7 @@
 // Necessary for copying ipd
 #include "player.hpp"
 
-#include "input/joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
 #include "input/ois_converters.hpp"
 #include "input/mouse_event.hpp"
 
@@ -380,7 +380,7 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	stream << button << e;
 	_sendEvent(data);
 
@@ -393,7 +393,7 @@ vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	stream << button << e;
 	_sendEvent( data );
 
@@ -406,7 +406,7 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	stream << axis << e;
 	_sendEvent( data );
 
@@ -419,7 +419,7 @@ vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	stream << pov << e;
 	_sendEvent( data );
 
@@ -432,7 +432,7 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	stream << index << e;
 	_sendEvent( data );
 

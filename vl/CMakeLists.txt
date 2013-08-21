@@ -85,12 +85,13 @@ source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
 if(WIN32)
 	set(INPUT_HEADERS
 		input/input.hpp
-		input/joystick_event.hpp
+		input/serial_joystick_event.hpp
 		input/serial_joystick.hpp
 		input/joystick.hpp
 		input/ois_converters.hpp
 		input/mouse.hpp
 		input/mouse_event.hpp
+		input/joystick_event.hpp
 		)
 	set(INPUT_SRC
 		input/serial_joystick.cpp

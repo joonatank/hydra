@@ -18,7 +18,7 @@
 #ifndef HYDRA_INPUT_OIS_CONVERS_HPP
 #define HYDRA_INPUT_OIS_CONVERS_HPP
 
-#include "joystick_event.hpp"
+#include "serial_joystick_event.hpp"
 #include "mouse_event.hpp"
 
 #include <OIS/OISJoyStick.h>
@@ -29,7 +29,7 @@
 namespace vl
 {
 
-inline JoystickEvent
+inline SerialJoystickEvent
 convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 {
 	// Does an axis swap for joysticks, not tested with gamepads
@@ -38,7 +38,7 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 	double y = ((double)evt.state.mAxes[1].abs) / OIS::JoyStick::MAX_AXIS;
 	double z = ((double)evt.state.mAxes[0].abs) / OIS::JoyStick::MAX_AXIS;
 	
-	JoystickEvent e;
+	SerialJoystickEvent e;
 	
 	
 	e.axis_x = x;

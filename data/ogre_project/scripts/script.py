@@ -96,6 +96,8 @@ class RumblePadMappingWrapper(Joystick):
                 self.btn_8 = is_button_down(7)
                 self.btn_9 = is_button_down(8)
                 self.btn_10 = is_button_down(9)
+
+
 class ActionComponent:
         def __init__(self): pass
         def map_target(self, target):
@@ -117,6 +119,7 @@ class Action:
         def enable_action(self):
                 self.action_disabled = False
                 
+
 #Toggle high speed should be broken into an action component. This way we don't need to copypaste the code all the time.
 #Also currently the moving and rotating codes are identical so basically we could unite this with more general method and member variable names.
 class MoveTargets(Action):
@@ -172,6 +175,7 @@ class RotateTargets(Action):
         def toggle_high_speed(self):
                 self.high_speed_enabled = not self.high_speed_enabled
 
+
 class SetTargetOrientation(Action):
         def __init__(self,targets=[], orientation=Quaternion.zero, reference=None):
                 self.targets = targets
@@ -179,6 +183,7 @@ class SetTargetOrientation(Action):
         def execute(self):
                 for target in targets:
                         target.quaternion = orientation
+
 
 class Actions:
 
@@ -199,6 +204,8 @@ class Actions:
 
         def hide(self, targets=[]):
                 raise NotImplementedError, "You haven't implemented SetOrientation action!"
+
+
 class Action:
         def __init__(self, targets=[]):
                 self.targets = targets
@@ -213,14 +220,15 @@ class Action:
         def disable(self):
                 self.disabled = True                
                 
+
 class ControlComponent:
         def __init__(self):pass
         def update(self): pass
-class RangeControl(ControllerComponent):
-        def __init__(self, min_value=-1.0, max_value=1.0)
-                self.value = 0.0
-                self.max = max_value
-                self.min = min_value
+
+
+class RangeComponent(ControlComponent):
+        def __init__(self)
+        def __call__(self        self.value = 0.0
                 self.disabled = False
         def update(self, value):
                 if self.disabled:
@@ -231,6 +239,29 @@ class RangeControl(ControllerComponent):
                 self.disabled = True
         def enable(self):
                 self.disabled = False
+class RumblePad:
+        DPAD_VERTICAL, DPAD_HORIZONTAL = RangeControl(), RangeControl()
+        BUTTONS = list(StateControl(), StateControl(), StateControl(), StateControl(), StateControl(), StateControl())
+        POV_L, POV_R = VectorControl(), VectorControl()
+        
+        def __init__(self):
+                self.trigger = game.event_manager.getJoystick("Rumble")
+                self.trigger.addListener(self.update)
+                
+        def update(self, evt):
+                RumbleMap.DPAD_H.update(evt.axis_x)
+                RumbleMap.DPAD_V.update(evt.axis_y)
+                RumbleMap.POV_L.update(evt.pov[0])
+                RumbleMap.POV_R.update(evt.pov[1])
+                for index,bt in enumerate(RumbleMap.BUTTONS):
+                        bt.update(evt.is_button_down(index))
+                RumbleMap.BUTTONS
+
+
+class CamContext:
+        def __init__(self, devices):
+                
+
 class VectorControl(ControlComponent): pass
 class QuaternionControl(ControlComponent): pass
 class StateControl(ControlComponent): pass
@@ -364,6 +395,8 @@ class InputDevice:
         def populate_vectors(self):pass
         def populate_quaternions(self): pass
         def populate_states(self):pass
+
+                     
 class RumblePad2(Device):
         def __init__(self):
                 super().__init__("RumblePad2", 1)

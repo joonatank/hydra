@@ -61,18 +61,18 @@ struct ConstraintJoystickHandler : public JoystickHandler
 	vl::scalar get_velocity_multiplier(void) const
 	{ return _velocity_multiplier; }
 
-	virtual void execute(JoystickEvent const &evt);
+	virtual void execute(SerialJoystickEvent const &evt);
 
 	static ConstraintJoystickHandlerRefPtr create(void);
 	
 protected :
 	ConstraintJoystickHandler(void);
 
-	void _apply_event(JoystickEvent const &evt);
+	void _apply_event(SerialJoystickEvent const &evt);
 
 	vl::scalar _velocity_multiplier;
 
-	JoystickEvent _last_event;
+	SerialJoystickEvent _last_event;
 
 	std::vector<AxisConstraintElem> _constraint_map;
 };

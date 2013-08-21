@@ -20,14 +20,14 @@
 #include <boost/signal.hpp>
 
 // Event stucture
-#include "joystick_event.hpp"
+#include "serial_joystick_event.hpp"
 
 namespace vl
 {
 
 class Joystick : public InputDevice
 {
-	typedef boost::signal<void (JoystickEvent const &)> OnValueChanged;
+	typedef boost::signal<void (SerialJoystickEvent const &)> OnValueChanged;
 
 public :
 	Joystick(void);
@@ -59,7 +59,7 @@ public :
 	}
 
 	/// @brief called from event manager to update the event value
-	void _update(JoystickEvent const &evt);
+	void _update(SerialJoystickEvent const &evt);
 
 protected :
 	std::vector<JoystickHandlerRefPtr> _handlers;
@@ -76,7 +76,7 @@ struct JoystickHandler
 
 	virtual ~JoystickHandler(void) {}
 
-	virtual void execute(JoystickEvent const &evt) = 0;
+	virtual void execute(SerialJoystickEvent const &evt) = 0;
 
 };	// struct JoystickHandler
 

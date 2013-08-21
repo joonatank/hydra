@@ -403,7 +403,7 @@ vl::EventManager::_getGameJoystick(std::string const &name)
 }
 
 void
-vl::EventManager::update_joystick(vl::JoystickEvent const &evt)
+vl::EventManager::update_joystick(vl::SerialJoystickEvent const &evt)
 {
 	// @todo should we add it if it doesn't exist already?
 	if(_game_joystick)

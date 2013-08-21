@@ -25,7 +25,7 @@
 
 #include "tracker.hpp"
 
-#include "input/joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
 
 #include "input/mouse_event.hpp"
 
@@ -123,7 +123,7 @@ public :
 	// comX is a short hand for comX:0
 	JoystickRefPtr getJoystick(std::string const &name = "default");
 
-	void update_joystick(vl::JoystickEvent const &evt);
+	void update_joystick(vl::SerialJoystickEvent const &evt);
 
 	/// @brief called from GameManager to update input devices
 	void mainloop(vl::time const &elapsed_time);

@@ -31,7 +31,7 @@
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
-#include "input/joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
 #include "input/mouse_event.hpp"
 
 // Necessary for sending Environment and Project configs
@@ -755,7 +755,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_PRESSED :
 		{
-			vl::JoystickEvent evt;
+			vl::SerialJoystickEvent evt;
 			int button;
 			stream >> button >> evt;
 
@@ -765,7 +765,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_RELEASED :
 		{
-			vl::JoystickEvent evt;
+			vl::SerialJoystickEvent evt;
 			int button;
 			stream >> button >> evt;
 
@@ -775,7 +775,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_AXIS :
 		{
-			vl::JoystickEvent evt;
+			vl::SerialJoystickEvent evt;
 			int axis;
 			stream >> axis >> evt;
 
@@ -785,7 +785,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_POV :
 		{
-			vl::JoystickEvent evt;
+			vl::SerialJoystickEvent evt;
 			int pov;
 			stream >> pov >> evt;
 
@@ -795,7 +795,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_VECTOR3 :
 		{
-			vl::JoystickEvent evt;
+			vl::SerialJoystickEvent evt;
 			int index;
 			stream >> index >> evt;
 

@@ -37,7 +37,7 @@
 #include "keycode.hpp"
 
 // Input
-#include "input/joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 #include "input/joystick.hpp"
 //#include "input/mouse_event.hpp"
@@ -134,12 +134,12 @@ void export_managers(void)
 	;
 
 	
-	bool (vl::JoystickEvent::*isButtonDown_ov0)(size_t) const = &vl::JoystickEvent::isButtonDown;
+	bool (vl::SerialJoystickEvent::*isButtonDown_ov0)(size_t) const = &vl::SerialJoystickEvent::isButtonDown;
 
-	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
-		.def_readonly("axis_x", &vl::JoystickEvent::axis_x)
-		.def_readonly("axis_y", &vl::JoystickEvent::axis_y)
-		.def_readonly("axis_z", &vl::JoystickEvent::axis_z)
+	python::class_<vl::SerialJoystickEvent>("SerialJoystickEvent", python::init<>())
+		.def_readonly("axis_x", &vl::SerialJoystickEvent::axis_x)
+		.def_readonly("axis_y", &vl::SerialJoystickEvent::axis_y)
+		.def_readonly("axis_z", &vl::SerialJoystickEvent::axis_z)
 		.def("is_button_down", isButtonDown_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -189,7 +189,7 @@ void export_managers(void)
 	;
 
 	python::class_<vl::Joystick, vl::JoystickRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("Joystick", python::no_init)
-		.def("addListener", toast::python::signal_connect<void (JoystickEvent const &)>(&vl::Joystick::addListener))
+		.def("addListener", toast::python::signal_connect<void (SerialJoystickEvent const &)>(&vl::Joystick::addListener))
 		.def("add_handler", &vl::Joystick::add_handler)
 		.def("remove_handler", &vl::Joystick::remove_handler)
 		.add_property("zero_size", &vl::Joystick::get_zero_size, &vl::Joystick::set_zero_size)
