@@ -60,6 +60,8 @@
 // Necessary for creating a proper implementation of callback functor
 #include "cad_importer.hpp"
 
+//#include "oculus.hpp"
+
 namespace vl
 {
 
@@ -345,6 +347,9 @@ public :
 	vl::config::ProjSettings const &getGlobalSettings(void) const
 	{ return _global_project; }
 
+	OculusRefPtr getOculus(void)
+	{ return _hmd; }
+
 	template<typename T>
 	void process_event(T const &evt);
 
@@ -419,6 +424,8 @@ private :
 	
 	void _addPythonScripts(vl::config::ProjSettings const &proj);
 
+	void _initialiseOculus(void);
+
 	/// Distributed object creation
 	SceneManagerPtr _createSceneManager(void);
 	PlayerPtr _createPlayer(void);
@@ -477,6 +484,14 @@ private :
 	vl::ProgramOptions _options;
 
 	GameObjectList _game_objects;
+
+	OculusRefPtr _hmd;
+	/// Use a tracker trigger
+	/// This needs to be updated at every frame
+	/// and added to EventManager so the python interface is same for
+	/// VRPN and Oculus
+	/// Um do we want it here or in GameManager?
+	TrackerTrigger *_oculus_tracker;
 
 	std::string _old_project;
 	std::string _old_global;

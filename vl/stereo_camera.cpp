@@ -18,6 +18,7 @@
 vl::StereoCamera::StereoCamera(void)
 	: _camera(0)
 	, _ogre_camera(0)
+	, _is_hmd(false)
 {}
 
 vl::StereoCamera::~StereoCamera(void)
@@ -60,8 +61,6 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 
 	_frustum.setClipping(_camera->getNearClipDistance(), _camera->getFarClipDistance());
 
-	Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
-
 	Ogre::Vector3 cam_pos = _camera->getPosition();
 	Ogre::Quaternion cam_quat = _camera->getOrientation();
 
@@ -73,7 +72,7 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 	else
 	{ eye = Ogre::Vector3::ZERO; }
 
-	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(eye.x);
+	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(_head, eye.x);
 	_ogre_camera->setCustomProjectionMatrix(true, projMat);
 
 	// Combine eye and camera positions
@@ -83,11 +82,23 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 	// cam*head*eye
 	Ogre::Vector3 eye_d = cam_quat*(_head.quaternion*eye + _head.position) + cam_pos;
 
-	// Combine camera and wall orientation to get the projection on correct wall
-	// Seems like the wallRotation needs to be inverse for this one, otherwise
-	// left and right wall are switched.
-	Ogre::Quaternion eye_orientation = cam_quat*wallRot.Inverse();
+	Ogre::Quaternion eye_q;
+	// This line of code is the only difference between is HMD and is Projector
+	if(_is_hmd)
+	{
+		// HMD does not use wall rot because we don't want to face the wall
+		// (it's moving with our head).
+		eye_q = _head.quaternion*cam_quat;
+	}
+	else
+	{
+		// Combine camera and wall orientation to get the projection on correct wall
+		// Seems like the wallRotation needs to be inverse for this one, otherwise
+		// left and right wall are switched.
+		Ogre::Quaternion wallRot = orientation_to_wall(_frustum.getWall());
+		eye_q = cam_quat*wallRot.Inverse();
+	}
 
 	_ogre_camera->setPosition(eye_d);
-	_ogre_camera->setOrientation(eye_orientation);
+	_ogre_camera->setOrientation(eye_q);
 }

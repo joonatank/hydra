@@ -119,6 +119,9 @@ find_package(OpenCollada REQUIRED)
 find_package(SkyX REQUIRED)
 find_package(Caelum REQUIRED)
 
+# Oculus SDK should not be required but for the moment
+find_package(OVR REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -136,6 +139,7 @@ include_directories( SYSTEM
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
+	${OVR_INCLUDE_DIR}
 	)
 
 # Libraries that Hydra library depends on
@@ -153,6 +157,7 @@ set( HYDRA_DEP_LIBS
 	${OPENCOLLADA_LIBRARIES}
 	${SkyX_LIBRARIES}
 	${Caelum_LIBRARIES}
+	${OVR_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

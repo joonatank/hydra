@@ -39,6 +39,7 @@ enum RENDER_MODE
 	RM_DEFERRED,	// Work in progress
 	// Combined mode
 	RM_DEFERRED_MRT_STEREO,	// Not implemented
+	RM_OCULUS,
 };
 
 class Channel

@@ -61,6 +61,14 @@ enum StereoType
 	ST_OCULUS,
 };
 
+/// Duplicating stereo and Window configs for Oculus
+/// More locigal for the user, stereo config is copied from Window
+enum WindowType
+{
+	WT_WINDOW,
+	WT_OCULUS,
+};
+
 std::string convert_stereo(StereoType const &stereo);
 
 StereoType convert_stereo(std::string const &stereo);
@@ -115,6 +123,11 @@ struct HYDRA_API Channel
 
 	vl::Colour background_colour;
 
+	// User projection matrices that can be used instead of wall or fov
+	// @todo not sure if this is proper place for them though.
+	Ogre::Matrix4 user_projection_left;
+	Ogre::Matrix4 user_projection_right;
+
 };	// struct Channel
 
 std::ostream &operator<<(std::ostream &os, Channel const &c);
@@ -131,6 +144,7 @@ struct HYDRA_API Projection
 	{
 		WALL,
 		FOV,
+		USER,
 	};
 
 	Projection(void)
@@ -214,7 +228,8 @@ struct HYDRA_API Window
 
 	// Name of the window
 	std::string name;
-
+	// What kind of window we have
+	WindowType type;
 	// @todo why is Renderer in Window and not the otherway around?
 	Renderer renderer;
 

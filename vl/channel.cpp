@@ -50,6 +50,18 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	_size = config.area;
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;
+
+	// Oculus is not yet supported, we want picture so we need a valid value
+	// @todo this is gonna be even more difficult if we add DEFERRED for Oculus
+	// In reality what RM_OCULUS needs to do
+	// render to FBO and apply a filter (pixel shader) to the FBO
+	// so we need post processing effects for it
+	if(_render_mode == RM_OCULUS)
+	{ _render_mode = RM_FBO; }
+
+	Ogre::Matrix4 const &left = config.user_projection_left;
+	Ogre::Matrix4 const &right = config.user_projection_right;
+	_camera.getFrustum().setUserProjection(left, right);
 }
 
 void
@@ -235,8 +247,8 @@ vl::Channel::update(void)
 	_camera.setHead(_player->getHeadTransform());
 
 	/// @todo these shouldn't be copied at every frame use the distribution
-	/// system to distribute the Frustum.
-	_camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
+	/// system to distribute the stereo camera.
+	/// This would actually need the StereoCamera to replace our Camera.
 	_camera.setIPD(_player->getIPD());
 
 	if(_render_mode == RM_FBO)

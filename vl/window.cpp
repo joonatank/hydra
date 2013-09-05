@@ -614,13 +614,14 @@ vl::Window::_createNative(void)
 		vl::Wall const &wall = channel_config.wall;
 		config::Renderer::Type renderer_type = _window_config.renderer.type;
 
-		RENDER_MODE rend_mode;
+		RENDER_MODE rend_mode(RM_WINDOW);
 		if(renderer_type == vl::config::Renderer::FBO)
 		{ rend_mode = RM_FBO; }
 		else if(renderer_type == vl::config::Renderer::DEFERRED)
 		{ rend_mode = RM_DEFERRED; }
-		else
-		{ rend_mode = RM_WINDOW; }
+	
+		if(_window_config.stereo_type == vl::config::ST_OCULUS)
+		{ rend_mode = RM_OCULUS; }
 
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
@@ -776,12 +777,34 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 		std::clog << "Setting channel " << channel->getName() << " to use FOV frustum." << std::endl;
 		channel->getCamera().getFrustum().setType(Frustum::FOV);
 	}
+	else if(projection.perspective_type == vl::config::Projection::USER)
+	{
+		std::clog << "Setting channel " << channel->getName() << " to use USER frustum." << std::endl;
+		channel->getCamera().getFrustum().setType(Frustum::USER);
+	}
 	else
 	{
 		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
 		channel->getCamera().getFrustum().setType(Frustum::WALL);
 	}
 
+	/// Need to modify the rendering to include head orientation in view matrix
+	if(render_mode == RM_OCULUS)
+	{
+		channel->getCamera().enableHMD(true);
+	}
+
+	// set the aspect ratio
+	// @todo this is still rather hackish
+	// we should update the Channel which should update the Camera etc.
+	//
+	// channel size is in homogenous coordinates so we need the window size
+	// to calculate the aspect ratio
+	Rect<double> size = channel->getSize();
+	vl::scalar aspect = _window_config.area.w*size.w / (_window_config.area.h*size.h);
+	channel->getCamera().getFrustum().setAspect(aspect);
+
+	// @todo what does this do and why?
 	channel->setStereoEyeCfg(stereo_cfg);
 
 	return channel;

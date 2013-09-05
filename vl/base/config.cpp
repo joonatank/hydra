@@ -122,6 +122,9 @@ vl::config::Window::Window(std::string const &nam, Rect<int> a, StereoType stere
 void
 vl::config::Window::clear(void)
 {
+	name.clear();
+	type = WT_WINDOW;
+	params.clear();
 	stereo_type = ST_OFF;
 	vert_sync = false;
 

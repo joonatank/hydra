@@ -634,36 +634,48 @@ vl::config::EnvSerializer::processWindows(rapidxml::xml_node<> *xml_node, vl::co
 
 	while( pWindow )
 	{
+		std::string name("default");
 		rapidxml::xml_attribute<> *attrib = pWindow->first_attribute("name");
-		if( !attrib )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no name") ); }
-		std::string name = attrib->value();
+		if(attrib)
+		{ name = attrib->value(); }
+		// @todo we should check that the window name is not already in use
+		// and we should just append an index if it's
 
 		// Process w, h, x, y
-		// @todo these should have default values
-		Rect<int> area;
+		// hard coded default for now, later we should use automation in
+		// window creation to determine a fullscreen window.
+		Rect<int> area(800, 600, 0, 0);
 		attrib = pWindow->first_attribute("w");
-		if( !attrib )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no w") ); }
+		if(attrib)
 		area.w = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("h");
-		if( !attrib )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no h") ); }
+		if(attrib)
 		area.h = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("x");
-		if( !attrib )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no x") ); }
+		if(attrib)
 		area.x = vl::from_string<int>( attrib->value() );
 
 		attrib = pWindow->first_attribute("y");
-		if( !attrib )
-		{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no y") ); }
+		if(attrib)
 		area.y = vl::from_string<int>( attrib->value() );
 
 		vl::config::Window window(name, area);
 		
+		attrib = pWindow->first_attribute("type");
+		if(attrib)
+		{
+			std::string type = attrib->value();
+			to_lower(type);
+			if(type == "hmd")
+			{
+				std::clog << "Window type HMD" << std::endl;
+				window.type = WT_OCULUS;
+			}
+			// otherwise use normal screen renderign
+		}
+
 		// Copy env settings values
 		window.stereo_type = _env->getRenderer().stereo_type;
 		// @todo we can override stereo type in window config
@@ -744,15 +756,15 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
 	if( wall_elem )
 	{ wall_name = wall_elem->value(); }
-	else
-	{ BOOST_THROW_EXCEPTION( vl::invalid_settings() << vl::desc("no wall") ); }
-
 	
 	window.add_channel(Channel(channel_name, r, Wall(), background_col));
 	// this needs to be a reference because we use it to set the proper
 	// channel later on
 	// Nope we should not add pointers because window is a temporary object
-	_wall_map[channel_name] = wall_name;
+	if(!wall_name.empty())
+	{
+		_wall_map[channel_name] = wall_name;
+	}
 }
 
 void
