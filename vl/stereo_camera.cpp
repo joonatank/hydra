@@ -1,13 +1,14 @@
 /**
- *	Copyright (c) 2012 Savant Simulators
+ *	Copyright (c) 2012 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2012-04
  *	@file stereo_camera.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
+ *	Licensed under commercial license.
  */
 
 // Interface

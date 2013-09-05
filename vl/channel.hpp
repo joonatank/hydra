@@ -55,6 +55,11 @@ public:
 
 	void draw(void);
 
+	/// @brief get the size of the Channel in homogeneous coordinates
+	/// No setSize for now
+	Rect<double> getSize(void) const
+	{ return _size; }
+
 	STEREO_EYE getStereoEyeCfg(void) const
 	{ return _stereo_eye_cfg; }
 
@@ -131,6 +136,7 @@ private :
 	/// Data
 private:
 	std::string _name;
+	Rect<double> _size;
 
 	StereoCamera _camera;
 	Ogre::Viewport *_viewport;

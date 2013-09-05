@@ -47,6 +47,13 @@ public :
 
 };	 // class Colour
 
+inline
+std::ostream &operator<<(std::ostream &os, Colour const &c)
+{
+	os << "(" << c.r << ", " << c.g << ", " << c.b << ", " << c.a << ")";
+	return os;
+}
+
 }	// namespace vl
 
 #endif // HYDRA_MATH_COLOUR_HPP

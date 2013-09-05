@@ -81,7 +81,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
 	msg << window.name << window.get_channels() << window.area 
-		<< window.stereo_type << window.vert_sync << window.renderer;
+		<< window.stereo_type << window.vert_sync << window.fsaa  << window.renderer;
 
 	msg << window.params.size();
 	for(NamedParamList::const_iterator iter = window.params.begin(); 
@@ -98,7 +98,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
 	msg >> window.name >> window.get_channels() >> window.area
-		>> window.stereo_type >> window.vert_sync >> window.renderer;
+		>> window.stereo_type >> window.vert_sync >> window.fsaa >> window.renderer;
 
 	size_t params_size;
 	msg >> params_size;

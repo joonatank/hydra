@@ -90,6 +90,7 @@ public:
 	/// Swap the back buffer to front
 	virtual void swap( void );
 
+	// Interesting thing the resize allows us create larger than screen windows.
 	virtual void resize(int w, int h);
 
 	std::vector<Channel *> const &getChannels(void)
@@ -137,8 +138,8 @@ private :
 	/// @todo wall is tied to projection we should not need them both
 	/// @todo this should be public so we can move channel creation to Renderer
 	vl::Channel *_create_channel(vl::config::Channel const &channel, 
-		STEREO_EYE stereo_cfg, vl::config::Projection const &projection, Wall const &wall,
-		vl::config::Renderer::Type renderer_type, uint32_t fsaa);
+		STEREO_EYE stereo_cfg, vl::config::Projection const &projection,
+		RENDER_MODE render_mode, uint32_t fsaa);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <iostream>
 
 namespace vl
 {
@@ -116,6 +117,8 @@ struct HYDRA_API Channel
 
 };	// struct Channel
 
+std::ostream &operator<<(std::ostream &os, Channel const &c);
+
 struct HYDRA_API Projection
 {
 	enum Type
@@ -151,6 +154,8 @@ struct HYDRA_API Projection
 	bool use_asymmetric_stereo;
 
 };	// struct Projection
+
+std::ostream &operator<<(std::ostream &os, Projection const &p);
 
 /// The rendering element that can be individually rendered
 /// usually either a window or a FBO

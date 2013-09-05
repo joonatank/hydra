@@ -487,10 +487,17 @@ vl::Window::resize(int w, int h)
 	// works with both Ogre and external windows
 	_ogre_window->resize(w, h);
 	_ogre_window->windowMovedOrResized();
-	// @todo does not handle correctly multiple channels
-	if(_channels.size() > 0)
+
+	for(std::vector<Channel *>::iterator iter = _channels.begin();
+		iter != _channels.end(); ++iter)
 	{
-		_channels.at(0)->getCamera().getFrustum().setAspect(vl::scalar(w)/vl::scalar(h));
+		Rect<double> size = (*iter)->getSize();
+		vl::scalar aspect = w*size.w / (h*size.h);
+		std::clog << "Resizing channel : " << (*iter)->getName()
+			<< " size = " << size << " aspect ratio = " << aspect << std::endl;
+		// @todo this is still rather hackish
+		// we should update the Channel which should update the Camera etc.
+		(*iter)->getCamera().getFrustum().setAspect(aspect);
 	}
 }
 
@@ -604,32 +611,54 @@ vl::Window::_createNative(void)
 		if(channel_config.wall.empty())
 		{ std::cout << vl::TRACE << "No wall for channel " << channel_config.name << std::endl; }
 
+		vl::Wall const &wall = channel_config.wall;
+		config::Renderer::Type renderer_type = _window_config.renderer.type;
+
+		RENDER_MODE rend_mode;
+		if(renderer_type == vl::config::Renderer::FBO)
+		{ rend_mode = RM_FBO; }
+		else if(renderer_type == vl::config::Renderer::DEFERRED)
+		{ rend_mode = RM_DEFERRED; }
+		else
+		{ rend_mode = RM_WINDOW; }
+
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
 		if(hasStereo())
 		{
 			_create_channel(channel_config, HS_LEFT, projection, 
-				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+				rend_mode, _window_config.fsaa);
 			_create_channel(channel_config, HS_RIGHT, projection, 
-				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+				rend_mode, _window_config.fsaa);
 		}
-		else if(_window_config.stereo_type == vl::config::ST_SIDE_BY_SIDE)
+		// For now lets try if side-by-side stereo is good enough for Oculus
+		else if(_window_config.stereo_type == vl::config::ST_SIDE_BY_SIDE
+			|| _window_config.stereo_type == vl::config::ST_OCULUS)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
 			channel_config.area.w /= 2;
 			_create_channel(channel_config, HS_LEFT, projection, 
-				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+				rend_mode, _window_config.fsaa);
 			channel_config.area.x += channel_config.area.w;
 			_create_channel(channel_config, HS_RIGHT, projection, 
-				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+				rend_mode, _window_config.fsaa);
 		}
 		// no stereo
 		else
 		{
-			_create_channel(_window_config.get_channel(i), HS_MONO, projection, 
-				channel_config.wall, _window_config.renderer.type, _window_config.fsaa);
+			_create_channel(channel_config, HS_MONO, projection, 
+				rend_mode, _window_config.fsaa);
 		}
 	}
+
+	// We need to set the aspect ratio for the cameras
+	// @todo not the proper place to set them though
+	// they should be set in either Channel creation 
+	// when Camera is set to Channel
+	int left, top;
+	uint32_t width, height, depth;
+	_ogre_window->getMetrics(width, height, depth, left, top);
+	resize(width, height);
 
 	std::clog << "Window::_createNative : done" << std::endl;
 }
@@ -706,11 +735,13 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
-			vl::config::Projection const &projection, Wall const &wall,
-			vl::config::Renderer::Type renderer_type, uint32_t fsaa)
+			vl::config::Projection const &projection,
+			RENDER_MODE render_mode, uint32_t fsaa)
 {
 	// @todo replace with throwing because this is user controlled
 	assert(!chan_cfg.name.empty());
+
+	Wall const &wall = chan_cfg.wall;
 
 	// Make a copy of channel config and rename it
 	vl::config::Channel channel_config(chan_cfg);
@@ -722,15 +753,7 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 
-	RENDER_MODE rend_mode;
-	if(renderer_type == vl::config::Renderer::FBO)
-	{ rend_mode = RM_FBO; }
-	else if(renderer_type == vl::config::Renderer::DEFERRED)
-	{ rend_mode = RM_DEFERRED; }
-	else
-	{ rend_mode = RM_WINDOW; }
-
-	Channel *channel = new Channel(channel_config, view, rend_mode, fsaa);
+	Channel *channel = new Channel(channel_config, view, render_mode, fsaa);
 	_channels.push_back(channel);
 
 	/// Set frustum
