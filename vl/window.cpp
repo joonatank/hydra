@@ -764,7 +764,7 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 
-	Channel *channel = new Channel(channel_config, view, render_mode, fsaa);
+	Channel *channel = new Channel(channel_config, view, render_mode, fsaa, this);
 	_channels.push_back(channel);
 
 	/// Set frustum
@@ -796,14 +796,6 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	{
 		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
 		channel->getCamera().getFrustum().setType(Frustum::WALL);
-	}
-
-	/// Need to modify the rendering to include head orientation in view matrix
-	if(render_mode == RM_OCULUS)
-	{
-		channel->getCamera().enableHMD(true);
-		assert(getPipe());
-		channel->setDistortionInfo(getPipe()->getDistortionInfo());
 	}
 
 	// set the aspect ratio

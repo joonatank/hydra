@@ -38,6 +38,8 @@
 // Necessary for checking materials after deserialize
 #include "material.hpp"
 #include "mesh_manager.hpp"
+// Necessary for DistortionInfo
+//#include "oculus.hpp"
 
 #include "pipe.hpp"
 
@@ -85,10 +87,10 @@ vl::Renderer::init(void)
 	std::cout << vl::TRACE << "vl::Renderer::init" << std::endl;
 
 	// Don't necessarily need the log level thingy
-	// Release version has horrible amount of empty lines if we use LL_NORMAL
-	// Debug version is fine
+	// @todo LL_NORMAL has a horrible amount of empty lines
+	// it's completely unusable atm.
 #ifdef _DEBUG
-	_root.reset( new vl::ogre::Root(config::LL_NORMAL) );
+	_root.reset( new vl::ogre::Root(config::LL_LOW) );
 #else
 	_root.reset( new vl::ogre::Root(config::LL_LOW) );
 #endif
@@ -233,6 +235,30 @@ vl::Renderer::clearProject(void)
 		}
 	}
 }
+
+void
+vl::Renderer::enableHMDdistortion(bool enable)
+{
+	DistortionInfo info = _pipe->getDistortionInfo();
+	info.enabled = enable;
+	_pipe->setDistortionInfo(info);
+}
+
+bool
+vl::Renderer::isHMDdistortion(void) const
+{ return _pipe->getDistortionInfo().enabled; }
+
+void
+vl::Renderer::setHMDdistortionScale(vl::scalar val)
+{
+	DistortionInfo info = _pipe->getDistortionInfo();
+	info.scale = val;
+	_pipe->setDistortionInfo(info);
+}
+
+vl::scalar
+vl::Renderer::getHMDdistortionScale(void) const
+{ return _pipe->getDistortionInfo().scale; }
 
 /// --------------------------------------------------------------------------
 void

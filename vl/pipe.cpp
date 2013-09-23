@@ -240,9 +240,6 @@ vl::Pipe::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 	if( DIRTY_PARAMS & dirtyBits )
 	{
 		msg >> _gui_enabled >> _debug_overlay_enabled >> _hmd_distortion_info;
-		// @todo we need to iterate over all the windows and set distortion configs to them.
-		// other option would be to always retrieve the distortion config from Pipe.
-		// channel doesn't have window access atm so that would need to change also.
 	}
 
 	if( DIRTY_RESOURCES & dirtyBits )

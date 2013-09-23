@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011-2012 Savant Simulators
+ *	Copyright (c) 2011-2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
  *	@file channel.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  */
 
@@ -17,6 +17,11 @@
 #include "player.hpp"
 
 #include "camera.hpp"
+// Parent
+#include "window.hpp"
+// Necessary for Distortion Info
+#include "oculus.hpp"
+#include "pipe.hpp"
 
 /// Necessary for rendering to FBO
 #include <OGRE/OgreRenderTexture.h>
@@ -31,7 +36,7 @@
 
 /// ---------------------------------- Public --------------------------------
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		RENDER_MODE rm, uint32_t fsaa)
+		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent)
 	: _name(config.name)
 	, _camera()
 	, _viewport(view)
@@ -40,9 +45,11 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	, _stereo_eye_cfg(HS_UNDEFINED)
 	, _render_mode(rm)
 	, _mrt(0)
+	, _parent(parent)
 {
 	assert(_viewport);
- 
+	assert(_parent);
+
 	Ogre::ColourValue col(config.background_colour.r, config.background_colour.g,
 		config.background_colour.b, config.background_colour.a);
 	_viewport->setBackgroundColour(col);
@@ -223,6 +230,8 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	else if(_render_mode == RM_OCULUS)
 	{
 		_set_fbo_camera(cam, "oculus_rtt");
+		/// Need to modify the rendering to include head orientation in view matrix
+		getCamera().enableHMD(true);
 	}
 	else if(_render_mode == RM_DEFERRED)
 	{
@@ -391,6 +400,14 @@ vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
 	// select the eye to render
 	assert(eye_cfg == HS_LEFT || eye_cfg == HS_RIGHT);
 
+	vl::DistortionInfo dist_info = _parent->getPipe()->getDistortionInfo();
+	if(!dist_info.enabled)
+	{
+		// reset distortion values
+		dist_info.K = Ogre::Vector4(1, 0, 0, 0);
+		dist_info.scale = 1;
+	}
+
 	// Correct values (calculated by Rift utilities) re [1.0 0.22 0.24 0]
 	// The second and third parameter modify the curvature
 	// what does the first parameter do? 
@@ -403,11 +420,11 @@ vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
 	vl::scalar offset;
 	if(eye_cfg == HS_RIGHT)
 	{
-		offset = -_hmd_distortion_info.x_center_offset;
+		offset = -dist_info.x_center_offset;
 	}
 	else
 	{
-		offset = _hmd_distortion_info.x_center_offset;
+		offset = dist_info.x_center_offset;
 	}
 
 	/*
@@ -439,7 +456,7 @@ vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
 	// Problem with this is that it's directly taken from Oculus samples
 	// and it outscales the image (horizontally).
 	// We should have a run time configurable parameter for changing this.
-	float scaleFactor = 1.0f / (_hmd_distortion_info.scale);// - 0.1);
+	float scaleFactor = 1.0f / (dist_info.scale);// - 0.1);
 
 	// @todo what purpose does both scales serve
 	// they seem to scale texture coordinates (those of the FBO)
@@ -460,7 +477,7 @@ vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
 	params->setNamedConstant("LensCenter", LensCenter);
 	params->setNamedConstant("ScreenCenter", ScreenCenter);
 	params->setNamedConstant("g_scale", scale);
-	params->setNamedConstant("HmdWarpParam", _hmd_distortion_info.K);
+	params->setNamedConstant("HmdWarpParam", dist_info.K);
 
 	// We don't have ChromAb, what does it do and do we need one
 	// if (PostProcessShaderRequested == PostProcessShader_DistortionAndChromAb)

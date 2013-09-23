@@ -74,7 +74,7 @@ struct DistortionInfo
 	// empty constructor for now
 	// should not matter that we don't have default values since it should only
 	// be used if it's initialised from Oculus
-	DistortionInfo(void) {}
+	DistortionInfo(void) : enabled(true) {}
 
 	// Distortion parameters, based on the lense used
 	Ogre::Vector4 K;
@@ -86,6 +86,8 @@ struct DistortionInfo
 	// how much the image needs to be scaled because the distortion filter
 	// makes the image smaller than the rendering viewport.
 	vl::scalar scale;
+	// Is distortion enabled or not, defaults to on
+	bool enabled;
 };
 
 std::ostream &operator<<(std::ostream &os, DistortionInfo const &info);

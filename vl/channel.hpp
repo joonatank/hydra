@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011-2012 Savant Simulators
+ *	Copyright (c) 2011-2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
  *	@file channel.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  */
 
@@ -22,8 +22,6 @@
 #include <OGRE/OgreRectangle2D.h>
 
 #include "stereo_camera.hpp"
-// necessary for Distortion Info
-#include "oculus.hpp"
 
 namespace vl
 {
@@ -47,7 +45,8 @@ enum RENDER_MODE
 class Channel
 {
 public:
-	Channel(vl::config::Channel config, Ogre::Viewport *view, RENDER_MODE rm, uint32_t fsaa);
+	Channel(vl::config::Channel config, Ogre::Viewport *view, 
+		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent);
 
 	void setCamera(vl::CameraPtr cam);
 
@@ -80,12 +79,6 @@ public:
 
 	void setPlayer(Player *player)
 	{ _player = player; }
-
-	// Only meaningful for Oculus Rift
-	vl::DistortionInfo const &getDistortionInfo(void)
-	{ return _hmd_distortion_info; }
-	void setDistortionInfo(vl::DistortionInfo const &info)
-	{ _hmd_distortion_info = info; }
 
 	/// Per frame statistics
 	vl::scalar getLastFPS(void) const;
@@ -168,8 +161,6 @@ private:
 	STEREO_EYE _stereo_eye_cfg;
 	vl::Player *_player;
 
-	vl::DistortionInfo _hmd_distortion_info;
-
 	// Special Rendering surface
 	// MRT is only available for Deferred shading
 	// FBO is only available for FBO rendering
@@ -180,6 +171,8 @@ private:
 	std::vector<Ogre::TexturePtr> _fbo_textures;
 
 	Ogre::Camera *_rtt_camera;
+
+	vl::Window *_parent;
 
 };	// class Channel
 
