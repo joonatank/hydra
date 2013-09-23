@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-10
  *	@file math/frustum.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -15,6 +15,8 @@
 #include "frustum.hpp"
 
 #include "base/exceptions.hpp"
+
+#include "base/string_utils.hpp"
 
 /// ---------------------------------- Global --------------------------------
 Ogre::Quaternion
@@ -41,36 +43,73 @@ vl::orientation_to_wall(vl::Wall const &wall)
 	return plane_normal.getRotationTo(cam_vec);
 }
 
+std::ostream &
+vl::operator<<(std::ostream &os, vl::Frustum const &f)
+{
+	// type, wall, clipping, fov, horizontal, asymmetric, fixed head, aspect,
+	// user projection left and right
+	// calculate the projection matrix for left and right with the parameters
+	// we have and default ipd
+	// @todo type should be converted to string
+	os << "Frustum : " << "type = " << f.getType() << " wall = " << f.getWall()
+		<< std::endl << " near clipping = " << f.getNearClipping()
+		<< " far clipping = " << f.getFarClipping()
+		<< " fov = " << f.getFov()
+		<< " asymmetric frustum = " << vl::to_string(f.isAsymmetricStereoFrustum())
+		<< " aspect = " << f.getAspect() << std::endl
+		<< " user left projection = " << f.getUserProjectionLeft() << std::endl
+		<< " user right projection = " << f.getUserProjectionRight() << std::endl;
+
+	return os;
+}
+
 /// ---------------------------------- Frustum -------------------------------
 vl::Frustum::Frustum(Type type)
 	: _type(type)
 	, _wall()
 	, _near_clipping(0.01)
 	, _far_clipping(100)
-	, _head()
 	, _fov(Ogre::Degree(60))
 	, _use_asymmetric_stereo(true)
 	, _aspect(4.0/3)
 {
+	// @todo initialise user projection matrices
+	// initialise them to identity so we can do debug assertions on them
+	_user_projection_right = Ogre::Matrix4::IDENTITY;
+	_user_projection_left = Ogre::Matrix4::IDENTITY;
 }
 
 Ogre::Matrix4
 vl::Frustum::getProjectionMatrix(void) const
 {
-	return getProjectionMatrix(0);
+	return getProjectionMatrix(Transform(), 0);
+}
+
+Ogre::Matrix4
+vl::Frustum::getProjectionMatrix(vl::Transform const &head) const
+{
+	return getProjectionMatrix(head, 0);
 }
 
 /// @todo this could be implemented using dirties to be lots of faster
 /// then again how slow is it at the moment? is there a need for optimisation?
 Ogre::Matrix4
-vl::Frustum::getProjectionMatrix(vl::scalar eye_offset) const
+vl::Frustum::getProjectionMatrix(vl::Transform const &head, vl::scalar eye_offset) const
 {
 	switch(_type)
 	{
 	case WALL:
-		return _calculate_wall_projection(eye_offset);
+		return _calculate_wall_projection(head, eye_offset);
 	case FOV:
 		return _calculate_fov_projection(eye_offset);
+	case USER:
+		// User matrix is assumed to be complete so we return here
+		assert(_user_projection_right != Ogre::Matrix4::IDENTITY);
+		assert(_user_projection_left != Ogre::Matrix4::IDENTITY);
+		if(eye_offset < 0)
+		{ return _user_projection_left; }
+		else
+		{ return _user_projection_right; }
 	default:
 		// this should never happen
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown projection type."));
@@ -79,7 +118,7 @@ vl::Frustum::getProjectionMatrix(vl::scalar eye_offset) const
 
 /// ------------------------------ Private -----------------------------------
 Ogre::Matrix4
-vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
+vl::Frustum::_calculate_wall_projection(vl::Transform const &head_t, vl::scalar eye_offset) const
 {
 	/* Projection matrix i.e. frustum
 	 * | E	0	A	0 |
@@ -117,23 +156,20 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	// If scale is negative it rotates 180 deg around z,
 	// i.e. flips to the other side of the wall
 	Ogre::Quaternion wallRot = orientation_to_wall(_wall);
-	Ogre::Vector3 head = wallRot*_head.position;
+	Ogre::Vector3 head = wallRot*head_t.position;
 
 	Ogre::Vector3 eye = Ogre::Vector3::ZERO;
 	if(_use_asymmetric_stereo)
 	{
 		// get the eye vector in head coordinates
 		// then in the wall coordinates we are using for this wall
-		eye = wallRot * _head.quaternion * Ogre::Vector3(eye_offset, 0, 0);
+		eye = wallRot * head_t.quaternion * Ogre::Vector3(eye_offset, 0, 0);
 	}
 
 	// Scale is necessary and is correct because 
 	// if we increase it some of the object is clipped and not shown on either of the screens (too small fov)
-	// and if we decrease it we the the same part on both front and side screens (too large fov) 
-	Ogre::Real scale = -(plane.front - eye.z)/_near_clipping;
-	
-	// Modify the front plane (or scale in this case)
-	scale = -(plane.front - head.z - eye.z)/_near_clipping;
+	// and if we decrease it we the the same part on both front and side screens (too large fov) 	
+	Ogre::Real scale = -(plane.front - head.z - eye.z)/_near_clipping;
 
 	Ogre::Real right = (plane.right - eye.x)/scale;
 	Ogre::Real left = (plane.left - eye.x)/scale;
@@ -142,16 +178,9 @@ vl::Frustum::_calculate_wall_projection(vl::scalar eye_offset) const
 	right = (plane.right - head.x - eye.x)/scale;
 	left = (plane.left - head.x - eye.x)/scale;
 
-	// Golden ratio for the frustum
-	// Should be tested with the head tracking if it doesn't work provide an
-	// alternative to use golden ratio for one screen systems and non for VR
-	Ogre::Real wall_height = plane.top - plane.bottom;
-	Ogre::Real top = (plane.top - (1/PHI)*wall_height)/scale;
-	Ogre::Real bottom = (plane.bottom - (1/PHI)*wall_height)/scale;
-
 	// Modify the top and botom planes
-	top = (plane.top - head.y - eye.y)/scale;
-	bottom = (plane.bottom - head.y - eye.y)/scale;
+	Ogre::Real top = (plane.top - head.y - eye.y)/scale;
+	Ogre::Real bottom = (plane.bottom - head.y - eye.y)/scale;
 
 	Ogre::Matrix4 projMat;
 
@@ -193,7 +222,7 @@ vl::Frustum::_calculate_fov_projection(vl::scalar eye_offset) const
 	 * | 0	0	-1	0 | */
 
 	Ogre::Matrix4 projMat;
-
+	/*
 	float xymax = _near_clipping * std::tan(_fov.valueRadians());
 	float ymin = -xymax;
 	float xmin = -xymax;
@@ -207,6 +236,24 @@ vl::Frustum::_calculate_fov_projection(vl::scalar eye_offset) const
 
 	float E = (2 * _near_clipping / width)/_aspect;
 	float F = 2 * _near_clipping / height;
+	*/
+
+	/// @todo Doesn't work properly with Oculus Rift
+	float near = _near_clipping;
+	float far = _far_clipping;
+	float depth = far - near;
+	float f = 1/std::tan(_fov.valueRadians()/2);
+	// for some reason we need to multiply by near clip distance even though
+	// projection matrix documentation says we don't
+	// if we don't we get 100 too close in z axis (so all movement is 1/100)
+	// the only reliable resource for projection matrices is
+	// http://www.songho.ca/opengl/gl_projectionmatrix.html
+	// but it doesn't have a fov case
+
+	float C = -far/depth;
+	float D = -near*far/depth;
+	float E = f/_aspect;
+	float F = f;
 
 	projMat[0][0] = E;
 	projMat[0][1] = 0;

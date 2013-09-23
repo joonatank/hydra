@@ -23,6 +23,8 @@
 #include "window_interface.hpp"
 // Necessary for config::Window struct
 #include "base/config.hpp"
+// Necessary for distortion info
+#include "oculus.hpp"
 
 namespace vl
 {
@@ -66,6 +68,10 @@ public :
 	bool isGUI(void) const
 	{ return _gui_enabled; }
 	void enableGUI(bool enable);
+
+	vl::DistortionInfo const &getDistortionInfo(void) const
+	{ return _hmd_distortion_info; }
+	void setDistortionInfo(vl::DistortionInfo const &info);
 
 	void addResources(vl::Settings const &settings);
 
@@ -126,6 +132,8 @@ private :
 	/// Configuration
 	bool _gui_enabled;
 	bool _debug_overlay_enabled;
+
+	vl::DistortionInfo _hmd_distortion_info;
 
 	std::vector<std::string> _resource_paths;
 

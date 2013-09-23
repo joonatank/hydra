@@ -63,6 +63,12 @@ public :
 				&& bottom_right.empty() && top_left.empty() );
 	}
 
+	bool not_defined(void) const
+	{
+		return(bottom_left.size() < 3 || bottom_right.size() < 3
+			|| top_left.size() < 3);
+	}
+
 	// Name of the wall
 	std::string name;
 
@@ -74,6 +80,30 @@ public :
 	std::vector<double> top_left;
 
 };	// class Wall
+
+inline
+std::ostream &operator<<(std::ostream &os, Wall const &w)
+{
+	if(!w.not_defined())
+	{
+		os << "Wall " << w.name << " bottom left : [" << w.bottom_left.at(0)
+			<< ", " << w.bottom_left.at(1) << ", " << w.bottom_left.at(2) << "]"
+			<< " bottom right : " << ", " << w.bottom_right.at(0)
+			<< ", " << w.bottom_right.at(1) <<", " << w.bottom_right.at(2) << "]"
+			<< " top left : " << ", " << w.top_left.at(0)
+			<< ", " << w.top_left.at(1) <<", " << w.top_left.at(2) << "]";
+	}
+	else if(w.empty())
+	{
+		os << "empty wall";
+	}
+	else
+	{
+		os << "Not completely defined wall " << w.name;
+	}
+
+	return os;
+}
 
 }	// namespace vl
 

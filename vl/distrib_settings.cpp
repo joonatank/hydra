@@ -80,8 +80,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, const vl::config::Window& window )
 {
-	msg << window.name << window.get_channels() << window.area 
-		<< window.stereo_type << window.vert_sync << window.renderer;
+	msg << window.name << window.type << window.get_channels() << window.area 
+		<< window.stereo_type << window.vert_sync << window.fsaa  << window.renderer;
 
 	msg << window.params.size();
 	for(NamedParamList::const_iterator iter = window.params.begin(); 
@@ -97,8 +97,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Window& window )
 {
-	msg >> window.name >> window.get_channels() >> window.area
-		>> window.stereo_type >> window.vert_sync >> window.renderer;
+	msg >> window.name >> window.type >> window.get_channels() >> window.area
+		>> window.stereo_type >> window.vert_sync >> window.fsaa >> window.renderer;
 
 	size_t params_size;
 	msg >> params_size;
@@ -116,7 +116,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
-	msg << chan.name << chan.wall << chan.area << chan.background_colour;
+	msg << chan.name << chan.wall << chan.area << chan.background_colour 
+		<< chan.user_projection_left << chan.user_projection_right;
 
 	return msg;
 }
@@ -125,7 +126,8 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
-	msg >> chan.name >> chan.wall >> chan.area >> chan.background_colour;
+	msg >> chan.name >> chan.wall >> chan.area >> chan.background_colour
+		>> chan.user_projection_left >> chan.user_projection_right;
 
 	return msg;
 }

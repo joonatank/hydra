@@ -522,7 +522,10 @@ def toggle_pause():
 		game.play()
 
 # Add a head tracker support
-mapHeadTracker("glassesTrigger")
+# TODO we have two different head trackers
+# glassesTrigger is the optical tracking and headTrigger is Oculus
+#mapHeadTracker("glassesTrigger")
+mapHeadTracker("headTrigger")
 
 
 # Add some global events that are useful no matter what the scene/project is

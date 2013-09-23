@@ -89,10 +89,17 @@ namespace vl
 	typedef boost::shared_ptr<ResourceManager> ResourceManagerRefPtr;
 	typedef PythonContext * PythonContextPtr;
 
+	class Oculus;
+	typedef boost::shared_ptr<Oculus> OculusRefPtr;
+
 	class GameObject;
 	typedef boost::shared_ptr<GameObject> GameObjectRefPtr;
 	typedef std::vector<GameObjectRefPtr> GameObjectList;
 
+	/// Triggers
+	class Trigger;
+	class TrackerTrigger;
+	
 	/// SceneObjects
 	class ObjectInterface;
 	class SceneManager;

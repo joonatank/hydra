@@ -65,6 +65,7 @@ set(SRC
 	hsf_writer.cpp
 	profiler_report.cpp
 	cad_importer.cpp
+	oculus.cpp
 	)
 
 set(MATH_HEADERS
@@ -272,6 +273,7 @@ set( HEADERS
 	profiler_report.hpp
 	flags.hpp
 	cad_importer.hpp
+	oculus.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

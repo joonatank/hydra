@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011-2012 Savant Simulators
+ *	Copyright (c) 2011-2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
  *	@file channel.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  */
 
@@ -17,6 +17,11 @@
 #include "player.hpp"
 
 #include "camera.hpp"
+// Parent
+#include "window.hpp"
+// Necessary for Distortion Info
+#include "oculus.hpp"
+#include "pipe.hpp"
 
 /// Necessary for rendering to FBO
 #include <OGRE/OgreRenderTexture.h>
@@ -31,7 +36,7 @@
 
 /// ---------------------------------- Public --------------------------------
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		RENDER_MODE rm, uint32_t fsaa)
+		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent)
 	: _name(config.name)
 	, _camera()
 	, _viewport(view)
@@ -40,14 +45,22 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	, _stereo_eye_cfg(HS_UNDEFINED)
 	, _render_mode(rm)
 	, _mrt(0)
+	, _parent(parent)
 {
 	assert(_viewport);
- 
-	Ogre::ColourValue col(config.background_colour.r, config.background_colour.g, config.background_colour.b, config.background_colour.a);
+	assert(_parent);
+
+	Ogre::ColourValue col(config.background_colour.r, config.background_colour.g,
+		config.background_colour.b, config.background_colour.a);
 	_viewport->setBackgroundColour(col);
 	_viewport->setAutoUpdated(false);
+	_size = config.area;
 
 	std::clog << "Channel::Channel : name " << _name << std::endl;
+
+	Ogre::Matrix4 const &left = config.user_projection_left;
+	Ogre::Matrix4 const &right = config.user_projection_right;
+	_camera.getFrustum().setUserProjection(left, right);
 }
 
 void
@@ -159,9 +172,8 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	_viewport->setCamera(_rtt_camera);
 }
 
-/// nop if null parameter is passed here
 void
-vl::Channel::_set_fbo_camera(vl::CameraPtr camera)
+vl::Channel::_set_fbo_camera(vl::CameraPtr camera, std::string const &base_material)
 {
 	if(!camera)
 	{ return; }
@@ -169,7 +181,7 @@ vl::Channel::_set_fbo_camera(vl::CameraPtr camera)
 	/// FBO needs to be initialised here because we need Ogre::SceneManager for it
 	if(!_fbo)
 	{
-		_initialise_fbo(camera);
+		_initialise_fbo(camera, base_material);
 	}
 	else
 	{
@@ -213,7 +225,13 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	}
 	else if(_render_mode == RM_FBO)
 	{
-		_set_fbo_camera(cam);
+		_set_fbo_camera(cam, "rtt");
+	}
+	else if(_render_mode == RM_OCULUS)
+	{
+		_set_fbo_camera(cam, "oculus_rtt");
+		/// Need to modify the rendering to include head orientation in view matrix
+		getCamera().enableHMD(true);
 	}
 	else if(_render_mode == RM_DEFERRED)
 	{
@@ -233,11 +251,11 @@ vl::Channel::update(void)
 	_camera.setHead(_player->getHeadTransform());
 
 	/// @todo these shouldn't be copied at every frame use the distribution
-	/// system to distribute the Frustum.
-	_camera.getFrustum().setHeadTransformation(_player->getCyclopWorldTransform());
+	/// system to distribute the stereo camera.
+	/// This would actually need the StereoCamera to replace our Camera.
 	_camera.setIPD(_player->getIPD());
 
-	if(_render_mode == RM_FBO)
+	if(_render_mode == RM_FBO || _render_mode == RM_OCULUS)
 	{ _render_to_fbo(); }
 	else if(_render_mode == RM_DEFERRED)
 	{ _deferred_geometry_pass(); }
@@ -276,7 +294,13 @@ vl::Channel::draw(void)
 	{ _camera.update(_stereo_eye_cfg); }
 	else if(_render_mode == RM_DEFERRED)
 	{
+		// actually this isn't light pass per ce it only updates the shader uniforms
+		// the actual light pass is automatically called by Viewport::update
 		_deferred_light_pass();
+	}
+	else if(_render_mode == RM_OCULUS)
+	{
+		_oculus_post_processing(_stereo_eye_cfg);
 	}
 
 	// Must be using this stupid syntax for
@@ -304,7 +328,8 @@ vl::Channel::getTriangleCount(void) const
 {
 	switch(_render_mode)
 	{
-		case RM_FBO: 
+		case RM_FBO:
+		case RM_OCULUS:
 			assert(_fbo);
 			return _fbo->getTriangleCount();
 		case RM_DEFERRED: 
@@ -325,7 +350,8 @@ vl::Channel::getBatchCount(void) const
 	/// Because only one quad is rendered outside of the FBO
 	switch(_render_mode)
 	{
-		case RM_FBO: 
+		case RM_FBO:
+		case RM_OCULUS:
 			assert(_fbo);
 			return _fbo->getBatchCount();
 		case RM_DEFERRED: 
@@ -341,7 +367,8 @@ vl::Channel::resetStatistics(void)
 {
 	switch(_render_mode)
 	{
-		case RM_FBO: 
+		case RM_FBO:
+		case RM_OCULUS :
 			if(_fbo)
 			{ _fbo->resetStatistics(); }
 			break;
@@ -360,6 +387,109 @@ vl::Channel::_render_to_fbo(void)
 
 	_camera.update(_stereo_eye_cfg);
 	_fbo->update();
+}
+
+void
+vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
+{
+	assert(_fbo_materials.size() > 0);
+	Ogre::Technique *tech = _fbo_materials.at(0)->getBestTechnique();
+	Ogre::Pass *pass = tech->getPass(0);
+	Ogre::GpuProgramParametersSharedPtr params = pass->getFragmentProgramParameters();
+
+	// select the eye to render
+	assert(eye_cfg == HS_LEFT || eye_cfg == HS_RIGHT);
+
+	vl::DistortionInfo dist_info = _parent->getPipe()->getDistortionInfo();
+	if(!dist_info.enabled)
+	{
+		// reset distortion values
+		dist_info.K = Ogre::Vector4(1, 0, 0, 0);
+		dist_info.scale = 1;
+	}
+
+	// Correct values (calculated by Rift utilities) re [1.0 0.22 0.24 0]
+	// The second and third parameter modify the curvature
+	// what does the first parameter do? 
+	// zero gives us a full screen of blue (sky colour)
+	// 0.5 gives us the original image (little bit blurred though)
+	//
+	// Three latter parameters control the curvature
+	// well all of them since it's function y = a + b*x^2 + c*x^4 + d*x^6
+
+	vl::scalar offset;
+	if(eye_cfg == HS_RIGHT)
+	{
+		offset = -dist_info.x_center_offset;
+	}
+	else
+	{
+		offset = dist_info.x_center_offset;
+	}
+
+	/*
+	w = viewport width / FBO width
+	h = viewport height / FBO height
+	x = viewport x / FBO width
+	y = viewport y / FBO height
+	*/
+	// Because we use one FBO per viewport i.e. the post processing shaders
+	// are run on the individual viewports we need to use full size here.
+	// Also the shaders needs to be changed for the single FBO.
+	float w = 1.0;
+	float h = 1.0;
+	float x = 0.0;
+	float y = 0.0;
+
+	// as = viewport width / viewport height;
+	// This is 640/800 because it's half screen and the Oculus Rift has 
+	// resolution of 1280x800.
+	// It's half screen since we are rendering only half screen.
+	float as = (1280.0/2.0)/800.0;
+
+	// Using vec3 since we can't upload vec2 to the shaders,
+	// could use one vec4 instead.
+	Ogre::Vector3 LensCenter(x + (w + offset*0.5)*0.5f, y + h*0.5f, 0);
+	Ogre::Vector3 ScreenCenter(x + w*0.5f, y + h*0.5f, 0);
+
+	// This scales the image larger so it fills the whole window.
+	// Problem with this is that it's directly taken from Oculus samples
+	// and it outscales the image (horizontally).
+	// We should have a run time configurable parameter for changing this.
+	float scaleFactor = 1.0f / (dist_info.scale);// - 0.1);
+
+	// @todo what purpose does both scales serve
+	// they seem to scale texture coordinates (those of the FBO)
+	// before we apply the lens distortion filter.
+	//
+	// ScaleIn is input scale and Scale is output scale
+	// "Scale" = [(w/2) * scaleFactor, (h/2) * scaleFactor * as]
+	// "ScaleIn" = [(2/w), (2/h) / as]
+	// actually this is Scale = scaleFactor * scale_v
+	// and ScaleIn = 1/scale_v
+	Ogre::Vector4 scale;
+	scale.x = (w/2) * scaleFactor;
+	scale.y = (h/2) * scaleFactor * as;
+	scale.z = 2/w;
+	scale.w = (2/h) / as;
+
+	// Update the parameters
+	params->setNamedConstant("LensCenter", LensCenter);
+	params->setNamedConstant("ScreenCenter", ScreenCenter);
+	params->setNamedConstant("g_scale", scale);
+	params->setNamedConstant("HmdWarpParam", dist_info.K);
+
+	// We don't have ChromAb, what does it do and do we need one
+	// if (PostProcessShaderRequested == PostProcessShader_DistortionAndChromAb)
+	// copy the ChromAb parameters
+
+	/* @todo What is tex matrix? and do we need one.
+	Matrix4f texm(w, 0, 0, x,
+					0, h, 0, y,
+					0, 0, 0, 0,
+					0, 0, 0, 1);
+	pPostProcessShader->SetUniform4x4f("Texm", texm);
+	*/
 }
 
 void
@@ -400,34 +530,26 @@ vl::Channel::_deferred_light_pass(void)
 
 
 void
-vl::Channel::_initialise_fbo(vl::CameraPtr camera)
+vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_material)
 {
-	std::clog << "vl::Channel::_initialise_fbo" << std::endl;
+	std::clog << "vl::Channel::_initialise_fbo : with material " << base_material << std::endl;
 
 	std::string name("internal/" + getName());
 	std::string material_name(name + "/fbo_material");
 	std::string texture_name(name + "/rtt_tex");
 	_fbo = _create_fbo(camera, name, Ogre::PF_R8G8B8);
 
-	/* For some reason dynamically created material does not work
-	_fbo_material = Ogre::MaterialManager::getSingleton().create(material_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-	Ogre::Technique* matTechnique = _fbo_material->createTechnique();
-	matTechnique->createPass();
-	matTechnique->getPass(0)->setLightingEnabled(false);
-	matTechnique->getPass(0)->createTextureUnitState(_fbo_texture->getName());
-	*/
-
-	// shouldn't be done for MRT
-	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName("rtt");
+	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName(base_material);
 	Ogre::MaterialPtr fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(material_name);
 	fbo_material->load();
 	_fbo_materials.push_back(fbo_material);
 	Ogre::AliasTextureNamePairList alias_list;
-	std::clog << "Trying to replace diffuseTexture alias with " << texture_name << std::endl;
+	std::clog << "Trying to replace rtt_texture alias with " << texture_name << std::endl;
 	alias_list["rtt_texture"] = texture_name;
 	if(fbo_material->applyTextureAliases(alias_list))
 	{
-		std::clog << "Succesfully replaced diffuseTexture." << std::endl;
+		// @todo this should throw if unsuccesfull
+		std::clog << "Succesfully replaced rtt_texture." << std::endl;
 	}
 	
 	/// Create viewport, necessary for FBO

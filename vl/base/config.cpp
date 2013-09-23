@@ -56,6 +56,37 @@ vl::config::convert_stereo(std::string const &stereo)
 	{ return ST_DEFAULT; }
 }
 
+std::ostream &
+vl::config::operator<<(std::ostream &os, vl::config::Channel const &c)
+{
+	os << c.name << " : " << c.wall << " : " << c.area 
+		<< " : " << c.background_colour << std::endl;
+	return os;
+}
+
+/// ------------------------- Projection -------------------------------------
+std::ostream &
+vl::config::operator<<(std::ostream &os, vl::config::Projection const &p)
+{
+	std::string type("perspective");
+	if(p.type == Projection::ORTHO)
+	{ type = "ortho"; }
+
+	std::string p_type("wall");
+	if(p.perspective_type == Projection::FOV)
+	{ p_type = "fov"; }
+
+	os << "Projection : " << type << " with " << p_type << " perspective"
+		<< " fov " << p.fov << " and horizontal " << p.horizontal;
+	if(p.use_asymmetric_stereo)
+	{ os << " using asymmetric stereo."; }
+	else
+	{ os << " not using asymmetric stereo."; }
+
+	return os;
+}
+
+
 /// ------------------------- Window -----------------------------------------
 vl::config::Window::Window(std::string const &nam, int width, int height, int px, int py,
 		StereoType stereo_t)	
@@ -91,6 +122,9 @@ vl::config::Window::Window(std::string const &nam, Rect<int> a, StereoType stere
 void
 vl::config::Window::clear(void)
 {
+	name.clear();
+	type = WT_WINDOW;
+	params.clear();
 	stereo_type = ST_OFF;
 	vert_sync = false;
 

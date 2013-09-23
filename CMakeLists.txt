@@ -143,6 +143,9 @@ find_package(OpenCollada REQUIRED)
 # TODO Sky plugisn should be optional and only one of them should be used
 find_package(SkyX REQUIRED)
 
+# Oculus SDK should not be required but for the moment
+find_package(OVR REQUIRED)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -160,6 +163,7 @@ include_directories( SYSTEM
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	${BULLET_INCLUDE_DIRS}
+	${OVR_INCLUDE_DIR}
 	)
 
 # Libraries that Hydra library depends on
@@ -177,6 +181,7 @@ set( HYDRA_DEP_LIBS
 	${OPENCOLLADA_LIBRARIES}
 	${SkyX_LIBRARIES}
 	${BULLET_LIBRARIES}
+	${OVR_LIBRARIES}
 	)
 
 # Libraries used to build project binaries

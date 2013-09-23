@@ -99,6 +99,13 @@ vl::Pipe::enableGUI(bool enable)
 }
 
 void
+vl::Pipe::setDistortionInfo(vl::DistortionInfo const &info)
+{
+	setDirty(DIRTY_PARAMS);
+	_hmd_distortion_info = info;
+}
+
+void
 vl::Pipe::addResources(vl::Settings const &settings)
 {
 	setDirty(DIRTY_RESOURCES);
@@ -183,7 +190,7 @@ vl::Pipe::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) con
 
 	if( DIRTY_PARAMS & dirtyBits )
 	{
-		msg << _gui_enabled << _debug_overlay_enabled;
+		msg << _gui_enabled << _debug_overlay_enabled << _hmd_distortion_info;
 	}
 
 	if( DIRTY_RESOURCES & dirtyBits )
@@ -232,7 +239,7 @@ vl::Pipe::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 
 	if( DIRTY_PARAMS & dirtyBits )
 	{
-		msg >> _gui_enabled >> _debug_overlay_enabled;
+		msg >> _gui_enabled >> _debug_overlay_enabled >> _hmd_distortion_info;
 	}
 
 	if( DIRTY_RESOURCES & dirtyBits )

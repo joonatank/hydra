@@ -47,6 +47,8 @@
 #include "base/print.hpp"
 // Necessary for EnvSettings
 #include "base/envsettings.hpp"
+// Necessary for copying Oculus parameters
+#include "oculus.hpp"
 
 #include "pipe.hpp"
 
@@ -474,9 +476,6 @@ vl::Master::_do_init(ProgramOptions const &opt)
 	/// Correct name has been set
 	std::cout << "vl::Master::Master : name = " << _env->getMaster().name << std::endl;
 
-	/// Parses the env config and creates all pipes and windows
-	_createWindows(_env);
-
 	/// Only create local Renderer if we have Windows defined
 	if(_env->getMaster().getNWindows())
 	{ _renderer = new Renderer(this, _env->getMaster().name); }
@@ -484,6 +483,10 @@ vl::Master::_do_init(ProgramOptions const &opt)
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 
 	_game_manager = new vl::GameManager(this, _logger, opt);
+
+	// Parses the env config and creates all pipes and windows
+	// needs to be after GameManager has been created because we need Oculus info from it.
+	_createWindows(_env);
 
 	_server.reset(new vl::cluster::Server(_env->getServer().port));
 	_server->addRequestMessageListener(boost::bind(&Master::messageRequested, this, _1));
@@ -567,7 +570,7 @@ void
 vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 {
 	// @todo we should combine these by using getNodes or something similar
-
+	std::vector< std::pair<PipeRefPtr, config::Window> > windows;
 	if(env->getMaster().getNWindows() > 0)
 	{
 		PipeRefPtr pipe(new Pipe(this, env->getMaster().name));
@@ -577,7 +580,7 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 		pipe->enableDebugOverlay(true);
 		for(size_t i = 0; i < env->getMaster().getNWindows(); ++i)
 		{
-			pipe->createWindow(env->getMaster().getWindow(i));
+			windows.push_back(std::make_pair(pipe, env->getMaster().getWindow(i)));
 		}
 		_pipes.push_back(pipe);
 	}
@@ -588,9 +591,67 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 		PipeRefPtr pipe(new Pipe(this, slave.name));
 		for(size_t j = 0; j < slave.getNWindows(); ++j)
 		{
-			pipe->createWindow(slave.getWindow(j));
+			windows.push_back(std::make_pair(pipe, slave.getWindow(j)));
 		}
 		_pipes.push_back(pipe);
+	}
+
+	for(std::vector< std::pair<PipeRefPtr, config::Window> >::iterator iter = windows.begin();
+		iter != windows.end(); ++iter)
+	{
+		config::Window win = iter->second;
+
+		if(win.type == config::WT_OCULUS)
+		{
+			// copy parameters from GameManager
+			assert(_game_manager);
+			// @todo this is problematic if Oculus is connected
+			// to a slave instead of a Master then again it needs more modifications.
+			if(!_game_manager->getOculus())
+			{
+				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Oculus not connected."));
+			}
+
+			vl::HMDInfo const &info = _game_manager->getOculus()->getInfo();
+
+			// Configure window
+			// copy only w and h, because we don't have a decent method for
+			// retrieving x and y from oculus so they are in the config
+			win.area.w = info.resolution.w;
+			win.area.h = info.resolution.h;
+			
+			win.stereo_type = config::ST_OCULUS;
+
+			// auto create a channel if we have none
+			// this way because we want to reuse any configured channels
+			if(win.get_channels().size() == 0)
+			{
+				// empty because we configure it later
+				win.add_channel(config::Channel());
+			}
+			// @todo should remove all but the first channel
+
+			// overwrite first channel config
+			config::Channel &chan = win.get_channel(0);
+			chan.name = "oculus";
+			
+			// using USER for now because we have a problem with FOV
+			// Also because projection matrices do not need to be recalculated
+			// at every frame because the screens are tied to head
+			// we can use static projections which are faster.
+			win.renderer.projection.perspective_type = config::Projection::USER;
+			win.renderer.projection.use_asymmetric_stereo = false;
+
+			// copy the Channel config i.e. projection matrices
+			_game_manager->getOculus()->copyConfig(chan);
+
+			std::clog << "Configured Oculus channel : " << chan << std::endl;
+
+			// set the distortion info
+			iter->first->setDistortionInfo(_game_manager->getOculus()->getDistortionInfo());
+		}
+
+		iter->first->createWindow(win);
 	}
 }
 

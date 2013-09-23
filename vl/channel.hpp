@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011-2012 Savant Simulators
+ *	Copyright (c) 2011-2013 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
  *	@file channel.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  */
 
@@ -39,12 +39,14 @@ enum RENDER_MODE
 	RM_DEFERRED,	// Work in progress
 	// Combined mode
 	RM_DEFERRED_MRT_STEREO,	// Not implemented
+	RM_OCULUS,
 };
 
 class Channel
 {
 public:
-	Channel(vl::config::Channel config, Ogre::Viewport *view, RENDER_MODE rm, uint32_t fsaa);
+	Channel(vl::config::Channel config, Ogre::Viewport *view, 
+		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent);
 
 	void setCamera(vl::CameraPtr cam);
 
@@ -55,9 +57,18 @@ public:
 
 	void draw(void);
 
+	/// @brief get the size of the Channel in homogeneous coordinates
+	/// No setSize for now
+	Rect<double> getSize(void) const
+	{ return _size; }
+
 	STEREO_EYE getStereoEyeCfg(void) const
 	{ return _stereo_eye_cfg; }
 
+	/// @todo this is really odd
+	/// why does a Channel hold stereo config?
+	/// for split screen stereo it's understandable because it's fixed
+	/// for channels that handle both eyes it's really confusing.
 	void setStereoEyeCfg(STEREO_EYE eye_cfg)
 	{ _stereo_eye_cfg = eye_cfg; }
 	
@@ -95,10 +106,18 @@ private :
 
 	void _render_to_fbo(void);
 
-	void _set_fbo_camera(vl::CameraPtr cam);
+	// passing stereo eye even though it's member variable because
+	// the member variable looks iffy.
+	void _oculus_post_processing(STEREO_EYE eye_cfg);
 
-	void _initialise_fbo(vl::CameraPtr camera);
+	/// nop if null parameter is passed here
+	void _set_fbo_camera(vl::CameraPtr cam, std::string const &base_material);
 
+	/// @param base_material is used to select post processing effects
+	/// rtt has no post processing, oculus_rtt has distortion for Oculus Rift
+	void _initialise_fbo(vl::CameraPtr camera, std::string const &base_material);
+
+	/// nop if null parameter is passed here
 	void _set_mrt_camera(vl::CameraPtr cam);
 
 	void _initialise_mrt(vl::CameraPtr camera);
@@ -131,6 +150,7 @@ private :
 	/// Data
 private:
 	std::string _name;
+	Rect<double> _size;
 
 	StereoCamera _camera;
 	Ogre::Viewport *_viewport;
@@ -151,6 +171,9 @@ private:
 	std::vector<Ogre::TexturePtr> _fbo_textures;
 
 	Ogre::Camera *_rtt_camera;
+
+	vl::Window *_parent;
+
 };	// class Channel
 
 }	// namespace vl

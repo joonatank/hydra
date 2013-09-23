@@ -135,6 +135,13 @@ public :
 	vl::Pipe *getPipe(void)
 	{ return _pipe; }
 
+	/// Functions for Oculus Rift, designed to be called from python
+	void enableHMDdistortion(bool enable);
+	bool isHMDdistortion(void) const;
+
+	void setHMDdistortionScale(vl::scalar val);
+	vl::scalar getHMDdistortionScale(void) const;
+
 	/// @brief Helper function for creating GUI when window is initalised
 	/// should not be called elsewhere than Window and GUI creation
 	/// NOP if GUI has already been initialised
