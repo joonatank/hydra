@@ -128,6 +128,16 @@ vl::Window::setCamera(vl::CameraPtr camera)
 	}
 }
 
+vl::Pipe *
+vl::Window::getPipe(void)
+{
+	if(_pipe)
+	{ return _pipe; }
+
+	assert(_renderer);
+	return _renderer->getPipe();
+}
+
 void
 vl::Window::takeScreenshot( const std::string& prefix, const std::string& suffix )
 {
@@ -792,6 +802,8 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	if(render_mode == RM_OCULUS)
 	{
 		channel->getCamera().enableHMD(true);
+		assert(getPipe());
+		channel->setDistortionInfo(getPipe()->getDistortionInfo());
 	}
 
 	// set the aspect ratio

@@ -600,6 +600,7 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 		iter != windows.end(); ++iter)
 	{
 		config::Window win = iter->second;
+
 		if(win.type == config::WT_OCULUS)
 		{
 			// copy parameters from GameManager
@@ -645,6 +646,9 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 			_game_manager->getOculus()->copyConfig(chan);
 
 			std::clog << "Configured Oculus channel : " << chan << std::endl;
+
+			// set the distortion info
+			iter->first->setDistortionInfo(_game_manager->getOculus()->getDistortionInfo());
 		}
 
 		iter->first->createWindow(win);

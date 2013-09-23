@@ -66,6 +66,30 @@ struct HMDInfo
 
 std::ostream &operator<<(std::ostream &os, HMDInfo const &info);
 
+// distortion info should not need special overloads for serialization
+// if it's changed to include types that use pointers we need to implement
+// serialization methods.
+struct DistortionInfo
+{
+	// empty constructor for now
+	// should not matter that we don't have default values since it should only
+	// be used if it's initialised from Oculus
+	DistortionInfo(void) {}
+
+	// Distortion parameters, based on the lense used
+	Ogre::Vector4 K;
+	// no idea
+	Ogre::Vector4 chromatic_aberration;
+	// lens offset
+	vl::scalar x_center_offset;
+	vl::scalar y_center_offset;
+	// how much the image needs to be scaled because the distortion filter
+	// makes the image smaller than the rendering viewport.
+	vl::scalar scale;
+};
+
+std::ostream &operator<<(std::ostream &os, DistortionInfo const &info);
+
 class Oculus : public OVR::MessageHandler
 {
 public :
@@ -83,6 +107,9 @@ public :
 	HMDInfo const &getInfo(void) const
 	{ return _info; }
 
+	DistortionInfo const &getDistortionInfo(void) const
+	{ return _distortion; }
+
 	// For testing
 	OVR::Util::Render::StereoConfig const &getStereoConfig(void) const
 	{ return _sconfig; }
@@ -93,6 +120,7 @@ private :
 	void _initialise_sconfig(OVR::HMDInfo const &info);
 
 	HMDInfo _info;
+	DistortionInfo _distortion;
 
 	OVR::Ptr<OVR::DeviceManager> _manager;
 	OVR::Ptr<OVR::SensorDevice> _sensor;

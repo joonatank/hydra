@@ -16,6 +16,7 @@
 
 #include "base/exceptions.hpp"
 
+/// -------------------------------- Global ----------------------------------
 std::ostream &
 vl::operator<<(std::ostream &os, vl::HMDInfo const &info)
 {
@@ -32,6 +33,19 @@ vl::operator<<(std::ostream &os, vl::HMDInfo const &info)
 	return os;
 }
 
+std::ostream &
+vl::operator<<(std::ostream &os, DistortionInfo const &info)
+{
+	os << "K = " << info.K << std::endl
+		<< "chromatic_aberration = " << info.chromatic_aberration << std::endl
+		<< "X center offset = " << info.x_center_offset 
+		<< " : Y center offset = " << info.y_center_offset
+		<< " : scale = " << info.scale << std::endl;
+	return os;
+}
+
+
+/// -------------------------------- Oculus ----------------------------------
 vl::Oculus::Oculus(void)
 	: _manager(0)
 	, _hmd(0)
@@ -173,12 +187,9 @@ vl::Oculus::copyConfig(vl::config::Channel &channel)
 	// from here we get the projection matrix
 	// Convert Oculus matrices to Ogre
 	OVR::Util::Render::StereoEyeParams p = _sconfig.GetEyeRenderParams(OVR::Util::Render::StereoEye_Left);			
-	Ogre::Matrix4 m_left(convert_matrix(p.Projection));
+	channel.user_projection_left = convert_matrix(p.Projection);
 	p = _sconfig.GetEyeRenderParams(OVR::Util::Render::StereoEye_Right);
-	Ogre::Matrix4 m_right(convert_matrix(p.Projection));
-
-	channel.user_projection_left = m_left;
-	channel.user_projection_right = m_right;
+	channel.user_projection_right = convert_matrix(p.Projection);
 }
 
 /// --------------------------- Private --------------------------------------
@@ -207,4 +218,26 @@ vl::Oculus::_initialise_sconfig(OVR::HMDInfo const &info)
 		else
 			_sconfig.SetDistortionFitPointVP(0.0f, 1.0f);
 	}
+
+	// @todo this is in TinyRoom sample
+	// it doesn't seem to have any affect though, dunno what it should do.
+	_sconfig.Set2DAreaFov(Ogre::Degree(85).valueRadians());
+
+	OVR::Util::Render::DistortionConfig const &d_config = _sconfig.GetDistortionConfig();
+
+	// copy distortion info
+	_distortion.K = Ogre::Vector4( d_config.K[0], d_config.K[1], d_config.K[2], d_config.K[3] );
+	_distortion.chromatic_aberration = Ogre::Vector4( d_config.ChromaticAberration[0], 
+		d_config.ChromaticAberration[1], d_config.ChromaticAberration[2], d_config.ChromaticAberration[3] );
+	_distortion.x_center_offset = d_config.XCenterOffset;
+	_distortion.y_center_offset = d_config.YCenterOffset;
+	_distortion.scale = d_config.Scale;
+
+	OVR::Util::Render::StereoEyeParams leftEye = _sconfig.GetEyeRenderParams(OVR::Util::Render::StereoEye_Left);
+	OVR::Util::Render::StereoEyeParams rightEye = _sconfig.GetEyeRenderParams(OVR::Util::Render::StereoEye_Right);
+	// Left eye rendering parameters
+	// Custom projection matrix for left eye
+	OVR::Matrix4f leftProjection = leftEye.Projection;
+	// Matrix that should multiply the view matrix (not necessary if we use ipd properly)
+	OVR::Matrix4f leftViewAdjust = leftEye.ViewAdjust;
 }

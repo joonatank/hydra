@@ -22,6 +22,8 @@
 #include <OGRE/OgreRectangle2D.h>
 
 #include "stereo_camera.hpp"
+// necessary for Distortion Info
+#include "oculus.hpp"
 
 namespace vl
 {
@@ -64,6 +66,10 @@ public:
 	STEREO_EYE getStereoEyeCfg(void) const
 	{ return _stereo_eye_cfg; }
 
+	/// @todo this is really odd
+	/// why does a Channel hold stereo config?
+	/// for split screen stereo it's understandable because it's fixed
+	/// for channels that handle both eyes it's really confusing.
 	void setStereoEyeCfg(STEREO_EYE eye_cfg)
 	{ _stereo_eye_cfg = eye_cfg; }
 	
@@ -74,6 +80,12 @@ public:
 
 	void setPlayer(Player *player)
 	{ _player = player; }
+
+	// Only meaningful for Oculus Rift
+	vl::DistortionInfo const &getDistortionInfo(void)
+	{ return _hmd_distortion_info; }
+	void setDistortionInfo(vl::DistortionInfo const &info)
+	{ _hmd_distortion_info = info; }
 
 	/// Per frame statistics
 	vl::scalar getLastFPS(void) const;
@@ -101,10 +113,18 @@ private :
 
 	void _render_to_fbo(void);
 
-	void _set_fbo_camera(vl::CameraPtr cam);
+	// passing stereo eye even though it's member variable because
+	// the member variable looks iffy.
+	void _oculus_post_processing(STEREO_EYE eye_cfg);
 
-	void _initialise_fbo(vl::CameraPtr camera);
+	/// nop if null parameter is passed here
+	void _set_fbo_camera(vl::CameraPtr cam, std::string const &base_material);
 
+	/// @param base_material is used to select post processing effects
+	/// rtt has no post processing, oculus_rtt has distortion for Oculus Rift
+	void _initialise_fbo(vl::CameraPtr camera, std::string const &base_material);
+
+	/// nop if null parameter is passed here
 	void _set_mrt_camera(vl::CameraPtr cam);
 
 	void _initialise_mrt(vl::CameraPtr camera);
@@ -148,6 +168,8 @@ private:
 	STEREO_EYE _stereo_eye_cfg;
 	vl::Player *_player;
 
+	vl::DistortionInfo _hmd_distortion_info;
+
 	// Special Rendering surface
 	// MRT is only available for Deferred shading
 	// FBO is only available for FBO rendering
@@ -158,6 +180,7 @@ private:
 	std::vector<Ogre::TexturePtr> _fbo_textures;
 
 	Ogre::Camera *_rtt_camera;
+
 };	// class Channel
 
 }	// namespace vl

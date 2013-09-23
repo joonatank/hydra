@@ -72,6 +72,9 @@ public:
 	std::string const &getName( void ) const
 	{ return _name; }
 
+	// conveniance function because Pipe differs for slaves and masters
+	vl::Pipe *getPipe(void);
+
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
 	/// @brief return the system handle for the window

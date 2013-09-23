@@ -1,0 +1,40 @@
+fragment_program oculus_distortion_ps glsl
+{
+	source oculus_distortion_ps.glsl
+
+	default_params
+	{
+		// textures
+		param_named tex int 0
+		// others
+		param_named LensCenter float3 0 0 0
+		param_named ScreenCenter float3 0 0 0
+		param_named g_scale float4 0 0 0 0
+		// Distortion parameters
+		param_named HmdWarpParam float4 1.0 0.22 0.24 0.0
+	}
+}
+
+// Post processing effect for Oculus Rift
+material oculus_rtt
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref pass_through_vs
+			{
+			}
+
+			fragment_program_ref oculus_distortion_ps
+			{
+			}
+
+			texture_unit rtt_texture
+			{
+				texture white.tga
+			}
+		}
+	}
+}
+
