@@ -155,16 +155,14 @@ set( HYDRA_DEP_LIBS
 	)
 
 # Find the Eye tracking package which is not required
-find_package(Eyes QUIET)
-find_package(GLM QUIET)
-# Link if we found it
-if(EYES_FOUND AND GLM_FOUND)
-	message("Linking to eyes")
-	include_directories(SYSTEM ${EYES_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
-	list(APPEND HYDRA_DEP_LIBS ${EYES_LIBRARIES})
-	# Add define so we can build the support for Eyes
-	add_definitions(-DUSE_EYES)
-endif()
+# For now because I'm too lazy to implement non required, lets make it required
+find_package(Eyes REQUIRED)
+find_package(GLM REQUIRED)
+
+include_directories(SYSTEM ${EYES_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
+list(APPEND HYDRA_DEP_LIBS ${EYES_LIBRARIES})
+# Add define so we can build the support for Eyes
+add_definitions(-DUSE_EYES)
 
 # Libraries used to build project binaries
 set( HYDRA_LIBRARIES HydraMain )

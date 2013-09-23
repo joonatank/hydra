@@ -746,9 +746,11 @@ void export_game(void)
 		.add_property("started", &vl::EyeTracker::isStarted)
 		.def("load_recording", &vl::EyeTracker::loadRecording)
 		.def("save_recording", &vl::EyeTracker::saveRecording)
+		.def("print_init", &vl::EyeTracker::printInit)
 		.add_property("recording_shown", &vl::EyeTracker::isRecordingShown, &vl::EyeTracker::showRecording)
 		.add_property("ray", python::make_function(&vl::EyeTracker::getRay, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("debug", &vl::EyeTracker::isDebug, &vl::EyeTracker::setDebug)
+		.add_property("head_disabled", &vl::EyeTracker::isHeadDisabled, &vl::EyeTracker::disableHead)
 		// @todo add parameter configuring or RayObject retrieval
 		.def(python::self_ns::str(python::self_ns::self))
 	;

@@ -82,9 +82,46 @@ l_node.attachObject(l)
 
 # Add code that enables and configures EyeTracker
 # Obviously needs EyeTracker interface to be exposed first
+# Not auto starting at the moment because we want to calibrate it
+# FIXME
+# IF we don't auto start it the ray goes missing, still need to test it with the
+# debugging variables on though.
+# If we auto start we get a weird 45 degree downward angle in the eye ray
 game.eye_tracker.start()
+# Seems to be working properly with fake gaze tracker and static head tracking
+# TODO
+# With varying head tracking
+# Doesn't seem to work, for some reason the eye flips over when head tracking
+# is enabled. It doesn't however seem to have a noticable pattern for flipping.
+# 
+# TODO
+# Test with real eye tracking (without head tracking)
+# Test with real head tracking (without eye tracking)
+# Test with both eye and head tracking
+#game.eye_tracker.debug = True
+#game.eye_tracker.head_disabled = True
+
+# Debug functions
+def toggle_eye_debug() :
+	game.eye_tracker.debug = not game.eye_tracker.debug
+def toggle_eye_head() :
+	game.eye_tracker.head_disabled = not game.eye_tracker.head_disabled
 
 # Add key event to enable/disable real time eye tracking
+def toggle_eye_tracker() :
+	if game.eye_tracker.started :
+		game.eye_tracker.stop()
+	else :
+		game.eye_tracker.start()
+
+trigger = game.event_manager.createKeyTrigger(KC.SPACE)
+trigger.addListener(toggle_eye_tracker)
+
+trigger = game.event_manager.createKeyTrigger(KC.U)
+trigger.addListener(toggle_eye_debug)
+
+trigger = game.event_manager.createKeyTrigger(KC.I)
+trigger.addListener(toggle_eye_head)
 
 # Add key event to show/hide previous recording
 

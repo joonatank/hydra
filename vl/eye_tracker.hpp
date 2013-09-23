@@ -93,6 +93,14 @@ public :
 	bool isDebug(void) const
 	{ return _debug; }
 
+	void disableHead(bool disable_head)
+	{ _head_disabled = disable_head; }
+
+	bool isHeadDisabled(void) const
+	{ return _head_disabled; }
+
+	void printInit(void);
+
 private :
 	void _update_head(void);
 #ifdef USE_EYES
@@ -110,6 +118,7 @@ private :
 
 	bool _started;
 	bool _debug;
+	bool _head_disabled;
 
 };
 

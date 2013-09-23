@@ -50,8 +50,9 @@ vl::EyeTracker::EyeTracker(PlayerPtr player, SceneManager *creator)
 	: _player(player)
 	, _drawable(0)
 	, _creator(creator)
-	, _debug(false)
 	, _started(false)
+	, _debug(false)
+	, _head_disabled(false)
 {
 	assert(_creator);
 
@@ -94,16 +95,10 @@ vl::EyeTracker::start(void)
 	{ return; }
 
 	// Do start
-	// @todo we should have separated calibration function
 
-	// @todo tecnically the calibration function uses head data
-	// for calculating the initial position, problem with this
-	// is that if we use it we get really skewed results without
-	// head tracking. 
-	// Need to test if this is the case with real head tracking also
-	// if so we need to fix the calibration.
-	//_update_head();
-	_eyes->init();
+	// Update head before calibrating
+	_update_head();
+	_eyes->calibrate();
 	_node->show();
 
 	_started = true;
@@ -124,6 +119,9 @@ vl::EyeTracker::stop(void)
 void
 vl::EyeTracker::_update_head(void)
 {
+	if(_head_disabled)
+	{ return; }
+
 	vl::Transform const &t = _player->getHeadTransform();
 	glm::vec3 v(t.position.x, t.position.y, t.position.z);
 	glm::quat q(t.quaternion.w, t.quaternion.x, t.quaternion.y, t.quaternion.z);
@@ -145,7 +143,8 @@ vl::EyeTracker::progress(void)
 	_eyes->mainloop();
 	
 	// Copy the transformation from Player::currentCamera to our Ray SceneNode
-	// @todo might make this configurable so we can debug more easily
+	// @fixme this causes very weird bugs in the eye position
+	// even with the static position
 	if(!_debug)
 	{
 		_node->setWorldTransform(_player->getCameraNode()->getWorldTransform());
@@ -218,6 +217,12 @@ vl::EyeTracker::isRecordingShown(void) const
 {
 	assert(_drawable);
 	return _drawable->getShowRecordedRays();
+}
+
+void
+vl::EyeTracker::printInit(void)
+{
+	std::cout << _eyes->getInit();
 }
 
 #endif

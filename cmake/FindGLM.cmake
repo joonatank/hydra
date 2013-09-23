@@ -14,7 +14,7 @@
 
 # include already in cache
 if( GLM_INCLUDE_DIR )
-	if(EXISTS "${GLM_INCLUDE_DIR}/glm.hpp")
+	if(EXISTS "${GLM_INCLUDE_DIR}/glm/glm.hpp")
 		set(GLM_FIND_QUIETLY TRUE)
 	endif()
 endif() 
@@ -28,19 +28,8 @@ find_path(GLM_INCLUDE_DIR
 	PATH_SUFFIXES
 	)
 
-# Common library search paths, for both Windows and Linux
-set( LIB_SEARCH_PATHS
-	$ENV{GLM_DIR}/lib
-	/usr/lib
-	/usr/local/lib
-	${GLM_INCLUDE_DIR}/../lib
-	)
-
-if(GLM_INCLUDE_DIR AND EXISTS "${GLM_INCLUDE_DIR}/glm.hpp")
+if(GLM_INCLUDE_DIR AND EXISTS "${GLM_INCLUDE_DIR}/glm/glm.hpp")
 	set(GLM_FOUND "YES")
-	if(NOT GLM_FIND_QUIETLY)
-		message(STATUS "Found GLM: ${GLM_LIBRARY}")
-	endif()
 else()
 	unset(GLM_FOUND)
 	if(NOT GLM_FIND_QUIETLY)
@@ -49,11 +38,6 @@ else()
 endif()
 
 if( GLM_FOUND OR GLM_FIND_QUIETLY )
-	mark_as_advanced(
-		GLM_INCLUDE_DIR
-		GLM_LIBRARY
-		GLM_LIBRARY_RELEASE
-		GLM_LIBRARY_DEBUG
-		)
+	mark_as_advanced(GLM_INCLUDE_DIR)
 endif()
 

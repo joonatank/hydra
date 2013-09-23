@@ -224,7 +224,7 @@ public :
 		// Declare the supported options.
 		po::options_description desc("Allowed options");
 		desc.add_options()
-			("help", "produce help message")
+			("help,h", "produce help message")
 			("port,P", po::value<int>(), "VRPN server port.")
 			("input-file,I", po::value<std::string>(), "Input file for the values to send.")
 			("name", po::value<std::string>(), "Name of the VRPN server.")
