@@ -16,18 +16,7 @@ createCameraMovements(camera, speed=10)
 
 game.player.camera = "camera"
 
-addMoveSelection(speed=3, angular_speed=Degree(60), reference=camera)
-
-"""
-ogre_ent = game.scene.createEntity("ogre", "ogre.mesh")
-ogre = game.scene.createSceneNode("ogre")
-ogre.attachObject(ogre_ent)
-ogre.position = Vector3(0, 2.5, 0)
-"""
-
-#game.scene.addToSelection(ogre)
-
-game.scene.sky = SkyDomeInfo("CloudySky")
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
 # Create ground plane
 ground_length = 20;
@@ -66,15 +55,13 @@ wall_right.attachObject(wall_ent)
 wall_right.rotate(Quaternion(-0.7071, 0, 0.7071, 0)*rot)
 wall_right.translate(Vector3(0, -10, 0))
 
-"""
-sphere_ent = game.scene.createEntity('sphere', PF.SPHERE)
+game.mesh_manager.createSphere('sphere')
+sphere_ent = game.scene.createEntity('sphere', 'sphere', True)
 sphere_ent.material_name = 'finger_sphere/red'
 sphere = game.scene.createSceneNode('sphere')
 sphere.attachObject(sphere_ent)
 sphere.position = Vector3(4, 2.5, 0)
-sphere.scale = sphere.scale*0.003
 sphere_ent.cast_shadows = True
-"""
 
 athene = game.scene.createSceneNode("athene")
 # Testing the new Mesh Manager for loading meshes
@@ -82,7 +69,7 @@ athene_ent = game.scene.createEntity("athene", "athene.mesh", True)
 athene_ent.material_name = "athene_material"
 athene.attachObject(athene_ent)
 athene.position = Vector3(-3, 4, 5)
-athene.scale = Vector3(1,1,1)*0.05;
+athene.scale(0.05);
 
 game.scene.shadows.enable()
 
@@ -93,6 +80,52 @@ l_node.position = Vector3(0, 30, 0)
 l_node.orientation = Quaternion(0, 0, 0.7071, 0.7071)
 l_node.attachObject(l)
 
+# Add code that enables and configures EyeTracker
+# Obviously needs EyeTracker interface to be exposed first
+# Not auto starting at the moment because we want to calibrate it
+# FIXME
+# IF we don't auto start it the ray goes missing, still need to test it with the
+# debugging variables on though.
+# If we auto start we get a weird 45 degree downward angle in the eye ray
+game.eye_tracker.start()
+# Seems to be working properly with fake gaze tracker and static head tracking
+# TODO
+# With varying head tracking
+# Doesn't seem to work, for some reason the eye flips over when head tracking
+# is enabled. It doesn't however seem to have a noticable pattern for flipping.
+# 
+# TODO
+# Test with real eye tracking (without head tracking)
+# Test with real head tracking (without eye tracking)
+# Test with both eye and head tracking
+#game.eye_tracker.debug = True
+#game.eye_tracker.head_disabled = True
+
+# Debug functions
+def toggle_eye_debug() :
+	game.eye_tracker.debug = not game.eye_tracker.debug
+def toggle_eye_head() :
+	game.eye_tracker.head_disabled = not game.eye_tracker.head_disabled
+
+# Add key event to enable/disable real time eye tracking
+def toggle_eye_tracker() :
+	if game.eye_tracker.started :
+		game.eye_tracker.stop()
+	else :
+		game.eye_tracker.start()
+
+trigger = game.event_manager.createKeyTrigger(KC.SPACE)
+trigger.addListener(toggle_eye_tracker)
+
+trigger = game.event_manager.createKeyTrigger(KC.U)
+trigger.addListener(toggle_eye_debug)
+
+trigger = game.event_manager.createKeyTrigger(KC.I)
+trigger.addListener(toggle_eye_head)
+
+# Add key event to show/hide previous recording
+
+""" These are not used anymore
 eye_trigger_n = "eyeTrigger"
 if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	print("Adding eye tracker action")
@@ -144,4 +177,5 @@ if(game.event_manager.hasTrackerTrigger(eye_trigger_n)):
 	# TODO this does not update the ray correctly
 	# If enabled here user needs to call ray.update() from command line
 	ray.show_recording = True
+"""
 

@@ -26,6 +26,8 @@
 
 #include "logger.hpp"
 
+#include "input/pcan.hpp"
+
 vl::EventManager::EventManager( void )
 	: _frame_trigger(0)
 	, _key_modifiers(KEY_MOD_NONE)
@@ -272,6 +274,17 @@ vl::EventManager::getJoystick(std::string const &name)
 	}
 }
 
+vl::PCANRefPtr
+vl::EventManager::getPCAN(void)
+{
+	if(!_pcan)
+	{
+		_pcan.reset(new PCAN());
+	}
+
+	return _pcan;
+}
+
 void
 vl::EventManager::removeAll(void)
 {
@@ -405,6 +418,9 @@ vl::EventManager::mainloop(vl::time const &elapsed_time)
 	{
 		(*iter)->update(elapsed_time);
 	}
+
+	if(_pcan)
+	{ _pcan->mainloop(); }
 
 	if(_frame_trigger)
 	{ _frame_trigger->update(elapsed_time); }

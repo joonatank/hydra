@@ -137,8 +137,8 @@ namespace vl
 	typedef boost::shared_ptr<Material> MaterialRefPtr;
 	typedef boost::shared_ptr<MaterialManager> MaterialManagerRefPtr;
 
-	class Recording;
-	typedef boost::shared_ptr<Recording> RecordingRefPtr;
+	class EyeTracker;
+	typedef boost::shared_ptr<EyeTracker> EyeTrackerRefPtr;
 
 	/// Containers
 	typedef std::map<std::string, std::string> NamedValuePairList;
@@ -185,6 +185,7 @@ namespace vl
 
 	class InputDevice;
 	class Joystick;
+	class PCAN;
 	class GameJoystick;
 	class SerialJoystick;
 	class JoystickHandler;
@@ -192,6 +193,7 @@ namespace vl
 	class MouseHandler;
 	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
 	typedef boost::shared_ptr<Joystick> JoystickRefPtr;
+	typedef boost::shared_ptr<PCAN> PCANRefPtr;
 	typedef boost::shared_ptr<GameJoystick> GameJoystickRefPtr;
 	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
 	typedef boost::shared_ptr<JoystickHandler> JoystickHandlerRefPtr;

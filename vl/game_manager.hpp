@@ -57,6 +57,8 @@
 #include "profiler_report.hpp"
 // Necessary for LOADER_FLAGS
 #include "flags.hpp"
+// Necessary for EyeTracker
+#include "eye_tracker.hpp"
 // Necessary for creating a proper implementation of callback functor
 #include "cad_importer.hpp"
 
@@ -177,6 +179,9 @@ public :
 	vl::Logger *getLogger(void)
 	{ return assert_return(_logger); }
 
+	EyeTrackerRefPtr getEyeTracker(void)
+	{ return _eye_tracker; }
+
 	/// @brief creates a new GameObject
 	/// @return new GameObject if none with that name exist, otherwise already existing object
 	/// @param name the name of the GameObject to create
@@ -285,11 +290,6 @@ public :
 	bool isStopped(void) const;
 
 	std::string getStateName(void) const;
-
-	/// Resource loading
-	/// @todo all resource loading should be moved to ResourceManager or similar
-
-	RecordingRefPtr loadRecording(std::string const &path);
 
 	/// @brief get the current project and global settings
 	/// Mostly usefull for project change callbacks
@@ -475,6 +475,8 @@ private :
 	KinematicWorldRefPtr _kinematic_world;
 
 	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
+
+	EyeTrackerRefPtr _eye_tracker;
 
 	vl::config::ProjSettings _loaded_project;
 	vl::config::ProjSettings _global_project;

@@ -21,7 +21,6 @@ set(SRC
 	tracker_serializer.cpp
 	settings.cpp
 	resource.cpp
-	recording.cpp
 	game_manager.cpp
 	player.cpp
 	dotscene_loader.cpp
@@ -64,6 +63,7 @@ set(SRC
 	hsf_loader.cpp
 	hsf_writer.cpp
 	profiler_report.cpp
+	eye_tracker.cpp
 	cad_importer.cpp
 	oculus.cpp
 	)
@@ -91,12 +91,14 @@ if(WIN32)
 		input/serial_joystick.hpp
 		input/joystick.hpp
 		input/ois_converters.hpp
+		input/pcan.hpp
 		input/mouse.hpp
 		input/mouse_event.hpp
 		)
 	set(INPUT_SRC
 		input/serial_joystick.cpp
 		input/joystick.cpp
+		input/pcan.cpp
 		input/mouse.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
@@ -240,7 +242,6 @@ set( HEADERS
 	player.hpp
 	typedefs.hpp
 	resource.hpp
-	recording.hpp
 	resource_manager.hpp
 	dotscene_loader.hpp
 	scene_manager.hpp
@@ -272,6 +273,7 @@ set( HEADERS
 	remote_launcher_helper.hpp
 	profiler_report.hpp
 	flags.hpp
+	eye_tracker.hpp
 	cad_importer.hpp
 	oculus.hpp
 	)

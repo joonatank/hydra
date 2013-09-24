@@ -54,6 +54,21 @@ material sky/cloudy/glsl
 	}
 }
 
+material dome/blue
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.5 0.5 1.0 1.0
+			diffuse 0.5 0.5 1.0 1.0
+			lighting on
+			depth_write off
+			polygon_mode_overrideable false
+		}
+	}
+}
+
 material CloudySky : sky/cloudy/glsl
 {}
 
@@ -187,14 +202,14 @@ material debug_red
 	}
 }
 
-material collision_sphere/transparent/red : bling_phong/shadows
+material collision_sphere/red : bling_phong/shadows
 {
 	set $emissiveCol "0.4 0 0 0.2"
 	set $diffuseCol "0.4 0.2 0.2 0.2"
 	set $specularCol "0 0 0"
-	set $depthWrite off
-	set $ambient_scene_blend "alpha_blend"
-	set $diffuse_scene_blend "src_alpha one"
+//	set $depthWrite off
+//	set $ambient_scene_blend "alpha_blend"
+//	set $diffuse_scene_blend "src_alpha one"
 }
 
 material finger_sphere/red : bling_phong/shadows

@@ -99,7 +99,6 @@ find_package(Ogre REQUIRED)
 ######### Find OIS ###########
 find_package(OIS REQUIRED)
 
-
 ####### Find Boost ########
 
 set(Boost_USE_MULTITHREADED ON)
@@ -184,6 +183,16 @@ set( HYDRA_DEP_LIBS
 	${OVR_LIBRARIES}
 	)
 
+# Find the Eye tracking package which is not required
+# For now because I'm too lazy to implement non required, lets make it required
+find_package(Eyes REQUIRED)
+find_package(GLM REQUIRED)
+
+include_directories(SYSTEM ${EYES_INCLUDE_DIR} ${GLM_INCLUDE_DIR})
+list(APPEND HYDRA_DEP_LIBS ${EYES_LIBRARIES})
+# Add define so we can build the support for Eyes
+add_definitions(-DUSE_EYES)
+
 # Libraries used to build project binaries
 set( HYDRA_LIBRARIES HydraMain )
 
@@ -194,6 +203,14 @@ link_directories( ${vl_BINARY_DIR}/vl ${Boost_LIBRARY_DIRS} )
 include( CopyScripts )
 
 set(HYDRA_BUILD_TESTS TRUE CACHE BOOL "Build the unit tests.")
+
+# Find PCAN and add use flag if found
+find_package(PCANBasic)
+if(PCANBasic_FOUND)
+	add_definitions(-DUSE_PCAN)
+	include_directories(SYSTEM ${PCANBasic_INCLUDE_DIR})
+	list(APPEND HYDRA_DEP_LIBS ${PCANBasic_LIBRARY})
+endif()
 
 add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/extern )
 

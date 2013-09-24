@@ -63,6 +63,10 @@ copy_start_scripts( hydra
 	"btCompound_test" )
 
 copy_start_scripts( hydra
+	pcan_project/pcan_project.prj
+	"pcan" )
+
+copy_start_scripts( hydra
 	dynamic_concave_raycast/dynamic_concave_raycast.prj
 	"dynamic_concave_raycast" )
 	
@@ -131,6 +135,12 @@ set(HYDRA_MAIN_BINARY_DIR \"${HydraMain_BINARY_DIR}\")
 if(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
 	message(FATAL_ERROR "Hydra dependencies lib dir doesn't exist.")
 endif()
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/x64\"")
+else()
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/Win32\"")
+endif()
+
 
 set(OGRE_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/Ogre/bin\"")
 set(CEGUI_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/CEGUI/bin\"")

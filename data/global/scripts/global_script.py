@@ -47,6 +47,7 @@ class Controller:
 		self.rotation = rotation
 		self.disabled = False
 		self.frame = TS.LOCAL
+		self.rotation_frame = TS.LOCAL
 
 	def transform(self, nodes, t):
 		if self.disabled:
@@ -83,7 +84,7 @@ class Controller:
 			angle = Radian(self.angular_speed*float(t))
 			q = Quaternion(angle, axis)
 			for i in range(len(nodes)):
-				nodes[i].rotate(q)
+				nodes[i].rotate(q, self.rotation_frame)
 
 	def up(self):
 		self.mov_dir += Vector3.unit_y
@@ -121,6 +122,12 @@ class Controller:
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
 
+	def reset_rotation(self):
+		self.rot_axis = Vector3.zero
+
+	def reset_translation(self):
+		self.mov_dir = Vector3.zero
+
 	def toggle_high_speed(self):
 		if self.speed < self.high_speed:
 			self.speed = self.high_speed
@@ -135,8 +142,10 @@ class Controller:
 
 
 class ObjectController(Controller):
-	def __init__(self, node, speed = 5, angular_speed = Degree(90), high_speed=10):
-		Controller.__init__(self, speed, angular_speed, node, high_speed=high_speed)
+	def __init__(self, node, speed = 5, angular_speed = Degree(90),
+			reference=None, high_speed=10):
+		Controller.__init__(self, speed, angular_speed,
+				reference=reference, high_speed=high_speed)
 		self.node = node
 
 	def progress(self, t):

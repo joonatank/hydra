@@ -40,9 +40,12 @@
 #include "input/joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 #include "input/joystick.hpp"
-
+#include "input/pcan.hpp"
 
 #include "vrpn_analog_client.hpp"
+
+// Necessary for exposing vectors
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 /// Event system overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
@@ -84,6 +87,7 @@ void export_managers(void)
 		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>()) )
 		.def("getJoystick", &vl::EventManager::getJoystick, getJoystick_ov())
+		.def("get_pcan", &vl::EventManager::getPCAN)
 		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
 			python::return_value_policy<python::reference_existing_object>())
 		.def(python::self_ns::str(python::self_ns::self))
@@ -131,6 +135,7 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
+	/// Input
 	
 	bool (vl::JoystickEvent::*isButtonDown_ov0)(size_t) const = &vl::JoystickEvent::isButtonDown;
 
@@ -139,6 +144,17 @@ void export_managers(void)
 		.def_readonly("axis_y", &vl::JoystickEvent::axis_y)
 		.def_readonly("axis_z", &vl::JoystickEvent::axis_z)
 		.def("is_button_down", isButtonDown_ov0)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<std::vector<int8_t> >("bytevec")
+		.def(python::vector_indexing_suite< std::vector<int8_t> >())
+	;
+
+	python::class_<vl::CANMsg>("CanMsg", python::init<>())
+		.def_readonly("id", &vl::CANMsg::id)
+		.def_readonly("length", &vl::CANMsg::length)
+		.def_readonly("data", &vl::CANMsg::data)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -153,7 +169,6 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
-	/// Input
 	
 	/// Handlers
 	python::class_<vl::JoystickHandler, vl::JoystickHandlerRefPtr, boost::noncopyable>("JoystickHandler", python::no_init)
@@ -175,6 +190,10 @@ void export_managers(void)
 		.def("add_handler", &vl::Joystick::add_handler)
 		.def("remove_handler", &vl::Joystick::remove_handler)
 		.add_property("zero_size", &vl::Joystick::get_zero_size, &vl::Joystick::set_zero_size)
+	;
+
+	python::class_<vl::PCAN, vl::PCANRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("PCAN", python::no_init)
+		.def("add_listener", toast::python::signal_connect<void (CANMsg const &)>(&vl::PCAN::addListener))
 	;
 
 	python::def( "getKeyName", getKeyName );
