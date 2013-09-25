@@ -93,7 +93,7 @@ operator<<(std::ostream &os, MouseEvent const &evt)
 }
 
 namespace cluster {
-
+/*
 template<>
 inline ByteStream &
 operator<< <Ogre::Matrix4 const>(ByteStream &msg, Ogre::Matrix4 const &mat)
@@ -126,16 +126,14 @@ operator>> <Ogre::Matrix4>(ByteStream &msg, Ogre::Matrix4 &mat)
 	return msg;
 }
 
+*/
 
 template<>
 inline ByteStream &
-operator<< <vl::MouseEvent const>(ByteStream &msg, vl::MouseEvent const &evt)
+operator<<(ByteStream &msg, vl::MouseEvent const &evt)
 {
 	msg << evt.X.abs << evt.X.rel << evt.Y.abs << evt.Y.rel << evt.Z.abs << evt.Z.rel;
 	msg	<< evt.buttons;
-	//msg	<< evt.head_position;
-	//msg	<< evt.head_orientation;
-	
 	
 	return msg;
 }
@@ -143,13 +141,11 @@ operator<< <vl::MouseEvent const>(ByteStream &msg, vl::MouseEvent const &evt)
 
 template<>
 inline ByteStream &
-operator>> <vl::MouseEvent>(ByteStream &msg, vl::MouseEvent &evt)
+operator>>(ByteStream &msg, vl::MouseEvent &evt)
 {
 	
 	msg >> evt.X.abs >> evt.X.rel >> evt.Y.abs >> evt.Y.rel >> evt.Z.abs >> evt.Z.rel;
 	msg	>> evt.buttons;
-	//msg	>> evt.head_position;
-	//msg	>> evt.head_orientation;
 	
 	return msg;
 }

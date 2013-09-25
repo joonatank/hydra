@@ -37,6 +37,7 @@
 #include "keycode.hpp"
 
 // Input
+//#include "input/joystick_event.hpp"
 #include "input/serial_joystick_event.hpp"
 #include "input/serial_joystick.hpp"
 #include "input/joystick.hpp"
@@ -87,6 +88,8 @@ void export_managers(void)
 		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
 			python::return_value_policy<python::reference_existing_object>())
 		.def("createMouseTrigger", &vl::EventManager::createMouseTrigger,
+			python::return_value_policy<python::reference_existing_object>())
+		.def("createJoystickTrigger", &vl::EventManager::createJoystickTrigger,
 			python::return_value_policy<python::reference_existing_object>())
 		.def(python::self_ns::str(python::self_ns::self))
 	;
@@ -142,6 +145,23 @@ void export_managers(void)
 		.def_readonly("axis_z", &vl::SerialJoystickEvent::axis_z)
 		.def("is_button_down", isButtonDown_ov0)
 		.def(python::self_ns::str(python::self_ns::self))
+	;
+
+	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
+		.def_readonly("info", &vl::JoystickEvent::info)
+		.def_readonly("state", &vl::JoystickEvent::state)
+	;
+	
+	python::class_<vl::JoystickInfo>("JoystickInfo", python::init<>())
+		.def_readonly("dev_id", &vl::JoystickInfo::dev_id)
+		.def_readonly("input_manager_id", &vl::JoystickInfo::input_manager_id)
+		.def_readonly("vendor", &vl::JoystickInfo::vendor_id)
+	;
+	
+	python::class_<vl::JoystickState>("JoystickState", python::init<>())
+		.def_readonly("buttons", &vl::JoystickState::buttons)
+		.def_readonly("axes", &vl::JoystickState::axes)
+		.def_readonly("vectors", &vl::JoystickState::vectors)
 	;
 
 	python::class_<vl::MouseEvent>("MouseEvent", python::init<>())
@@ -272,6 +292,10 @@ void export_triggers(void)
 		.def("addMovedListener", toast::python::signal_connect<void(vl::MouseEvent const &)>(&vl::MouseTrigger::addMovedListener))
 		.def("addButtonDownListener", toast::python::signal_connect<void(vl::MouseEvent const &, vl::MouseEvent::BUTTON)>(&vl::MouseTrigger::addButtonPressedListener))
 		.def("addButtonUpListener", toast::python::signal_connect<void(vl::MouseEvent const &, vl::MouseEvent::BUTTON)>(&vl::MouseTrigger::addButtonReleasedListener))
+	;
+
+	python::class_<vl::JoystickTrigger, boost::noncopyable, python::bases<Trigger> >("JoystickTrigger", python::no_init )
+		.def("addListener", toast::python::signal_connect<void(vl::JoystickEvent const &, vl::JoystickEvent::EventType, int)>(&vl::JoystickTrigger::addListener))
 	;	
 		
 

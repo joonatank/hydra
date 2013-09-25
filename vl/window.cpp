@@ -375,53 +375,57 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 }
 
 bool 
-vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int button)
+vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int index)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_PRESSED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	stream << button << e;
-	_sendEvent(data);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	//stream << index << e;
+	//_sendEvent(data);
 
 	return true;
 }
 
 bool 
-vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int button)
+vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int index)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_RELEASED);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	stream << button << e;
-	_sendEvent( data );
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	//stream << index << e;
+	//_sendEvent( data );
 
 	return true;
 }
 
 bool 
-vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int axis)
+vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int index)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_AXIS);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	stream << axis << e;
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	stream << index << e;
 	_sendEvent( data );
 
 	return true;
 }
 
 bool 
-vl::Window::povMoved(OIS::JoyStickEvent const &evt, int pov)
+vl::Window::povMoved(OIS::JoyStickEvent const &evt, int index)
 {
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_POV);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	stream << pov << e;
-	_sendEvent( data );
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	//stream << index << e;
+	//_sendEvent( data );
 
 	return true;
 }
@@ -432,12 +436,29 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_VECTOR3);
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
-	SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	stream << index << e;
-	_sendEvent( data );
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	//stream << index << e;
+	//_sendEvent( data );
 
 	return true;
 }
+
+
+bool 
+vl::Window::sliderMoved(OIS::JoyStickEvent const &evt, int index)
+{
+	vl::cluster::EventData data(vl::cluster::EVT_JOYSTICK_SLIDER);
+	// TODO add support for the device ID from where the event originated
+	vl::cluster::ByteDataStream stream = data.getStream();
+	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
+	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
+	//stream << index << e;
+	//_sendEvent( data );
+
+	return true;
+}
+
 
 /// ----------------------------- Public methods -------------------------------
 void

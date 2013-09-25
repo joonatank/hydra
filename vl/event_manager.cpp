@@ -204,6 +204,30 @@ vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger)
 	}
 }
 
+vl::JoystickTrigger*
+vl::EventManager::createJoystickTrigger(void)
+{
+	vl::JoystickTrigger *trigger = new vl::JoystickTrigger();
+	_joystick_triggers.push_back(trigger);
+	return trigger;
+}
+
+void
+vl::EventManager::destroyJoystickTrigger(vl::JoystickTrigger *trigger)
+{
+	std::vector<vl::JoystickTrigger *>::iterator iter 
+		= std::find(_joystick_triggers.begin(), _joystick_triggers.end(), trigger);
+
+	if(iter != _joystick_triggers.end())
+	{
+		delete *iter;
+		_joystick_triggers.erase(iter);
+	}
+}
+
+
+
+
 void
 vl::EventManager::mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id)
 {
@@ -235,6 +259,14 @@ vl::EventManager::mouseMoved(vl::MouseEvent const &evt)
 		(*iter)->update(evt, vl::MouseTrigger::MS_MOVED);
 	}
 	
+}
+
+void vl::EventManager::updateGameJoystick(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
+{
+	for(std::vector< vl::JoystickTrigger* >::iterator iter = _joystick_triggers.begin(); iter != _joystick_triggers.end(); ++iter)
+	{
+		(*iter)->update(evt, type, index);
+	}
 }
 
 
@@ -322,6 +354,13 @@ vl::EventManager::removeAll(void)
 		delete *iter;
 	}
 	_mouse_triggers.clear();
+
+	for(std::vector<JoystickTrigger *>::iterator iter = _joystick_triggers.begin();
+		iter != _joystick_triggers.end(); ++iter)
+	{
+		delete *iter;
+	}
+	_joystick_triggers.clear();
 
 }
 

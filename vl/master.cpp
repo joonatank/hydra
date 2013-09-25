@@ -31,6 +31,7 @@
 #include <OIS/OISMouse.h>
 #include <OIS/OISKeyboard.h>
 
+#include "input/joystick_event.hpp"
 #include "input/serial_joystick_event.hpp"
 #include "input/mouse_event.hpp"
 
@@ -755,51 +756,58 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_PRESSED :
 		{
-			vl::SerialJoystickEvent evt;
+			//vl::SerialJoystickEvent evt;
+			vl::JoystickEvent evt;
 			int button;
+			
 			stream >> button >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::BUTTON_PRESSED, button);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_RELEASED :
 		{
-			vl::SerialJoystickEvent evt;
+			//vl::SerialJoystickEvent evt;
+			vl::JoystickEvent evt;
 			int button;
 			stream >> button >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::BUTTON_RELEASED, button);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_AXIS :
 		{
-			vl::SerialJoystickEvent evt;
+			//vl::SerialJoystickEvent evt;
+			vl::JoystickEvent evt;
 			int axis;
 			stream >> axis >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::AXIS, axis);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_POV :
 		{
-			vl::SerialJoystickEvent evt;
+			//vl::SerialJoystickEvent evt;
+			vl::JoystickEvent evt;
 			int pov;
 			stream >> pov >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::VECTOR, pov);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_VECTOR3 :
 		{
-			vl::SerialJoystickEvent evt;
+			//vl::SerialJoystickEvent evt;
+			vl::JoystickEvent evt;
 			int index;
 			stream >> index >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::VECTOR, index);
+			//needed for serial joystick:
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
