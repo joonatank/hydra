@@ -27,7 +27,10 @@
 
 #include "input/serial_joystick_event.hpp"
 
+#include "input/joystick_event.hpp"
+
 #include "input/mouse_event.hpp"
+
 
 namespace vl
 {
@@ -100,11 +103,18 @@ public :
 	vl::MouseTrigger *createMouseTrigger(void);
 	void vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger);
 
+	vl::JoystickTrigger *createJoystickTrigger(void);
+	void vl::EventManager::destroyJoystickTrigger(vl::JoystickTrigger *trigger);
 	
 	void mouseMoved(vl::MouseEvent const &evt);
 	void mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	void mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	
+	void updateGameJoystick(vl::JoystickEvent const&, vl::JoystickEvent::EventType type, int index);
+	//void updateJoystickButton(vl::JoystickEvent const &evt, int index);
+	//void updateJoystickAxis(vl::JoystickEvent const &evt, int index);
+	//void updateJoystickVector(vl::JoystickEvent const &evt, int index);
+	//void updateGameJoystick(vl::JoystickEvent const &evt);
 	
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
@@ -154,7 +164,8 @@ private :
 	std::vector<vl::KeyTrigger *> _key_triggers;
 	// @warning: added due mouse support and raycast picker testing:
 	std::vector<vl::MouseTrigger *> _mouse_triggers;
-	
+	std::vector<vl::JoystickTrigger*> _joystick_triggers;
+
 	vl::FrameTrigger *_frame_trigger;
 
 	std::bitset<8> _key_modifiers;
@@ -170,6 +181,7 @@ private :
 	// stored also separately to avoid searching and casting
 	JoystickRefPtr _game_joystick;
 
+	
 };	// class EventManager
 
 inline std::ostream &
