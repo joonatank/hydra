@@ -111,11 +111,12 @@ public:
 	bool mousePressed(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 	bool mouseReleased(const OIS::MouseEvent &evt, OIS::MouseButtonID id);
 
-	bool buttonPressed(OIS::JoyStickEvent const &evt, int button);
-	bool buttonReleased(OIS::JoyStickEvent const &evt, int button);
-	bool axisMoved(OIS::JoyStickEvent const &evt, int axis);
-	bool povMoved(OIS::JoyStickEvent const &evt, int pov);
+	bool buttonPressed(OIS::JoyStickEvent const &evt, int index);
+	bool buttonReleased(OIS::JoyStickEvent const &evt, int index);
+	bool axisMoved(OIS::JoyStickEvent const &evt, int index);
+	bool povMoved(OIS::JoyStickEvent const &evt, int index);
 	bool vector3Moved(OIS::JoyStickEvent const &evt, int index);
+	bool sliderMoved(OIS::JoyStickEvent const &evt, int index);
 
 	enum DirtyBits
 	{

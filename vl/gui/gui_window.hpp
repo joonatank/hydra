@@ -129,6 +129,8 @@ protected :
 
 	NativeCreated _signal;
 
+	
+
 };	// class Window
 
 }	// namespace gui

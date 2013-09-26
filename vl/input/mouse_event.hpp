@@ -17,10 +17,9 @@ struct MouseEvent
 	MouseEvent(void) :
 			X(),
 			Y(),
-			buttons(0),
-			head_position(vl::Vector3()),
-			head_orientation(vl::Quaternion()),
-			view_projection(Ogre::Matrix4())
+			buttons(0)
+			//head_position(vl::Vector3()),
+			//head_orientation(vl::Quaternion())
 	{}
 
 	~MouseEvent(void) {}
@@ -28,15 +27,15 @@ struct MouseEvent
 	//This has to be exactly like OIS::MouseButtonID
 	enum BUTTON
 	{
-		// @todo tripla tsekkaa mätsääkö OISSIIN!
-		MB_L = (1 << 0),
-		MB_R = (1 << 1),
-		MB_M = (1 << 2),
-		MB_3 = (1 << 3),
-		MB_4 = (1 << 4),
-		MB_5 = (1 << 5),
-		MB_6 = (1 << 6),
-		MB_7 = (1 << 7)
+		// @todo: create a converter from OIS to this, otherwise it's very error prone and impossible to debug.
+		MB_L = 0,
+		MB_R,
+		MB_M,
+		MB_3,
+		MB_4,
+		MB_5,
+		MB_6,
+		MB_7
 	};
 	
 
@@ -53,17 +52,20 @@ struct MouseEvent
 
 	bool isButtonDown(BUTTON bt) const
 	{
-		return(buttons & bt);
+		return( buttons & (1 << bt) );
 	}
 	
 	
 	Axis			X;
 	Axis			Y;
 	Axis			Z;
-	uint32_t		buttons;
-	vl::Vector3		head_position;
-	vl::Quaternion	head_orientation;
-	Ogre::Matrix4	view_projection;
+	uint32_t		buttons;	//Bit position is button!
+
+	//We can get these from python through player object:
+	//vl::Vector3		head_position;
+	//vl::Quaternion	head_orientation;
+	//This isn't needed anymore because Joonatan exposed renderer getter in python:
+	//Ogre::Matrix4	view_projection;
 	//int					window_height;
 	//int					window_width;
 };
@@ -80,24 +82,23 @@ operator<<(std::ostream &os, MouseEvent const &evt)
 	//Buttons:
 	for(size_t i = 0; i < 8; ++i)
 	{
-		os << "Button " << i+1 << ": " << evt.isButtonDown( vl::MouseEvent::BUTTON(1 << i) ) << std::endl;
+		os << "Button " << i+1 << ": " << evt.isButtonDown( vl::MouseEvent::BUTTON(i) ) << std::endl;
 	}
 
 	//Head position, orientation and viewmatrix:
-	os << "Head_Position = ( " << evt.head_position << " )" << std::endl;
-	os << "Head_Orientation = ( " << evt.head_orientation << " )" << std::endl;
-	os << "ViewMatrix = { "<< evt.view_projection << " }" << std::endl;
+	//os << "Head_Position = ( " << evt.head_position << " )" << std::endl;
+	//os << "Head_Orientation = ( " << evt.head_orientation << " )" << std::endl;
 	
 	return os;
 }
 
 namespace cluster {
-
+/*
 template<>
 inline ByteStream &
 operator<< <Ogre::Matrix4 const>(ByteStream &msg, Ogre::Matrix4 const &mat)
 {
-	// @todo: We should optimize this, also we should have a checking of NaN and Inf!
+	// @todo: We should optimize this
 	for(size_t row = 0; row < 4; ++row)
 	{
 		for(size_t col = 0; col < 4; ++col)
@@ -125,16 +126,14 @@ operator>> <Ogre::Matrix4>(ByteStream &msg, Ogre::Matrix4 &mat)
 	return msg;
 }
 
+*/
 
 template<>
 inline ByteStream &
-operator<< <vl::MouseEvent const>(ByteStream &msg, vl::MouseEvent const &evt)
+operator<<(ByteStream &msg, vl::MouseEvent const &evt)
 {
 	msg << evt.X.abs << evt.X.rel << evt.Y.abs << evt.Y.rel << evt.Z.abs << evt.Z.rel;
 	msg	<< evt.buttons;
-	msg	<< evt.head_position;
-	msg	<< evt.head_orientation;
-	msg	<< evt.view_projection;
 	
 	return msg;
 }
@@ -142,14 +141,12 @@ operator<< <vl::MouseEvent const>(ByteStream &msg, vl::MouseEvent const &evt)
 
 template<>
 inline ByteStream &
-operator>> <vl::MouseEvent>(ByteStream &msg, vl::MouseEvent &evt)
+operator>>(ByteStream &msg, vl::MouseEvent &evt)
 {
 	
 	msg >> evt.X.abs >> evt.X.rel >> evt.Y.abs >> evt.Y.rel >> evt.Z.abs >> evt.Z.rel;
 	msg	>> evt.buttons;
-	msg	>> evt.head_position;
-	msg	>> evt.head_orientation;
-	msg	>> evt.view_projection;
+	
 	return msg;
 }
 

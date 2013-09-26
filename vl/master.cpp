@@ -32,6 +32,7 @@
 #include <OIS/OISKeyboard.h>
 
 #include "input/joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
 #include "input/mouse_event.hpp"
 
 // Necessary for loading meshes to Server
@@ -845,7 +846,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> b_id >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 			
 			_game_manager->getEventManager()->mousePressed(evt, b_id);
 
@@ -863,7 +864,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> b_id >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 			
 			_game_manager->getEventManager()->mouseReleased(evt, b_id);
 
@@ -877,7 +878,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			stream >> evt;
 			
 			// @remove: print to test!
-			std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
+			//std::clog << " RECEIVED EVENT: " << std::endl << evt << std::endl;
 
 			_game_manager->getEventManager()->mouseMoved(evt);
 			
@@ -886,51 +887,58 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 
 		case vl::cluster::EVT_JOYSTICK_PRESSED :
 		{
+			//vl::SerialJoystickEvent evt;
 			vl::JoystickEvent evt;
 			int button;
+			
 			stream >> button >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::BUTTON_PRESSED, button);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_RELEASED :
 		{
+			//vl::SerialJoystickEvent evt;
 			vl::JoystickEvent evt;
 			int button;
 			stream >> button >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::BUTTON_RELEASED, button);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_AXIS :
 		{
+			//vl::SerialJoystickEvent evt;
 			vl::JoystickEvent evt;
 			int axis;
 			stream >> axis >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::AXIS, axis);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_POV :
 		{
+			//vl::SerialJoystickEvent evt;
 			vl::JoystickEvent evt;
 			int pov;
 			stream >> pov >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::VECTOR, pov);
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 
 		case vl::cluster::EVT_JOYSTICK_VECTOR3 :
 		{
+			//vl::SerialJoystickEvent evt;
 			vl::JoystickEvent evt;
 			int index;
 			stream >> index >> evt;
-
-			_game_manager->getEventManager()->update_joystick(evt);
+			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::EventType::VECTOR, index);
+			//needed for serial joystick:
+			//_game_manager->getEventManager()->update_joystick(evt);
 		}
 		break;
 

@@ -186,7 +186,8 @@ lookAt(Ogre::Vector3 const &target, Ogre::Vector3 const &current,
 	Ogre::Vector3 const &eye, Ogre::Vector3 const &up = Ogre::Vector3::UNIT_Y,
 	bool yawFixed = true);
 
-
+//HYDRA_API Ogre::Real
+//getMatrix4Value(Ogre::Matrix4 &mat, size_t index);
 
 }	// namespace vl
 

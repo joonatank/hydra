@@ -36,7 +36,7 @@ vl::ConstraintJoystickHandler::set_axis_constraint(ConstraintRefPtr constraint,
 	
 
 void
-vl::ConstraintJoystickHandler::execute(JoystickEvent const &evt)
+vl::ConstraintJoystickHandler::execute(SerialJoystickEvent const &evt)
 {
 	bool valid = true;
 
@@ -67,7 +67,7 @@ vl::ConstraintJoystickHandler::execute(JoystickEvent const &evt)
 		// Reset all axes
 		// we could also use the last buttons and current axes for continuing
 		// the movement, but this way is safer.
-		JoystickEvent e;
+		SerialJoystickEvent e;
 		e.buttons = _last_event.buttons;
 		_apply_event(e);
 	}
@@ -82,7 +82,7 @@ vl::ConstraintJoystickHandler::create(void)
 }
 
 void 
-vl::ConstraintJoystickHandler::_apply_event(JoystickEvent const &evt)
+vl::ConstraintJoystickHandler::_apply_event(SerialJoystickEvent const &evt)
 {
 	AxisConstraintElem elem_x(0, evt.firstButtonDown());
 	AxisConstraintElem elem_y(1, evt.firstButtonDown());

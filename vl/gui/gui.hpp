@@ -83,6 +83,10 @@ public :
 	void sendCommand(std::string const &cmd);
 
 	Gorilla::Screen *createScreen(void);
+	
+	void createMouseCursor(Gorilla::Screen *screen);
+	
+	void hideMouseCursor(void);
 
 	bool initialised(void) const;
 
@@ -119,9 +123,12 @@ private :
 	vl::Session *_session;
 
 	vl::Channel *_channel;
-
+		
 	Gorilla::Silverback *_gorilla;
 	Ogre::Viewport *mViewport;
+
+	Gorilla::Layer *_mouse_cursor_layer;
+	Gorilla::Rectangle *_mouse_cursor;
 
 	//CEGUI::Window *_root;
 

@@ -281,6 +281,8 @@ def createHingeConstraint2(bodyA, bodyB, joint_transform, lowerlimit, upperlimit
 
 
 
+
+
 if True :
     phy = initphysics()
     game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
@@ -288,7 +290,6 @@ if True :
     game.scene.shadows.texture_size = 4096
     game.scene.shadows.max_distance = 50
     create_sun()
-        
 
     #ground = physics_create_ground()
 

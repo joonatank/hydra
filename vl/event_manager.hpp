@@ -25,9 +25,12 @@
 
 #include "tracker.hpp"
 
+#include "input/serial_joystick_event.hpp"
+
 #include "input/joystick_event.hpp"
 
 #include "input/mouse_event.hpp"
+
 
 namespace vl
 {
@@ -98,12 +101,20 @@ public :
 	/// mouse related:
 	// What's this? 
 	vl::MouseTrigger *createMouseTrigger(void);
+	void vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger);
 
+	vl::JoystickTrigger *createJoystickTrigger(void);
+	void vl::EventManager::destroyJoystickTrigger(vl::JoystickTrigger *trigger);
 	
 	void mouseMoved(vl::MouseEvent const &evt);
 	void mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	void mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	
+	void updateGameJoystick(vl::JoystickEvent const&, vl::JoystickEvent::EventType type, int index);
+	//void updateJoystickButton(vl::JoystickEvent const &evt, int index);
+	//void updateJoystickAxis(vl::JoystickEvent const &evt, int index);
+	//void updateJoystickVector(vl::JoystickEvent const &evt, int index);
+	//void updateGameJoystick(vl::JoystickEvent const &evt);
 	
 	/// Frame trigger
 	vl::FrameTrigger *getFrameTrigger( void );
@@ -124,7 +135,8 @@ public :
 
 	PCANRefPtr getPCAN(void);
 
-	void update_joystick(vl::JoystickEvent const &evt);
+	void update_joystick(vl::SerialJoystickEvent const &evt);
+
 
 	/// @brief called from GameManager to update input devices
 	void mainloop(vl::time const &elapsed_time);
@@ -155,7 +167,8 @@ private :
 	std::vector<vl::KeyTrigger *> _key_triggers;
 	// @warning: added due mouse support and raycast picker testing:
 	std::vector<vl::MouseTrigger *> _mouse_triggers;
-	
+	std::vector<vl::JoystickTrigger*> _joystick_triggers;
+
 	vl::FrameTrigger *_frame_trigger;
 
 	std::bitset<8> _key_modifiers;
@@ -173,6 +186,7 @@ private :
 
 	PCANRefPtr _pcan;
 
+	
 };	// class EventManager
 
 inline std::ostream &

@@ -18,17 +18,18 @@
 #ifndef HYDRA_INPUT_OIS_CONVERS_HPP
 #define HYDRA_INPUT_OIS_CONVERS_HPP
 
-#include "joystick_event.hpp"
+#include "input/serial_joystick_event.hpp"
+#include "input/mouse_event.hpp"
+#include "input/joystick_event.hpp"
 
 #include <OIS/OISJoyStick.h>
-
 #include <OIS/OISMouse.h>
-#include "mouse_event.hpp"
+#include <OIS/OISInputManager.h>
 
 namespace vl
 {
 
-inline JoystickEvent
+inline SerialJoystickEvent
 convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 {
 	// Does an axis swap for joysticks, not tested with gamepads
@@ -36,17 +37,46 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 	double x = ((double)evt.state.mAxes[2].abs) / OIS::JoyStick::MAX_AXIS;
 	double y = ((double)evt.state.mAxes[1].abs) / OIS::JoyStick::MAX_AXIS;
 	double z = ((double)evt.state.mAxes[0].abs) / OIS::JoyStick::MAX_AXIS;
-
-	JoystickEvent e;
+	
+	SerialJoystickEvent e;
+	
+	
 	e.axis_x = x;
 	e.axis_y = y;
 	e.axis_z = z;
-
+	
 	for(size_t i = 0; i < evt.state.mButtons.size(); ++i)
 	{
 		e.setButtonDown(i, evt.state.mButtons.at(i));
 	}
 
+	return e;
+}
+
+
+
+inline vl::JoystickEvent
+convert_ois_joystick_to_hydra(OIS::JoyStickEvent const &evt)
+{
+	JoystickEvent e;
+	e.info.dev_id = vl::dev_id_t(evt.device->getID());
+	e.info.vendor_id = vl::vendor_id_t(evt.device->vendor());
+		
+	for( std::vector<OIS::Axis>::const_iterator it = evt.state.mAxes.begin(); it != evt.state.mAxes.end(); ++it)
+	{
+		e.state.axes.push_back( (it->abs/OIS::JoyStick::MAX_AXIS) );
+	}
+	
+	for( std::vector<bool>::const_iterator it = evt.state.mButtons.begin(); it != evt.state.mButtons.end(); ++it)
+	{
+		e.state.buttons.push_back(*it);
+	}
+	
+	for( std::vector<OIS::Vector3>::const_iterator it = evt.state.mVectors.begin(); it != evt.state.mVectors.end(); ++it)
+	{
+		e.state.vectors.push_back( vl::Vector3(it->x, it->y, it->z) );
+	}
+	
 	return e;
 }
 
@@ -60,9 +90,8 @@ convert_ois_to_hydra(OIS::MouseEvent const &evt)
 	mevt.Y.rel = evt.state.Y.rel;
 	mevt.Z.abs = evt.state.Z.abs;
 	mevt.Z.rel = evt.state.Z.rel;
-
 	mevt.buttons = evt.state.buttons;
-	
+
 	return mevt;
 }
 

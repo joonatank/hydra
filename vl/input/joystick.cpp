@@ -19,10 +19,10 @@ vl::Joystick::Joystick(void)
 }
 
 void
-vl::Joystick::_update(vl::JoystickEvent const &evt)
+vl::Joystick::_update(vl::SerialJoystickEvent const &evt)
 {
 	// @todo should check that the data is valid new data
-	JoystickEvent jevt(evt);
+	SerialJoystickEvent jevt(evt);
 
 	jevt.clip_zero(_zero_size);
 

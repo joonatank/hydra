@@ -32,6 +32,8 @@
 
 #include "input/mouse_event.hpp"
 
+#include "input/joystick_event.hpp"
+
 namespace vl
 {
 
@@ -182,29 +184,47 @@ private :
 /// @TODO this needs to use a complex structure for the trigger parameters
 /// similar system that is used with key triggers will not really cut it
 /// Because of the amount of parameters that can be used.
+
 class JoystickTrigger : public BasicActionTrigger
 {
 public :
+	
+	
+	
+	typedef boost::signal< void( vl::JoystickEvent const&, vl::JoystickEvent::EventType, int) > Joystick_signal_t;
+		
 	virtual std::string getTypeName( void ) const
 	{ return "JoystickTrigger"; }
 
 	virtual std::string getName( void ) const
 	{ return std::string(); }
+	
+	
+	int addListener(Joystick_signal_t::slot_type const &slot)
+	{
+		_joystick_signal.connect(slot);
+		return 1;
+	}
+	
+	void update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
+	{ _joystick_signal(evt, type, index);}
 
+private:
+	Joystick_signal_t _joystick_signal;
 };
 
 
 // @warning added due mouse and raycast picking test purposes:
-class MouseTrigger : public BasicActionTrigger
+class MouseTrigger : public Trigger
 {
 typedef boost::signal<void (vl::MouseEvent const &, vl::MouseEvent::BUTTON)> Tripped_button;
 typedef boost::signal<void (vl::MouseEvent const &)> Tripped_moved;
 public:
 	enum MOUSE_STATE
 	{
+		MS_MOVED = 0,
 		MS_PRESSED,
-		MS_RELEASED,
-		MS_MOVED
+		MS_RELEASED
 	};
 	
 	MouseTrigger(void)
@@ -231,6 +251,7 @@ private:
 	Tripped_button _button_released_signal;
 	Tripped_moved _mouse_moved_signal;
 	
+	//@todo: Is state really needed? For what?
 	vl::MouseTrigger::MOUSE_STATE _mstate;
 
 };

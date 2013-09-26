@@ -38,7 +38,7 @@ vl::SerialJoystick::SerialJoystick(std::string const &device)
 void
 vl::SerialJoystick::mainloop(void)
 {
-	std::vector<JoystickEvent> events;
+	std::vector<SerialJoystickEvent> events;
 
 	if(_joysticks.size() == 0)
 	{
@@ -72,7 +72,7 @@ void
 vl::SerialJoystick::initialise(void)
 {
 	_serial.set_read_timeout(1000, 200);
-	std::vector<JoystickEvent> events;
+	std::vector<SerialJoystickEvent> events;
 
 	_request_multi_data();
 	vl::msleep(uint32_t(1));
@@ -118,7 +118,7 @@ vl::SerialJoystick::calibrate_zero(void)
 }
 
 /// --------------------------------- Private --------------------------------
-vl::JoystickEvent
+vl::SerialJoystickEvent
 vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes, size_t offset)
 {
 	size_t end_index = offset+bytes;
@@ -127,7 +127,7 @@ vl::SerialJoystick::_parse(std::vector<char> msg, size_t bytes, size_t offset)
 	if(msg.at(offset++) != MSG_JOYSTICK_START)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Joystick message does not have MSG_JOYSTICK_START")); }
 
-	JoystickEvent evt;
+	SerialJoystickEvent evt;
 
 	while(offset < end_index)
 	{
@@ -201,7 +201,7 @@ vl::SerialJoystick::_request_multi_data(void)
 }
 
 bool
-vl::SerialJoystick::_read_multi_data(std::vector<vl::JoystickEvent> &evt, bool blocking)
+vl::SerialJoystick::_read_multi_data(std::vector<vl::SerialJoystickEvent> &evt, bool blocking)
 {
 	// Read data
 	std::vector<char> buf(128);
@@ -314,7 +314,7 @@ vl::SerialJoystick::_read_multi_data(std::vector<vl::JoystickEvent> &evt, bool b
 }
 
 void
-vl::SerialJoystick::_parse_joystick_msg(std::vector<vl::JoystickEvent> &evt, std::vector<char> msg)
+vl::SerialJoystick::_parse_joystick_msg(std::vector<vl::SerialJoystickEvent> &evt, std::vector<char> msg)
 {
 	size_t offset = 0;
 
@@ -329,7 +329,7 @@ vl::SerialJoystick::_parse_joystick_msg(std::vector<vl::JoystickEvent> &evt, std
 		// check that all joysticks are valid
 		assert(msg.at(offset) == MSG_JOYSTICK_START);
 
-		JoystickEvent eve;
+		SerialJoystickEvent eve;
 			
 		eve = _parse(msg, joystick_size, offset);
 		offset += joystick_size;

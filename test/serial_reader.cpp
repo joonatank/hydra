@@ -83,17 +83,17 @@ struct options
 	std::string input_file;
 };
 
-void joystickValueChanged0(vl::JoystickEvent const &evt)
+void joystickValueChanged0(vl::SerialJoystickEvent const &evt)
 {
 	std::cout << "Joystick 1 : new values : " << evt << std::endl;
 }
 
-void joystickValueChanged1(vl::JoystickEvent const &evt)
+void joystickValueChanged1(vl::SerialJoystickEvent const &evt)
 {
 	std::cout << "Joystick 2 : new values : " << evt << std::endl;
 }
 
-void joystickValueChanged2(vl::JoystickEvent const &evt)
+void joystickValueChanged2(vl::SerialJoystickEvent const &evt)
 {
 	std::cout << "Joystick 3 : new values : " << evt << std::endl;
 }
