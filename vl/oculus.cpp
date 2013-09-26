@@ -162,7 +162,8 @@ vl::Oculus::getAcceleration(void) const
 Ogre::Vector3
 vl::Oculus::getPositon(void) const
 {
-	return Ogre::Vector3::ZERO;
+	// hard coded default head height
+	return Ogre::Vector3(0, 1.5, 0);
 }
 
 void

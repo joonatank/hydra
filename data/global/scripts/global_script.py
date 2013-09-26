@@ -348,26 +348,6 @@ def addRigidBodyController(body):
 
 	game.event_manager.frame_trigger.addListener(controller.progress)
 
-
-def mapHeadTracker(name) :
-	def setHeadTransform(t):
-		game.player.head_transformation = t
-
-	if not game.event_manager.hasTrackerTrigger(name):
-		print("Creating a fake tracker trigger")
-		tracker = Tracker.create("FakeHeadTracker")
-		tracker.n_sensors = 1
-		t = Transform(Vector3(0, 1.5, 0))
-		tracker.getSensor(0).default_transform = t
-		# Create trigger
-		trigger = game.event_manager.createTrackerTrigger(name)
-		tracker.getSensor(0).trigger = trigger
-		game.tracker_clients.addTracker(tracker)
-
-	trigger = game.event_manager.getTrackerTrigger(name)
-	trigger.addListener(setHeadTransform)
-
-
 # Fine using the new event interface
 def addQuitEvent( kc, key_mod = KEY_MOD.NONE ) :
 	trigger = game.event_manager.createKeyTrigger(kc, key_mod)
@@ -530,11 +510,50 @@ def toggle_pause():
 	else:
 		game.play()
 
-# Add a head tracker support
-# TODO we have two different head trackers
-# glassesTrigger is the optical tracking and headTrigger is Oculus
-#mapHeadTracker("glassesTrigger")
-mapHeadTracker("headTrigger")
+# Callback for setting head transformation
+def setHeadTransform(t):
+	game.player.head_transformation = t
+
+def create_fake_tracker(name):
+	# Create fake tracker
+	assert(not game.event_manager.hasTrackerTrigger(name))
+
+	print("Creating a fake tracker trigger")
+	tracker = Tracker.create("FakeHeadTracker")
+	tracker.n_sensors = 1
+	t = Transform(Vector3(0, 1.5, 0))
+	tracker.getSensor(0).default_transform = t
+	# Create trigger
+	trigger = game.event_manager.createTrackerTrigger(name)
+	tracker.getSensor(0).trigger = trigger
+	game.tracker_clients.addTracker(tracker)
+
+def map_head_tracker(name) :
+	trigger = game.event_manager.getTrackerTrigger(name)
+	trigger.addListener(setHeadTransform)
+
+
+# Starts a head tracker and maps it to head
+# Selects between Oculus and Traditional tracking systems
+# Using glassesTrigger for traditional tracking (optical and magnetic)
+# Uses headTrigger for Oculus 
+#
+# TODO this does not allow us to change trackers at run time
+def initialise_head_tracker():
+	oculus_name = "headTrigger"
+	t_name = "glassesTrigger"
+	if game.event_manager.hasTrackerTrigger(oculus_name) :
+		map_head_tracker(oculus_name)
+	elif game.event_manager.hasTrackerTrigger(t_name) :
+		map_head_tracker(t_name)
+	else :
+		create_fake_tracker(t_name)
+		map_head_tracker(t_name)
+
+	# has traditional head tracker
+	# does not have head tracker
+
+initialise_head_tracker()
 
 
 # Add some global events that are useful no matter what the scene/project is
