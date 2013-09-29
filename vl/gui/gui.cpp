@@ -32,6 +32,8 @@ vl::gui::GUI::GUI(vl::Session *session)
 	, _channel(0)
 	, _gorilla(0)
 	, mViewport(0)
+	, _mouse_cursor_layer(0)
+	, _mouse_cursor(0)
 {
 	assert(_session);
 	_session->registerObject(this, OBJ_GUI);
@@ -42,6 +44,8 @@ vl::gui::GUI::GUI(vl::Session *session, uint64_t id)
 	, _channel(0)
 	, _gorilla(0)
 	, mViewport(0)
+	, _mouse_cursor_layer(0)
+	, _mouse_cursor(0)
 {
 	assert(_session);
 
@@ -127,9 +131,15 @@ vl::gui::GUI::createScreen(void)
 void
 vl::gui::GUI::createMouseCursor(Gorilla::Screen *screen)
 {
-	_mouse_cursor_layer = screen->createLayer(15);
-	_mouse_cursor = _mouse_cursor_layer->createRectangle(0, 0, 10, 18);
-	_mouse_cursor->background_image("mousepointer");
+	// for some reason this function is called multiple times
+	// using if instead of assert
+	// only create one mouse cursor
+	if(!_mouse_cursor_layer && !_mouse_cursor)
+	{
+		_mouse_cursor_layer = screen->createLayer(15);
+		_mouse_cursor = _mouse_cursor_layer->createRectangle(0, 0, 10, 18);
+		_mouse_cursor->background_image("mousepointer");
+	}
 }
 
 void
@@ -169,13 +179,11 @@ vl::gui::GUI::injectKeyUp(OIS::KeyEvent const &key)
 void
 vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 {
+	// there is a possibility that the mouse cursor has not yet
+	// been created while the GUI has been created.
 	if(_mouse_cursor)
 	{
-	_mouse_cursor->position(evt.state.X.abs,evt.state.Y.abs);
-	}
-	else
-	{
-	std::clog << "JOKIN MENI VITUSTI PIELEEN!";
+		_mouse_cursor->position(evt.state.X.abs,evt.state.Y.abs);
 	}
 }
 
