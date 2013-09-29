@@ -88,6 +88,24 @@ vl::KeyTrigger::print(std::ostream& os) const
 	return os;
 }
 
+///---JoystickTrigger-------
+
+int
+vl::JoystickTrigger::addListener(Joystick_signal_t::slot_type const &slot)
+{
+	_joystick_signal.connect(slot);
+	return 1;
+};
+
+void
+vl::JoystickTrigger::update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
+{ 
+	std::clog << "update funktio, trigger.cpp" << evt;
+	_joystick_signal(evt, type, index);
+}
+
+
+
 ///---Mouse trigger------------------------------------------------------
 // @todo: korjaa nää järkeviks, ihan hirveetä boilerplatescheissekoodia:
 void

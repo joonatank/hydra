@@ -382,8 +382,8 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
 	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
-	//stream << index << e;
-	//_sendEvent(data);
+	stream << index << e;
+	_sendEvent(data);
 
 	return true;
 }
@@ -412,7 +412,6 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int index)
 	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
 	stream << index << e;
 	_sendEvent( data );
-
 	return true;
 }
 
@@ -438,8 +437,8 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	vl::cluster::ByteDataStream stream = data.getStream();
 	//SerialJoystickEvent e = vl::convert_ois_to_hydra(evt);
 	vl::JoystickEvent e = vl::convert_ois_joystick_to_hydra(evt);
-	//stream << index << e;
-	//_sendEvent( data );
+	stream << index << e;
+	_sendEvent( data );
 
 	return true;
 }

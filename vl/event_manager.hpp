@@ -101,10 +101,10 @@ public :
 	/// mouse related:
 	// What's this? 
 	vl::MouseTrigger *createMouseTrigger(void);
-	void vl::EventManager::destroyMouseTrigger(vl::MouseTrigger *trigger);
+	void destroyMouseTrigger(vl::MouseTrigger *trigger);
 
 	vl::JoystickTrigger *createJoystickTrigger(void);
-	void vl::EventManager::destroyJoystickTrigger(vl::JoystickTrigger *trigger);
+	void destroyJoystickTrigger(vl::JoystickTrigger *trigger);
 	
 	void mouseMoved(vl::MouseEvent const &evt);
 	void mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
@@ -164,7 +164,7 @@ private :
 	std::vector<vl::KeyTrigger *> _key_triggers;
 	// @warning: added due mouse support and raycast picker testing:
 	std::vector<vl::MouseTrigger *> _mouse_triggers;
-	std::vector<vl::JoystickTrigger*> _joystick_triggers;
+	std::vector< vl::JoystickTrigger* > _joystick_triggers;
 
 	vl::FrameTrigger *_frame_trigger;
 
