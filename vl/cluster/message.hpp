@@ -633,10 +633,12 @@ ByteStream &operator>>( ByteStream &msg, std::vector<T> &v )
 {
 	typename std::vector<T>::size_type v_size;
 	msg >> v_size;
-	v.resize(v_size);
-	for(size_t i = 0; i < v.size(); ++i )
-	{ msg >> v.at(i); }
-
+	if(v_size > 0)
+	{
+		v.resize(v_size);
+		for(size_t i = 0; i < v.size(); ++i )
+		{ msg >> v.at(i); }
+	}
 	return msg;
 }
 
@@ -669,10 +671,11 @@ ByteStream &operator>> ( ByteStream &msg, std::vector<uint32_t> &v )
 {
 	std::vector<std::string>::size_type v_size;
 	msg >> v_size;
-	v.resize(v_size);
-
-	msg.read( (char *)&v[0], (vl::msg_size)(sizeof(uint32_t)*v_size) );
-
+	//Checking needed, if vector is empty!
+	if(v_size > 0) {
+		v.resize(v_size);
+		msg.read( (char *)&v[0], (vl::msg_size)(sizeof(uint32_t)*v_size) );
+	}
 	return msg;
 }
 

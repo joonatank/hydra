@@ -130,7 +130,7 @@ operator>> <Ogre::Matrix4>(ByteStream &msg, Ogre::Matrix4 &mat)
 
 template<>
 inline ByteStream &
-operator<<(ByteStream &msg, vl::MouseEvent const &evt)
+operator<< <vl::MouseEvent>(ByteStream &msg, vl::MouseEvent const &evt)
 {
 	msg << evt.X.abs << evt.X.rel << evt.Y.abs << evt.Y.rel << evt.Z.abs << evt.Z.rel;
 	msg	<< evt.buttons;
@@ -141,7 +141,7 @@ operator<<(ByteStream &msg, vl::MouseEvent const &evt)
 
 template<>
 inline ByteStream &
-operator>>(ByteStream &msg, vl::MouseEvent &evt)
+operator>> <vl::MouseEvent>(ByteStream &msg, vl::MouseEvent &evt)
 {
 	
 	msg >> evt.X.abs >> evt.X.rel >> evt.Y.abs >> evt.Y.rel >> evt.Z.abs >> evt.Z.rel;
@@ -149,9 +149,6 @@ operator>>(ByteStream &msg, vl::MouseEvent &evt)
 	
 	return msg;
 }
-
-
-
 
 
 } //namespace cluster

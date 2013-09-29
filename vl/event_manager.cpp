@@ -269,6 +269,7 @@ void vl::EventManager::updateGameJoystick(vl::JoystickEvent const& evt, vl::Joys
 	{
 		(*iter)->update(evt, type, index);
 	}
+	std::clog << "update funktio, event_manager.cpp: " << std::endl << evt;
 }
 
 
@@ -368,7 +369,7 @@ vl::EventManager::removeAll(void)
 	}
 	_mouse_triggers.clear();
 
-	for(std::vector<JoystickTrigger *>::iterator iter = _joystick_triggers.begin();
+	for(std::vector< JoystickTrigger* >::iterator iter = _joystick_triggers.begin();
 		iter != _joystick_triggers.end(); ++iter)
 	{
 		delete *iter;

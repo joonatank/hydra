@@ -169,11 +169,22 @@ void export_managers(void)
 		.def_readonly("state", &vl::JoystickEvent::state)
 	;
 	
-	python::class_<vl::JoystickInfo>("JoystickInfo", python::init<>())
-		.def_readonly("dev_id", &vl::JoystickInfo::dev_id)
-		.def_readonly("input_manager_id", &vl::JoystickInfo::input_manager_id)
-		.def_readonly("vendor", &vl::JoystickInfo::vendor_id)
+	python::enum_<vl::JoystickEvent::EventType>("JOYSTICK_EVENT_TYPE")
+		.value("UNKNOWN", vl::JoystickEvent::UNKNOWN)
+		.value("BUTTON_PRESSED", vl::JoystickEvent::BUTTON_PRESSED)
+		.value("BUTTON_RELEASED", vl::JoystickEvent::BUTTON_RELEASED)
+		.value("AXIS", vl::JoystickEvent::AXIS)
+		.value("VECTOR", vl::JoystickEvent::VECTOR)
 	;
+
+	python::class_<vl::JoystickInfo>("JoystickInfo", python::init<>())
+		//.def_readonly("dev_id", &vl::JoystickInfo::dev_id)
+		//.def_readonly("input_manager_id", &vl::JoystickInfo::input_manager_id)
+		//.def_readonly("vendor", &vl::JoystickInfo::vendor_id)
+		.def("vendor_id", &vl::JoystickInfo::getVendorID, python::return_value_policy<python::return_by_value>())
+		.def("owner_id", &vl::JoystickInfo::getOwnerID, python::return_value_policy<python::return_by_value>())
+		.def("device_id", &vl::JoystickInfo::getDevID, python::return_value_policy<python::return_by_value>())
+		;
 
 	python::class_<vl::JoystickState>("JoystickState", python::init<>())
 		.def_readonly("buttons", &vl::JoystickState::buttons)

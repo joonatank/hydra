@@ -1,32 +1,36 @@
 import math
-def initphysics():        
-    createCameraMovements(10)               
-    game.enablePhysics( True )
-    #CUSTOM SOLVER PARAMETERS:
-    solverparams = PhysicsSolverParameters() 
-    #Joint normal error reduction parameter (slow(0.0) - fast(1.0)):
+
+
+def initphysics():
+    createCameraMovements(10)
+    game.enablePhysics(True)
+#CUSTOM SOLVER PARAMETERS:
+    solverparams = PhysicsSolverParameters()
+#Joint normal error reduction parameter (slow(0.0) - fast(1.0)):
     solverparams.erp = 0.8
-    #Contact error reduction parameter (slow(0.0) - fast(1.0)) : 
+#Contact error reduction parameter (slow(0.0) - fast(1.0)):
     solverparams.erp2 = 0.8
-    #Constraint force mixing parameter, when set to 0.0 constraints will be hard:
+#Constraint force mixing parameter, when set to 0.0 constraints will be hard:
     solverparams.global_cfm = 0.0
-    #On collisions how much the momentum is conserved: (totally_inelastic(0.0) - totally_elastic(1.0))
+#On collisions how much the momentum is conserved:
+#(totally_inelastic(0.0) - totally_elastic(1.0))
     solverparams.restitution = 0.0
-    #I have no idea of this, so setting it to default:
+#I have no idea of this, so setting it to default:
     solverparams.max_error_reduction = game.physics_world.solver_parameters.max_error_reduction
-    #Internal time step (1/fps)
-    solverparams.internal_time_step = 1.0/120.0
-    #No idea what substep, has it something to do with interpolation, well higher value should be more precise but wastes much more computing power?
+#Internal time step (1/fps)
+    solverparams.internal_time_step = 1.0 / 120.0
+#No idea what substep, has it something to do with interpolation, well higher
+#value should be more precise but wastes much more computing power?
     solverparams.max_sub_steps = 20
-    #Now we set the solver parameters to current physics world:
+#Now we set the solver parameters to current physics world:
     game.physics_world.solver_parameters = solverparams
     return game.physics_world
 
 
-def createRB(name = None, shape = None, mass = 1.0, inertia = Vector3(0.3, 0.3, 0.3)):
+def createRB(name=None, shape=None, mass=1.0, inertia=Vector3(0.3, 0.3, 0.3)):
     assert(shape)
     snode = game.scene.getSceneNode(name)
-    assert(snode)    
+    assert(snode)
     motion_state = game.physics_world.createMotionState(snode.world_transformation, snode)
     assert(motion_state)
     rbody = game.physics_world.createRigidBody("rb_"+name, mass, motion_state, shape, inertia)
@@ -38,23 +42,25 @@ def createRB(name = None, shape = None, mass = 1.0, inertia = Vector3(0.3, 0.3, 
     rbody.set_sleeping_thresholds(0.0, 0.0)
     return rbody
 
+
 def printtaa_resultti(result, nimi):
     obs = result.hit_objects
     for i in obs:
-        print("Objekti resultista ",nimi,": ", i.name)
-    
+        print("Objekti resultista ", nimi, ": ", i.name)
+
 
 def VP_to_ND_cs(mouse_x, mouse_y, width_px, height_px):
     """
-    Transforms viewport coordinates (mouse cursor position) to normalized device coordinates/
-    homogenous clip coordinates
+    Transforms viewport coordinates (mouse cursor position)
+    to normalized device coordinates/homogenous clip coordinates
     """
-    x = ( ( ( 2.0*mouse_x ) / width_px ) - 1.0 )
-    y = -( ( ( 2.0*mouse_y ) / height_px ) - 1.0 )
+    x = (((2.0 * mouse_x) / width_px) - 1.0)
+    y = -(((2.0 * mouse_y) / height_px) - 1.0)
     z = 1.0
     ray = Vector3(x, y, z)
     print("NORMALIZED DEVICE COORDS: ", ray)
     return ray
+
 
 def ND_to_CLIP_cs(ray):
     ray_in_CLIP = Vector4(ray)
@@ -63,30 +69,33 @@ def ND_to_CLIP_cs(ray):
     print("HOMOGENOUS CLIPPING COORDINATES: ", ray_in_CLIP)
     return ray_in_CLIP
 
+
 def CLIP_to_EYE_cs(ray, inv_projection_matrix):
     """
     Transforms normalized device coordinates to cyclop/eye coordinates
     """
-    ray = inv_projection_matrix*ray
+    ray = inv_projection_matrix * ray
     #point_in_eye_cs = ray.w*Vector3(ray.x, ray.y, -1.0)
-    ray_in_eye_cs = ray.w*Vector3(ray.x, ray.y, ray.z)
+    ray_in_eye_cs = ray.w * Vector3(ray.x, ray.y, ray.z)
     #ray_in_eye_cs = ray
     #ray_in_eye_cs.normalise()
     print("EYE COORDINATES: ", ray_in_eye_cs)
     return ray_in_eye_cs
 
+
 def EYE_to_WORLD_cs(ray, inv_view_matrix):
-    ray = inv_view_matrix.to_quaternion.inverse()*ray
-    ray_w = Vector3(ray.x,ray.y,ray.z)
+    ray = inv_view_matrix.to_quaternion.inverse() * ray
+    ray_w = Vector3(ray.x, ray.y, ray.z)
     #ray_w.normalise()
     print("IN WORLD COORDS: ", ray)
     return ray_w
 
+
 def normalise_vec4(vec4):
     lenpower = math.pow(vec4.x, 2) + math.pow(vec4.y, 2) + math.pow(vec4.z, 2) + math.pow(vec4.w, 2)
     length = math.sqrt(lenpower)
-    invL = 1.0/length
-    return vec4*invL
+    invL = 1.0 / length
+    return vec4 * invL
 
 
 #GLOBAL
@@ -104,15 +113,15 @@ class SelectionSet2:
         def add(self):
             pass
 	def round_buffer_next(self):
-            
+
             return
-        
+
 
 class Selection:
     def __init__(self, selection = set()):
         self.selection = selection
         self.center_pivot = Vector3(0.0, 0.0, 0.0)
-        self.draw_selection = True    
+        self.draw_selection = True
     def calculate_origin(self):
         pos_sum  = Vector3(0.0, 0.0, 0.0)
         inv_obj_count = 1.0/len(self.selection)
@@ -124,8 +133,10 @@ class Selection:
     def update(self, nodes):
         self.selection.update(nodes)
         self.center_pivot
-"""    
-def pick_handler(evt,bid):
+"""
+
+
+def pick_handler(evt, bid):
     if bid is MOUSEBUTTON_ID.MB_L:
         if not pickOn:
             view_matrix = renderer.view_matrix
@@ -138,9 +149,11 @@ def pick_handler(evt,bid):
             #eat it's height of pixels. So basically if you have exact screen
             #pixels in function argument below it will calculate wrong ray.
             ray_in_ND = VP_to_ND_cs(evt.axis_x.abs, evt.axis_y.abs, 1024, 740)
-            #Transform normalized device coordinates to homogenous clipping coordinates:
+            #Transform normalized device coordinates to homogenous
+            #clipping coordinates:
             ray_in_CLIP = ND_to_CLIP_cs(ray_in_ND)
-            #Transform homogenous clipping coordinates to eye/cyclop coordinates:
+            #Transform homogenous clipping coordinates
+            #to eye/cyclop coordinates:
             ray_in_EYE = CLIP_to_EYE_cs(ray_in_CLIP, inv_projection_matrix)
             #Transform eye coordinates to world coordinates:
             ray_in_WORLD = EYE_to_WORLD_cs(ray_in_EYE, inv_view_matrix)
@@ -149,7 +162,7 @@ def pick_handler(evt,bid):
             ray_in_WORLD.normalise()
             #print("RAY AFTER NORMALISATION: ", ray_in_WORLD)
             start_pos = view_transform.position
-            end_pos = start_pos + raylen*ray_in_WORLD
+            end_pos = start_pos + raylen * ray_in_WORLD
             print("START: ", start_pos, " END: ", end_pos)
             result = game.physics_world.cast_ray(start_pos, end_pos)
             printtaa_resultti(result, "MOUSE_EVENT: ")
@@ -159,13 +172,17 @@ def pick_handler(evt,bid):
         else:
             pass
 
+
 def unpick_handler(evt, bid):
     if bid is MOUSEBUTTON_ID.MB_L and pickOn:
         game.physics_world.removeConstraint(pickOn[0])
-        
+
+
 def create_pick_constraint(rayresult):
     bodyB = rayresult.hit_objects[0]
-    hp_world = rayresult.hit_points[0]
+    hp_world = Transform()
+    hp_world.position = rayresult.hit_points[0]
+    #hp_local = bodyB.world_transformation.inverted() * hp_world
     hp_local = bodyB.transform_to_local(hp_world)
     constraint = PSixDofConstraint.create(game.physics_world, bodyB, hp_world, hp_local, False)
     return constraint
@@ -185,13 +202,11 @@ class Mouse:
         self.bid = bid
         self.printtaa()
     def printtaa(self):
-        print("X: ", self.axis_x, " Y: ", self.axis_y, " button_ID: ", self.bid) 
- """       
-
+        print("X: ", self.axis_x, " Y: ", self.axis_y, " button_ID: ", self.bid)
+ """
 
 #MAIN STARTS HERE:
 world = initphysics()
-
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
@@ -218,10 +233,10 @@ wall_F = game.scene.getSceneNode("wall_F")
 zerotrans = Transform()
 zerotrans.setIdentity()
 CP_local_trans = zerotrans
-WB_local_trans = cpool.world_transformation.inverted()*wall_B.world_transformation
-WL_local_trans = cpool.world_transformation.inverted()*wall_L.world_transformation
-WR_local_trans = cpool.world_transformation.inverted()*wall_R.world_transformation
-WF_local_trans = cpool.world_transformation.inverted()*wall_F.world_transformation
+WB_local_trans = cpool.world_transformation.inverted() * wall_B.world_transformation
+WL_local_trans = cpool.world_transformation.inverted() * wall_L.world_transformation
+WR_local_trans = cpool.world_transformation.inverted() * wall_R.world_transformation
+WF_local_trans = cpool.world_transformation.inverted() * wall_F.world_transformation
 
 cp_msh = game.mesh_manager.loadMesh("collision_pool")
 cp_shape = ConvexHullShape.create(cp_msh)
@@ -239,7 +254,7 @@ compound.add_child_shape(WR_local_trans, wall_shape)
 compound.add_child_shape(WF_local_trans, wall_shape)
 
 #Then we create the shape as a rigidbody:
-compound_body = createRB("collision_pool", compound, 5.0, Vector3(0.0, 0.0, 0.0)) 
+compound_body = createRB("collision_pool", compound, 5.0, Vector3(0.0, 0.0, 0.0))
 rblist.append(compound_body)
 
 #Create shapes of pacmen:
@@ -249,11 +264,11 @@ pacman_cube_msh = game.mesh_manager.loadMesh("pacman_cube")
 pacman_cube_shape = ConcaveHullShape.create(pacman_cube_msh)
 
 #Now it's time for rigidbodies:
-rblist.append(createRB("pacman", pacman_shape, 1.0, Vector3(0.33,0.33,0.33)))
-rblist.append(createRB("pacman_cube", pacman_cube_shape, 1.0, Vector3(0.33,0.33,0.33)))
+rblist.append(createRB("pacman", pacman_shape, 1.0, Vector3(0.33, 0.33, 0.33)))
+rblist.append(createRB("pacman_cube", pacman_cube_shape, 1.0, Vector3(0.33, 0.33, 0.33)))
 
-result1 = game.physics_world.cast_ray(Vector3(0.0,2.0,0.0), Vector3(0.0,-2.0,0.0))
-result2 = game.physics_world.cast_ray(Vector3(0.0,0.0,10.0), Vector3(0.0,0.0,-10.0))
+result1 = game.physics_world.cast_ray(Vector3(0.0, 2.0, 0.0), Vector3(0.0, -2.0, 0.0))
+result2 = game.physics_world.cast_ray(Vector3(0.0, 0.0, 10.0), Vector3(0.0, 0.0, -10.0))
 
 printtaa_resultti(result1, "pakka1")
 printtaa_resultti(result2, "pakka2")
@@ -279,11 +294,11 @@ class Sormi:
         self.force_vector.y = self.force_magnitude
     def forceup(self):
         self.force_vector.y = -self.force_magnitude
-        
+
 contrl = Sormi(compound_body, KC.F, 1000.0)
 
 
-   
+
     rigidbodies['bucket'].body.anisotropic_friction = Vector3(1.3, 1.3, 1.3)
     rigidbodies['track_L'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)
     rigidbodies['track_R'].body.anisotropic_friction = Vector3(6.0, 6.0, 6.0)

@@ -31,7 +31,6 @@
 #include "base/time.hpp"
 
 #include "input/mouse_event.hpp"
-
 #include "input/joystick_event.hpp"
 
 namespace vl
@@ -189,25 +188,18 @@ class JoystickTrigger : public BasicActionTrigger
 {
 public :
 	
-	
-	
 	typedef boost::signal< void( vl::JoystickEvent const&, vl::JoystickEvent::EventType, int) > Joystick_signal_t;
 		
 	virtual std::string getTypeName( void ) const
 	{ return "JoystickTrigger"; }
 
 	virtual std::string getName( void ) const
-	{ return std::string(); }
+	{ return std::string(""); }
 	
 	
-	int addListener(Joystick_signal_t::slot_type const &slot)
-	{
-		_joystick_signal.connect(slot);
-		return 1;
-	}
+	int addListener(Joystick_signal_t::slot_type const &slot);
 	
-	void update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
-	{ _joystick_signal(evt, type, index);}
+	void update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index);
 
 private:
 	Joystick_signal_t _joystick_signal;
