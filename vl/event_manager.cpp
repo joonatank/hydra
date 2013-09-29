@@ -269,7 +269,7 @@ void vl::EventManager::updateGameJoystick(vl::JoystickEvent const& evt, vl::Joys
 	{
 		(*iter)->update(evt, type, index);
 	}
-	std::clog << "update funktio, event_manager.cpp: " << std::endl << evt;
+	//std::clog << "update funktio, event_manager.cpp: " << std::endl << evt;
 }
 
 

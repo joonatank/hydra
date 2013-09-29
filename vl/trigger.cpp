@@ -100,7 +100,8 @@ vl::JoystickTrigger::addListener(Joystick_signal_t::slot_type const &slot)
 void
 vl::JoystickTrigger::update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
 { 
-	std::clog << "update funktio, trigger.cpp" << evt;
+	// enable if we can't get this to python
+//	std::clog << "update funktio, trigger.cpp" << evt;
 	_joystick_signal(evt, type, index);
 }
 

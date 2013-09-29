@@ -157,6 +157,12 @@ void export_managers(void)
 		.def(python::vector_indexing_suite< std::vector<int8_t> >())
 	;
 
+	// No idea why these need to be exposed separately
+	// vectors of primitive types, but boost does not do it for us automatically
+	python::class_<std::vector<vl::scalar> >("floatvec")
+		.def(python::vector_indexing_suite< std::vector<vl::scalar> >())
+	;
+
 	python::class_<vl::CANMsg>("CanMsg", python::init<>())
 		.def_readonly("id", &vl::CANMsg::id)
 		.def_readonly("length", &vl::CANMsg::length)
@@ -167,6 +173,7 @@ void export_managers(void)
 	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
 		.def_readonly("info", &vl::JoystickEvent::info)
 		.def_readonly("state", &vl::JoystickEvent::state)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
 	python::enum_<vl::JoystickEvent::EventType>("JOYSTICK_EVENT_TYPE")
@@ -190,6 +197,7 @@ void export_managers(void)
 		.def_readonly("buttons", &vl::JoystickState::buttons)
 		.def_readonly("axes", &vl::JoystickState::axes)
 		.def_readonly("vectors", &vl::JoystickState::vectors)
+		.def(python::self_ns::str(python::self_ns::self))
 	;
 
 	python::class_<vl::MouseEvent>("MouseEvent", python::init<>())

@@ -15,7 +15,9 @@
 
 camera = game.scene.getSceneNode("CameraNode")
 camera.position = Vector3(0, 3, 15)
-createCameraMovements(camera, speed=10)
+camera_controller = createCameraMovements(camera, speed=10)
+# TODO we need to use selection based if we are using Oculus or not
+camera_controller.head_direction = True
 # for the clouds we need to increase far clipping
 cam = game.scene.getCamera("Omakamera")
 cam.far_clip = 5e5
@@ -164,4 +166,16 @@ trigger.addListener(single_timer_callback)
 ogre.translate(0, 1, 0)
 trigger = game.event_manager.createKeyTrigger(KC.Y)
 trigger.addListener(show_debug)
+
+# Testing joystick trigger
+# evt is the event
+# evt_type is the type of the event fired
+# i is what?
+def joystick_print(evt, evt_type, i):
+	print("joystick callback called : ", evt)
+	print("state : ", evt.state)
+	print("type : ", evt_type)
+
+#trigger = game.event_manager.createJoystickTrigger()
+#trigger.addListener(joystick_print)
 
