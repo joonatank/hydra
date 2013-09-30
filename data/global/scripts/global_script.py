@@ -53,11 +53,12 @@ class Controller:
 		if self.disabled:
 			return;
 
-		# Normalises the move dir, this works for keyboard but it
-		# does not work for joysticks
-		# for joysticks we need to clip the length at 1
 		if self.mov_dir.length() != 0:
-			v = self.mov_dir/self.mov_dir.length()
+			v = self.mov_dir
+			# This isn't correct, we'd need a way to clamp the result
+			# to length = 1 but it isn't that important atm
+			#if self.mov_dir.length():
+			#	v = self.mov_dir - (self.mov_dir * (self.mov_dir.length() - 1))
 			mov = self.speed*float(t)*v
 			# can not use for n in nodes because of missing
 			# by-value converter.
@@ -122,6 +123,23 @@ class Controller:
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
 
+	# TODO need to add a boolean to enable/disable the joystick
+	# now it will enable it for all objects not just camera
+	# Actually it needs to be enabled when it's created
+	# only camera controller will enable it
+	def update_joystick(self, evt, evt_type, i) :
+		# Override the move dir
+		# dunno if this is the best way to do it
+		# might need to add and clamp to avoid issues with using both
+		# joystick and keyboard
+		if evt_type == JOYSTICK_EVENT_TYPE.AXIS:
+			# For some reason this doesn't reset to zero properly
+			# TODO we need to have these configurable for now hard coded
+			# for ps2 one handed joystick
+			# TODO we need to clamp the result to zero if it's small enough
+			self.mov_dir = Vector3(evt.state.axes[3], 0, evt.state.axes[2])
+			#print("Object update joystick AXIS :", self.mov_dir)
+
 	def reset_rotation(self):
 		self.rot_axis = Vector3.zero
 
@@ -169,10 +187,13 @@ class RigidBodyController(Controller):
 		self.transform(bodies, t)
 
 class ActiveCameraController(Controller):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10, head_direction = False):
 		Controller.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
+		self.head_direction = head_direction
 
 	def progress(self, t):
+		if self.head_direction:
+			self.rotation = game.player.head_transformation.quaternion
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
 
@@ -228,6 +249,10 @@ def createCameraController(speed = 5, angular_speed = Degree(90), high_speed = 1
 	for t in triggers:
 		t.addKeyDownListener(camera_movements.toggle_high_speed)
 		t.addKeyUpListener(camera_movements.toggle_high_speed)
+
+	# Joystick
+	trigger = game.event_manager.createJoystickTrigger()
+	trigger.addListener(camera_movements.update_joystick)
 
 	game.event_manager.frame_trigger.addListener(camera_movements.progress)
 
