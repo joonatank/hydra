@@ -589,3 +589,17 @@ addToggleStereo(KC.F12)
 
 #addQuitEvent(KC.ESCAPE)
 
+def enable_hmd_distortion():
+	print("Enabling HMD distortion.")
+	renderer.hmd_distortion_enabled = True
+
+def disable_hmd_distortion():
+	print("Disabling HMD distortion.")
+	renderer.hmd_distortion_enabled = False
+
+trigger = game.event_manager.createKeyTrigger(KC.F5)
+trigger.addKeyDownListener(enable_hmd_distortion)
+
+trigger = game.event_manager.createKeyTrigger(KC.F6)
+trigger.addKeyDownListener(disable_hmd_distortion)
+
