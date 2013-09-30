@@ -45,6 +45,7 @@ vl::ProgramOptions::ProgramOptions(std::string const &ini_file)
 	, _slave(false)
 	, _ini_file(ini_file)
 	, launcher_port(9556)
+	, oculus_rift(false)
 {
 	/// Find search directories for the ini file
 	/// The executable path

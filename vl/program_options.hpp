@@ -157,6 +157,10 @@ struct HYDRA_API ProgramOptions
 	/// that are loadable at runtime, single project can be active at once.
 	std::vector<std::string> project_paths;
 
+	/// If the user wants Oculus Rift to be used or not
+	/// This setting is for the moment copied from env config.
+	bool oculus_rift;
+
 private :
 	/// @brief Parse only ini file
 	void _parse_ini(void);

@@ -413,13 +413,25 @@ vl::Master::_mainloop(bool sleep)
 void
 vl::Master::_do_init(ProgramOptions const &opt)
 {
+	ProgramOptions options(opt);
 	assert(opt.master());
-	_env = vl::getMasterSettings(opt);
+	_env = vl::getMasterSettings(options);
+
+	/// Do we have Oculus
+	/// @todo this is rather hackish
+	if(_env->getMaster().getNWindows() > 0)
+	{
+		for(size_t i = 0; i < _env->getMaster().getNWindows(); ++i)
+		{
+			if(_env->getMaster().getWindow(i).type == config::WT_OCULUS)
+			{ options.oculus_rift = true; break; }
+		}
+	}
 
 	if(!_env)
 	{ BOOST_THROW_EXCEPTION(vl::exception()); }
 
-	if(opt.auto_fork)
+	if(options.auto_fork)
 	{
 		for(size_t i = 0; i < _env->getSlaves().size(); ++i)
 		{
@@ -464,13 +476,13 @@ vl::Master::_do_init(ProgramOptions const &opt)
 	
 	// Auto forking is incompatible with launchers so either or
 	// if we have no slaves there is no reason what so ever to send a message
-	if(!opt.auto_fork && !_env->getSlaves().empty())
+	if(!options.auto_fork && !_env->getSlaves().empty())
 	{
 		// Try to find launchers by broadcasting, 
 		// launchers will start automatically when they receive start command
 
 		/// @todo make port configurable
-		RemoteLauncherHelper launcher_helper(opt.launcher_port);
+		RemoteLauncherHelper launcher_helper(options.launcher_port);
 		launcher_helper.send_start(_env->getServer().port);
 	}
 
@@ -483,8 +495,8 @@ vl::Master::_do_init(ProgramOptions const &opt)
 	else
 	{ std::clog << "Not creating local Renderer." << std::endl; }
 
-	_game_manager = new vl::GameManager(this, _logger, opt);
-
+	_game_manager = new vl::GameManager(this, _logger, options);
+	
 	// Parses the env config and creates all pipes and windows
 	// needs to be after GameManager has been created because we need Oculus info from it.
 	_createWindows(_env);
@@ -506,7 +518,7 @@ vl::Master::_do_init(ProgramOptions const &opt)
 	if(_renderer)
 	{ _renderer->setMeshManager(_game_manager->getMeshManager()); }
 
-	init(opt.global_file, opt.project_file);
+	init(options.global_file, options.project_file);
 
 	std::vector<vl::config::Program> programs = _env->getUsedPrograms();
 	std::clog << "Should start " << programs.size() << " autolaunched programs."

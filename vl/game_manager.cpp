@@ -116,7 +116,10 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 	// @todo this is good except we should write to log if Oculus is connected
 	// and we should fail (exit the program) if Oculus is defined in the config
 	// but the initialisation fails.
-	_initialiseOculus();
+	if(opt.oculus_rift)
+	{
+		_initialiseOculus();
+	}
 
 	_fsm->setGameManager(this);
 	_fsm->start();
