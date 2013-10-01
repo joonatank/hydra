@@ -77,8 +77,18 @@ struct JoystickState
 	// @todo why do we need vectors? I think they are only used for wii
 	std::vector<vl::Vector3>	vectors;
 
+	/// need to define functions 
 	bool isButtonDown(size_t index) const
 	{ return index < buttons.size() ? buttons.at(index) : false; }
+
+	bool isAnyButtonDown(void) const
+	{ return buttons.any(); }
+
+	bool isNoButtonsDown(void) const
+	{ return !buttons.any(); }
+
+	bool isAllButtonsDown(void) const
+	{ return buttons.all(); }
 };
 
 

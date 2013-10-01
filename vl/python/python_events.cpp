@@ -198,6 +198,9 @@ void export_managers(void)
 		.def_readonly("axes", &vl::JoystickState::axes)
 		.def_readonly("vectors", &vl::JoystickState::vectors)
 		.def("is_button_down", &vl::JoystickState::isButtonDown)
+		.add_property("no_buttons_down", &vl::JoystickState::isNoButtonsDown)
+		.add_property("any_button_down", &vl::JoystickState::isAnyButtonDown)
+		.add_property("all_buttons_down", &vl::JoystickState::isAllButtonsDown)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

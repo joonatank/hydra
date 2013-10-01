@@ -133,12 +133,14 @@ class Controller:
 		# might need to add and clamp to avoid issues with using both
 		# joystick and keyboard
 		if evt_type == JOYSTICK_EVENT_TYPE.AXIS:
-			# For some reason this doesn't reset to zero properly
-			# TODO we need to have these configurable for now hard coded
-			# for ps2 one handed joystick
-			# TODO we need to clamp the result to zero if it's small enough
-			self.mov_dir = Vector3(evt.state.axes[3], 0, evt.state.axes[2])
-			#print("Object update joystick AXIS :", self.mov_dir)
+			# TODO this causes problems if we release axis first
+			if evt.state.no_buttons_down :
+				# For some reason this doesn't reset to zero properly
+				# TODO we need to have these configurable for now hard coded
+				# for ps2 one handed joystick
+				# TODO we need to clamp the result to zero if it's small enough
+				self.mov_dir = Vector3(evt.state.axes[3], 0, evt.state.axes[2])
+				#print("Object update joystick AXIS :", self.mov_dir)
 
 	def reset_rotation(self):
 		self.rot_axis = Vector3.zero
