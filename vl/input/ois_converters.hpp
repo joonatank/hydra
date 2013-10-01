@@ -29,34 +29,8 @@
 namespace vl
 {
 
-inline SerialJoystickEvent
-convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
-{
-	// Does an axis swap for joysticks, not tested with gamepads
-	// Assumes that MAX_AXIS == -MIN_AXIS
-	double x = ((double)evt.state.mAxes[2].abs) / OIS::JoyStick::MAX_AXIS;
-	double y = ((double)evt.state.mAxes[1].abs) / OIS::JoyStick::MAX_AXIS;
-	double z = ((double)evt.state.mAxes[0].abs) / OIS::JoyStick::MAX_AXIS;
-	
-	SerialJoystickEvent e;
-	
-	
-	e.axis_x = x;
-	e.axis_y = y;
-	e.axis_z = z;
-	
-	for(size_t i = 0; i < evt.state.mButtons.size(); ++i)
-	{
-		e.setButtonDown(i, evt.state.mButtons.at(i));
-	}
-
-	return e;
-}
-
-
-
 inline vl::JoystickEvent
-convert_ois_joystick_to_hydra(OIS::JoyStickEvent const &evt)
+convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 {
 	JoystickEvent e;
 	e.info.dev_id = vl::dev_id_t( evt.device->getID() );
