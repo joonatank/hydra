@@ -24,12 +24,11 @@
 #include <iostream>
 // Necessary for vl::scalar and uintX_t types
 #include "math/math.hpp"
-//#include "typedefs.hpp"
 #include "cluster/message.hpp"
 #include "typedefs.hpp"
 
-//Used for event data for buttons:
-//#include "boost/dynamic_bitset.hpp"
+//Used for event data for buttons
+#include <bitset>
 
 namespace vl {
 
@@ -68,7 +67,8 @@ operator<<(std::ostream &os, JoystickInfo const &info)
 struct JoystickState
 {
 	JoystickState(void) {}
-	std::vector<char>			buttons;
+	// 32 buttons supported at maximum
+	std::bitset<32>				buttons;
 	std::vector<vl::scalar>		axes;
 	//sliders are missing:
 	//std::vector<Slider>		sliders;
@@ -76,7 +76,9 @@ struct JoystickState
 	//std::vector<POV>			povs;
 	// @todo why do we need vectors? I think they are only used for wii
 	std::vector<vl::Vector3>	vectors;
-	
+
+	bool isButtonDown(size_t index) const
+	{ return index < buttons.size() ? buttons.at(index) : false; }
 };
 
 
@@ -150,42 +152,10 @@ ByteStream &operator>>(ByteStream &msg, vl::JoystickEvent &evt)
 	return msg;
 }
 
-/*
-template<> inline
-ByteStream &operator << < std::vector<bool> >(ByteStream &msg, std::vector<bool> const &vec)
-{
-	size_t vecsize = vec.size();
-	msg << vecsize;
-	if(vecsize > 0)
-	{
-		for(size_t i = 0; i < vecsize; ++i)
-		{
-			msg << vec.at(i);
-		}
-	}
-	return msg;
-}
-
-template<> inline
-ByteStream &operator >> < std::vector<bool> >(ByteStream &msg, std::vector<bool> &vec)
-{
-	size_t vecsize = 0;
-	msg >> vecsize;
-	if(vecsize > 0)
-	{
-		for(size_t i = 0; i < vecsize; ++i)
-		{
-			msg >> vec.at(i);
-		}
-	}
-	return msg;
-}
-*/
-
 
 } // namespace cluster
 
 } // namespace vl
 
-#endif //
+#endif // HYDRA_INPUT_JOYSTICK_EVENT_HPP
 

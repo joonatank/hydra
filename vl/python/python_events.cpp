@@ -157,8 +157,7 @@ void export_managers(void)
 		.def(python::vector_indexing_suite< std::vector<int8_t> >())
 	;
 
-	// No idea why these need to be exposed separately
-	// vectors of primitive types, but boost does not do it for us automatically
+	// Can't expose these with toast for some reason
 	python::class_<std::vector<vl::scalar> >("floatvec")
 		.def(python::vector_indexing_suite< std::vector<vl::scalar> >())
 	;
@@ -194,9 +193,11 @@ void export_managers(void)
 		;
 
 	python::class_<vl::JoystickState>("JoystickState", python::init<>())
-		.def_readonly("buttons", &vl::JoystickState::buttons)
+		// can't expose buttons without exposing std::bitset
+		//.def_readonly("buttons", &vl::JoystickState::buttons)
 		.def_readonly("axes", &vl::JoystickState::axes)
 		.def_readonly("vectors", &vl::JoystickState::vectors)
+		.def("is_button_down", &vl::JoystickState::isButtonDown)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

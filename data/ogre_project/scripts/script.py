@@ -172,10 +172,17 @@ trigger.addListener(show_debug)
 # evt_type is the type of the event fired
 # i is what?
 def joystick_print(evt, evt_type, i):
-	print("joystick callback called : ", evt)
-	print("state : ", evt.state)
-	print("type : ", evt_type)
+	#print("joystick callback called : ", evt)
+	#print("state : ", evt.state)
+	#print("type : ", evt_type)
 
-#trigger = game.event_manager.createJoystickTrigger()
-#trigger.addListener(joystick_print)
+	if evt.state.is_button_down(10) :
+		print("Button 10 is down") 
+
+	# Try to mess with buttons
+	# print(evt.state.buttons)
+	# can't access the buttons because exposing them is bit iffy
+
+trigger = game.event_manager.createJoystickTrigger()
+trigger.addListener(joystick_print)
 

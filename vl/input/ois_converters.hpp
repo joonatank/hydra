@@ -64,16 +64,10 @@ convert_ois_joystick_to_hydra(OIS::JoyStickEvent const &evt)
 	
 	size_t vecsize = evt.state.mButtons.size();
 
-	if( vecsize > 0)
+	assert(vecsize <= e.state.buttons.size());
+	for(size_t i = 0; i < vecsize; ++i)
 	{
-		e.state.buttons.resize(vecsize);
-		for(size_t i = 0; i < vecsize; ++i)
-		{
-			if(evt.state.mButtons[i])
-			{e.state.buttons.at(i) = '1';}
-			else
-			{e.state.buttons.at(i) = '0';}
-		}
+		e.state.buttons.at(i) = evt.state.mButtons[i];
 	}
 	
 	// @todo this is really slow, should use resize and at instead
