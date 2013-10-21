@@ -41,12 +41,18 @@ class Controller:
 		self.low_speed = speed
 		self.high_speed = high_speed
 		self.angular_speed = angular_speed
+		#Translational signal:
 		self.mov_dir = Vector3.zero
+		#Rotational signal:
 		self.rot_axis = Vector3.zero
+		#I believe this is reference object for rigidbody translation?
 		self.ref = reference
+		#Initial rotation eg. misalignment:
 		self.rotation = rotation
 		self.disabled = False
+		#Reference frame (transform) used for scene node translations?
 		self.frame = TS.LOCAL
+		#Reference used for scene node rotations?
 		self.rotation_frame = TS.LOCAL
 
 	def transform(self, nodes, t):

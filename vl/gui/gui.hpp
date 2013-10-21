@@ -85,7 +85,7 @@ public :
 	Gorilla::Screen *createScreen(void);
 	
 	void createMouseCursor(Gorilla::Screen *screen);
-	
+	void showMouseCursor(void);
 	void hideMouseCursor(void);
 
 	bool initialised(void) const;

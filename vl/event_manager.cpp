@@ -263,11 +263,11 @@ vl::EventManager::mouseMoved(vl::MouseEvent const &evt)
 	
 }
 
-void vl::EventManager::updateGameJoystick(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
+void vl::EventManager::updateGameJoystick(vl::JoystickEvent const& evt, int index)
 {
 	for(std::vector< vl::JoystickTrigger* >::iterator iter = _joystick_triggers.begin(); iter != _joystick_triggers.end(); ++iter)
 	{
-		(*iter)->update(evt, type, index);
+		(*iter)->update(evt, index);
 	}
 	//std::clog << "update funktio, event_manager.cpp: " << std::endl << evt;
 }

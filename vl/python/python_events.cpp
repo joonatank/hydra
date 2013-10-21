@@ -18,6 +18,7 @@
 
 // Callback helpers
 #include <toast/python/callback.hpp>
+
 // For namespace renaming
 #include "python_context_impl.hpp"
 
@@ -48,6 +49,7 @@
 
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 
 /// Event system overloads
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
@@ -169,29 +171,35 @@ void export_managers(void)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
+	python::enum_<vl::JoystickEvent::EventType>("JOYSTICK_EVENT_TYPE")
+		.value("BUTTON_PRESSED", vl::JoystickEvent::BUTTON_PRESSED)
+		.value("BUTTON_RELEASED", vl::JoystickEvent::BUTTON_RELEASED)
+		.value("AXIS", vl::JoystickEvent::AXIS)
+		.value("VECTOR", vl::JoystickEvent::VECTOR)
+		.value("POV", vl::JoystickEvent::POV)
+		.value("SLIDER", vl::JoystickEvent::SLIDER)
+	;
+
 	python::class_<vl::JoystickEvent>("JoystickEvent", python::init<>())
+		.def_readonly("type", &vl::JoystickEvent::type)
 		.def_readonly("info", &vl::JoystickEvent::info)
 		.def_readonly("state", &vl::JoystickEvent::state)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
-	python::enum_<vl::JoystickEvent::EventType>("JOYSTICK_EVENT_TYPE")
-		.value("UNKNOWN", vl::JoystickEvent::UNKNOWN)
-		.value("BUTTON_PRESSED", vl::JoystickEvent::BUTTON_PRESSED)
-		.value("BUTTON_RELEASED", vl::JoystickEvent::BUTTON_RELEASED)
-		.value("AXIS", vl::JoystickEvent::AXIS)
-		.value("VECTOR", vl::JoystickEvent::VECTOR)
-	;
-
 	python::class_<vl::JoystickInfo>("JoystickInfo", python::init<>())
 		//.def_readonly("dev_id", &vl::JoystickInfo::dev_id)
 		//.def_readonly("input_manager_id", &vl::JoystickInfo::input_manager_id)
 		//.def_readonly("vendor", &vl::JoystickInfo::vendor_id)
-		.def("vendor_id", &vl::JoystickInfo::getVendorID, python::return_value_policy<python::return_by_value>())
-		.def("owner_id", &vl::JoystickInfo::getOwnerID, python::return_value_policy<python::return_by_value>())
-		.def("device_id", &vl::JoystickInfo::getDevID, python::return_value_policy<python::return_by_value>())
+		//.def("vendor_id", &vl::JoystickInfo::getVendorID, python::return_value_policy<python::return_by_value>())
+		//.def("owner_id", &vl::JoystickInfo::getOwnerID, python::return_value_policy<python::return_by_value>())
+		//.def("device_id", &vl::JoystickInfo::getDevID, python::return_value_policy<python::return_by_value>())
+		.add_property("device_id", &vl::JoystickInfo::dev_id)
+		.add_property("owner_id", &vl::JoystickInfo::input_manager_id)
+		.add_property("vendor_id", &vl::JoystickInfo::vendor_id)
 		;
 
+	
 	python::class_<vl::JoystickState>("JoystickState", python::init<>())
 		// can't expose buttons without exposing std::bitset
 		//.def_readonly("buttons", &vl::JoystickState::buttons)
@@ -201,9 +209,10 @@ void export_managers(void)
 		.add_property("no_buttons_down", &vl::JoystickState::isNoButtonsDown)
 		.add_property("any_button_down", &vl::JoystickState::isAnyButtonDown)
 		.add_property("all_buttons_down", &vl::JoystickState::isAllButtonsDown)
+
 		.def(python::self_ns::str(python::self_ns::self))
 	;
-
+	
 	python::class_<vl::MouseEvent>("MouseEvent", python::init<>())
 		.def_readonly("axis_x", &vl::MouseEvent::X)
 		.def_readonly("axis_y", &vl::MouseEvent::Y)
@@ -338,7 +347,13 @@ void export_triggers(void)
 	;
 
 	python::class_<vl::JoystickTrigger, boost::noncopyable, python::bases<Trigger> >("JoystickTrigger", python::no_init )
-		.def("addListener", toast::python::signal_connect<void(vl::JoystickEvent const &, vl::JoystickEvent::EventType, int)>(&vl::JoystickTrigger::addListener))
+		.def("addListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addListener))
+		.def("addButtonPressedListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addButtonPressedListener))
+		.def("addButtonReleasedListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addButtonReleasedListener))
+		.def("addAxisListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addAxisListener))
+		.def("addVectorListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addVectorListener))
+
+
 	;	
 		
 

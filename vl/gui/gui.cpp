@@ -139,6 +139,7 @@ vl::gui::GUI::createMouseCursor(Gorilla::Screen *screen)
 		_mouse_cursor_layer = screen->createLayer(15);
 		_mouse_cursor = _mouse_cursor_layer->createRectangle(0, 0, 10, 18);
 		_mouse_cursor->background_image("mousepointer");
+		_mouse_cursor_layer->show();
 	}
 }
 
@@ -149,6 +150,14 @@ vl::gui::GUI::hideMouseCursor(void)
 	{ _mouse_cursor_layer->hide(); }
 	
 }
+
+void
+vl::gui::GUI::showMouseCursor(void)
+{
+	if(_mouse_cursor_layer)
+	{ _mouse_cursor_layer->show();}
+}
+
 
 bool
 vl::gui::GUI::initialised(void) const

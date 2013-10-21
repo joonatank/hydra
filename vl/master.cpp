@@ -903,7 +903,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			int button;
 			
 			stream >> button >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::BUTTON_PRESSED, button);
+			_game_manager->getEventManager()->updateGameJoystick(evt, button);
 		}
 		break;
 
@@ -912,7 +912,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			vl::JoystickEvent evt;
 			int button;
 			stream >> button >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::BUTTON_RELEASED, button);
+			_game_manager->getEventManager()->updateGameJoystick(evt, button);
 		}
 		break;
 
@@ -921,7 +921,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			vl::JoystickEvent evt;
 			int axis;
 			stream >> axis >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::AXIS, axis);
+			_game_manager->getEventManager()->updateGameJoystick(evt, axis);
 		}
 		break;
 
@@ -930,7 +930,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			vl::JoystickEvent evt;
 			int pov;
 			stream >> pov >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::UNKNOWN, pov);
+			_game_manager->getEventManager()->updateGameJoystick(evt, pov);
 		}
 		break;
 
@@ -939,7 +939,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			vl::JoystickEvent evt;
 			int index;
 			stream >> index >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::VECTOR, index);
+			_game_manager->getEventManager()->updateGameJoystick(evt, index);
 		}
 		break;
 		
@@ -948,7 +948,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 			vl::JoystickEvent evt;
 			int index;
 			stream >> index >> evt;
-			_game_manager->getEventManager()->updateGameJoystick(evt, vl::JoystickEvent::UNKNOWN, index);
+			_game_manager->getEventManager()->updateGameJoystick(evt, index);
 		}
 		break;
 

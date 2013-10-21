@@ -169,12 +169,11 @@ trigger.addListener(show_debug)
 
 # Testing joystick trigger
 # evt is the event
-# evt_type is the type of the event fired
-# i is what?
-def joystick_print(evt, evt_type, i):
+# i is index of the component which caused the triggering
+def joystick_print(evt, i):
 	#print("joystick callback called : ", evt)
 	#print("state : ", evt.state)
-	#print("type : ", evt_type)
+	#print("type : ", evt.type)
 
 	if evt.state.is_button_down(10) :
 		print("Button 10 is down") 
