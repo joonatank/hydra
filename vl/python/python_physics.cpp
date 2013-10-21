@@ -152,7 +152,8 @@ void export_physics_objects(void)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
 		.add_property("rotation_motor", python::make_function(&vl::physics::SixDofConstraint::getRotationalMotor, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("translation_motor", python::make_function(&vl::physics::SixDofConstraint::getTranslationalMotor, python::return_value_policy<python::reference_existing_object>())) 
-		
+		.add_property("frame_offset_A", &vl::physics::SixDofConstraint::getFrameOffsetA, &vl::physics::SixDofConstraint::setFrameOffsetA)
+		.add_property("frame_offset_B", &vl::physics::SixDofConstraint::getFrameOffsetB, &vl::physics::SixDofConstraint::setFrameOffsetB)
 		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::SixDofConstraint::createDynamic)
 		
@@ -327,6 +328,7 @@ void export_physics_objects(void)
 		.def("createMotionState", &vl::physics::World::createMotionState,
 			 createMotionState_ov()[ python::return_value_policy<python::reference_existing_object>() ] )
 		.def("addConstraint", &vl::physics::World::addConstraint, addConstraint_ovs() )
+		.def("removeConstraint", &vl::physics::World::removeConstraint)
 		.def("createTube", &vl::physics::World::createTube, createTube_ov())
 		.def("createTube", &vl::physics::World::createTubeEx)
 		.add_property("bodies", python::make_function(&vl::physics::World::getBodies, python::return_value_policy<python::copy_const_reference>()))
