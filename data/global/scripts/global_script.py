@@ -57,15 +57,18 @@ class Controller:
 
 	def transform(self, nodes, t):
 		if self.disabled:
-			return;
-
-		if self.mov_dir.length() != 0:
-			v = self.mov_dir
-			# This isn't correct, we'd need a way to clamp the result
-			# to length = 1 but it isn't that important atm
-			#if self.mov_dir.length():
-			#	v = self.mov_dir - (self.mov_dir * (self.mov_dir.length() - 1))
-			mov = self.speed*float(t)*v
+			return
+			
+		v = self.mov_dir
+		mov_len = v.length()
+		
+		if mov_len != 0:
+			v /= mov_len
+			#Now the signal is being clamped to 1.0.
+			#Basically the multiplier is signal size
+			#if it's smaller than 1.0 or 1.0 if it's
+			#greater than it. Same for rotation.
+			mov = self.speed*float(t)*v*min(mov_len, 1.0)
 			# can not use for n in nodes because of missing
 			# by-value converter.
 			for i in range(len(nodes)):
@@ -86,12 +89,16 @@ class Controller:
 
 
 		axis = self.rot_axis
-		if axis.length() != 0:
-			axis.normalise()
-			angle = Radian(self.angular_speed*float(t))
-			q = Quaternion(angle, axis)
-			for i in range(len(nodes)):
-				nodes[i].rotate(q, self.rotation_frame)
+		axis_len = self.rot_axis.length()
+		axis.normalise()
+		angle = Radian(self.angular_speed*float(t)*min(axis_len, 1.0))
+		q = Quaternion(angle, axis)
+		
+		#Bullet rigidbodies doesn't have rotate method so this won't work
+		#--> rigidbody controller won't work
+		for i in range(len(nodes)):
+			nodes[i].rotate(q, self.rotation_frame)
+		
 
 	def up(self):
 		self.mov_dir += Vector3.unit_y
@@ -118,10 +125,10 @@ class Controller:
 		self.rot_axis += Vector3.unit_y
 
 	def rotate_up(self):
-		self.rot_axis -= Vector3.unit_x
+		self.rot_axis += Vector3.unit_x
 
 	def rotate_down(self):
-		self.rot_axis += Vector3.unit_x
+		self.rot_axis -= Vector3.unit_x
 
 	def roll_right(self):
 		self.rot_axis -= Vector3.unit_z
@@ -185,6 +192,7 @@ class SelectionController(Controller):
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
 
+#This doesn't work because there's no rotate method for rigidbodies (defined in the end of Controller transform method)
 class RigidBodyController(Controller):
 	def __init__(self, body):
 		Controller.__init__(self)
