@@ -41,6 +41,15 @@ elseif(MSVC_VERSION EQUAL 1600)
 	set(VC_VERSION_STR "vc100")
 elseif(MSVC_VERSION EQUAL 1700)
 	set(VC_VERSION_STR "vc110")
+else()
+	# Something odd with MSVC 10 having not set MSVC_VERSION
+	if(${MSVC10})
+		set(VC_VERSION_STR "vc100")
+	endif()
+endif()
+
+if(NOT VC_VERSION_STR)
+	message(FATAL_ERROR "Not recognised MSVC version = ${MSVC_VERSION}")
 endif()
 
 set(Boost_PYTHON_BIN_NAME
