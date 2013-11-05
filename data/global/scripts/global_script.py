@@ -89,8 +89,7 @@ class Controller:
 
 
 		axis = self.rot_axis
-		axis_len = self.rot_axis.length()
-		axis.normalise()
+		axis_len = axis.normalise()
 		angle = Radian(self.angular_speed*float(t)*min(axis_len, 1.0))
 		q = Quaternion(angle, axis)
 		
@@ -135,17 +134,37 @@ class Controller:
 
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
+		
+	##callbacks / slots operated by range variables. At the moment I don't know should these be additive or not.
+	#in few tests when using additive the controller couldn't stop (rounding and signal errors) so I assume these are correct now.
+	def translate_forward(self, value):
+		self.mov_dir.z = -value
 
+	def translate_vertical(self, value):
+		self.mov_dir.y = value
+
+	def translate_horizontal(self, value):
+		self.mov_dir.x = value
+
+	def rotate_around_vertical(self, value):
+		self.rot_axis.y = value
+
+	def rotate_around_horizontal(self, value):
+		self.rot_axis.x = value
+
+	def rotate_around_forward(self, value):
+		self.rot_axis.z = -value
+		
 	# TODO need to add a boolean to enable/disable the joystick
 	# now it will enable it for all objects not just camera
 	# Actually it needs to be enabled when it's created
 	# only camera controller will enable it
-	def update_joystick(self, evt, evt_type, i) :
+	def update_joystick(self, evt, i) :
 		# Override the move dir
 		# dunno if this is the best way to do it
 		# might need to add and clamp to avoid issues with using both
 		# joystick and keyboard
-		if evt_type == JOYSTICK_EVENT_TYPE.AXIS:
+		if evt.type == JOYSTICK_EVENT_TYPE.AXIS:
 			# TODO this causes problems if we release axis first
 			if evt.state.no_buttons_down :
 				# For some reason this doesn't reset to zero properly
@@ -154,7 +173,7 @@ class Controller:
 				# TODO we need to clamp the result to zero if it's small enough
 				self.mov_dir = Vector3(evt.state.axes[3], 0, evt.state.axes[2])
 				#print("Object update joystick AXIS :", self.mov_dir)
-
+	
 	def reset_rotation(self):
 		self.rot_axis = Vector3.zero
 
