@@ -99,7 +99,7 @@ class RayDragger(IRayDragger):
 	also it's linked to VisualRay's	length. """
 	
 	def __init__(self, visual_ray, ray_pickable_objects=[], speed=5.0, ray_max_distance=15.0):
-		self.visual = visual
+		self.visual = visual_ray
 		self.selected = []
 		self.pickables = ray_pickable_objects
 		self.speed = speed
