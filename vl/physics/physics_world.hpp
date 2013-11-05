@@ -75,6 +75,7 @@ struct SolverParameters
 // @warning this is for raycasting:
 struct RayResult
 {
+	std::vector<std::string>	names;
 	RigidBodyList hit_objects;
 	std::vector<Ogre::Vector3>	hit_points_world;
 	std::vector<Ogre::Vector3>	hit_normals_world;

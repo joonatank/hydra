@@ -152,8 +152,8 @@ void export_physics_objects(void)
 		.add_property("bodyB", &vl::physics::SixDofConstraint::getBodyB)
 		.add_property("rotation_motor", python::make_function(&vl::physics::SixDofConstraint::getRotationalMotor, python::return_value_policy<python::reference_existing_object>()))
 		.add_property("translation_motor", python::make_function(&vl::physics::SixDofConstraint::getTranslationalMotor, python::return_value_policy<python::reference_existing_object>())) 
-		.add_property("frame_offset_A", &vl::physics::SixDofConstraint::getFrameOffsetA, &vl::physics::SixDofConstraint::setFrameOffsetA)
-		.add_property("frame_offset_B", &vl::physics::SixDofConstraint::getFrameOffsetB, &vl::physics::SixDofConstraint::setFrameOffsetB)
+		.add_property("frame_offset_A", python::make_function(&vl::physics::SixDofConstraint::getFrameOffsetA, python::return_value_policy<python::reference_existing_object>() ), &vl::physics::SixDofConstraint::setFrameOffsetA)
+		.add_property("frame_offset_B", python::make_function(&vl::physics::SixDofConstraint::getFrameOffsetB, python::return_value_policy<python::reference_existing_object>() ), &vl::physics::SixDofConstraint::setFrameOffsetB)
 		.def(python::self_ns::str(python::self_ns::self))
 		.def("create", &vl::physics::SixDofConstraint::createDynamic)
 		
@@ -257,14 +257,15 @@ void export_physics_objects(void)
 		.def(python::vector_indexing_suite< std::vector<Ogre::Vector3> >())
 		//.def(python::self_ns::str(python::self_ns::self))
 	;
-	//python::class_< std::vector<std::string const *> >("NameList")
-	//	.def(python::vector_indexing_suite<std::vector<std::string const *>,true >())
-	//;
+	python::class_< std::vector<std::string> >("StringList")
+		.def(python::vector_indexing_suite<std::vector<std::string> >())
+	;
 		// @warning: added due raycast, remove if there's problems:
 	
 	python::class_<vl::physics::RayResult>("RayResult")
 		.def_readonly("ray_start", &vl::physics::RayResult::start_point)
 		.def_readonly("ray_end", &vl::physics::RayResult::end_point)
+		.def_readonly("hit_names", &vl::physics::RayResult::names)
 		.def_readonly("hit_objects", &vl::physics::RayResult::hit_objects)
 		.def_readonly("hit_points", &vl::physics::RayResult::hit_points_world)
 		.def_readonly("hit_normals", &vl::physics::RayResult::hit_normals_world)

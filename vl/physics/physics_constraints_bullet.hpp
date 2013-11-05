@@ -460,12 +460,12 @@ public :
 		return Ogre::Vector3(x, y, z);
 	}
 
-	vl::Transform getFrameOffsetA(void) const
+	vl::Transform const &getFrameOffsetA(void) const
 	{
 		return convert_transform(_bt_constraint->getFrameOffsetA());
 	}
 	
-	vl::Transform getFrameOffsetB(void) const
+	vl::Transform const &getFrameOffsetB(void) const
 	{
 		return convert_transform(_bt_constraint->getFrameOffsetB());
 	}

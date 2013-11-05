@@ -129,32 +129,46 @@ vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 co
 		
 		
 		//Now we shall parse through all hits and convert bullet's result format to hydra:
-		for(unsigned int i = 0; i < resultcb.m_collisionObjects.size(); ++i)
+		size_t vecsize = resultcb.m_collisionObjects.size();
+		if(vecsize > 0)
 		{
-			rres.hit_points_world.push_back( vl::math::convert_vec(resultcb.m_hitPointWorld.at(i)) );
+			rres.hit_points_world.resize(vecsize);
+			rres.hit_normals_world.resize(vecsize);
+			rres.hit_fractions.resize(vecsize);
+			rres.hit_objects.resize(vecsize);
+			rres.names.resize(vecsize);
+		
+			for(unsigned int i = 0; i < vecsize; ++i)
+			{
+				rres.hit_points_world.at(i) = vl::math::convert_vec(resultcb.m_hitPointWorld.at(i));
 			
-			rres.hit_normals_world.push_back( vl::math::convert_vec(resultcb.m_hitNormalWorld.at(i)) );
+				rres.hit_normals_world.at(i) =  vl::math::convert_vec(resultcb.m_hitNormalWorld.at(i));
 
-			rres.hit_fractions.push_back( resultcb.m_hitFractions.at(i) );			
+				rres.hit_fractions.at(i) = resultcb.m_hitFractions.at(i);			
 
-			btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
+				btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
 
-			if(btrb) {
+				if(btrb) {
 				
 				// cast custom void pointer as string const and push it into our objectlist
 				// @todo: check if reinterpret userpointer is null! Also take account if collision
 				//object is a compound. Then the pointer is automatically null and not pointing to the root object.
-				std::string const *udata = reinterpret_cast<std::string const *>(btrb->getUserPointer());
-				if(udata)
-				{ 
-					RigidBodyRefPtr rb = this->_findRigidBody(*udata);
-					if(rb)
-					{
-						rres.hit_objects.push_back(rb);
+					std::string const *udata = reinterpret_cast<std::string const *>(btrb->getUserPointer());
+					if(udata)
+					{ 
+						RigidBodyRefPtr rb = this->_findRigidBody(*udata);
+						if(rb)
+						{
+							rres.hit_objects.at(i) = rb;
+							rres.names.at(i) = *udata;
+						}
+						
+				
+					
 					}
 				}
 			}
-		}
+		}	
 	}
 	else
 	{
