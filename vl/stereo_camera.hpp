@@ -82,7 +82,12 @@ public :
 
 	/// Return the view transform (view/eye matrix) for this frame
 	/// returns a view for a random eye but with correct head and wall transforms
-	vl::Transform getViewTransform(void) const;
+	Ogre::Matrix4 const &getLastViewMatrix(void) const
+	{return _last_view_matrix;}
+	
+	Ogre::Matrix4 const &getLastProjectionMatrix(void) const
+	{return _last_projection_matrix;}
+
 
 	/// @brief updates the Ogre::Camera's projection and view matrices
 	/// @param eye_x the eye x direction used for this rendering
@@ -132,6 +137,10 @@ private :
 
 	// flag used to check if we are calculating projection for Oculus
 	bool _is_hmd;
+
+	Ogre::Matrix4 _last_view_matrix;
+	
+	Ogre::Matrix4 _last_projection_matrix;
 
 };	// class StereoCamera
 

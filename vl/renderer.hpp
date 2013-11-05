@@ -159,10 +159,10 @@ public :
 	/// change Renderer, Window and Channel to be shared.
 	/// Would need modify the Renderer to be a shared Node, so master would own
 	/// N+1 of them where N is the number of slaves.
-	Ogre::Matrix4 const &getViewMatrix(void) const
-	{ return _view_matrix; }
-	Ogre::Matrix4 const &getProjectionMatrix(void) const
-	{ return _proj_matrix; }
+	
+	Ogre::Matrix4 const &getLastViewMatrix(void) const;
+	
+	Ogre::Matrix4 const &getLastProjectionMatrix(void) const;
 
 	/// Log Receiver overrides
 	virtual bool logEnabled(void) const;
@@ -234,11 +234,12 @@ protected :
 	uint32_t _n_log_messages;
 
 	std::vector<vl::MaterialRefPtr> _materials_to_check;
-
+	//These are not needed anymore, getter is rerouted straight from
+	//stereo camera.
 	// Projection and View matrices used for last frame
 	// Used for the python interface.
-	Ogre::Matrix4 _view_matrix;
-	Ogre::Matrix4 _proj_matrix;
+	//Ogre::Matrix4 _last_view_matrix;
+	//Ogre::Matrix4 _last_proj_matrix;
 
 };	// class Renderer
 

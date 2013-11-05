@@ -164,12 +164,12 @@ vl::Renderer::draw(void)
 		// what projection and view matrices exacatly are left after
 		// rendering a frame?
 		// need to test more but view matrix seemed fine for deferred.
-		Channel *chan = _pipe->getWindows().at(0)->getChannels().at(0);
+		//Channel *chan = _pipe->getWindows().at(0)->getChannels().at(0);
 
-		vl::Transform t = chan->getCamera().getViewTransform();
-		_view_matrix = Ogre::Matrix4(t.quaternion);
-		_view_matrix.setTrans(t.position);
-		_proj_matrix = chan->getCamera().getFrustum().getProjectionMatrix();
+		//vl::Transform t = chan->getCamera().getLastViewMatrix();
+		//_last_view_matrix = Ogre::Matrix4(t.quaternion);
+		//_last_view_matrix.setTrans(t.position);
+		//_last_proj_matrix = chan->getCamera().getLastProjectionMatrix();
 	}
 
 	// Hack to update Sky
@@ -193,6 +193,37 @@ vl::Renderer::swap(void)
 
 	_pipe->swap();
 }
+
+
+Ogre::Matrix4 const &vl::Renderer::getLastViewMatrix(void) const
+{
+	// @todo does this work for deferred shading or FBOs?
+	// what projection and view matrices exacatly are left after
+	// rendering a frame?
+	// need to test more but view matrix seemed fine for deferred.
+	assert(_pipe->getWindows().size() > 0);
+	assert(_pipe->getWindows().at(0)->getChannels().size() > 0);
+	Channel* cha = _pipe->getWindows().at(0)->getChannels().at(0);
+	return cha->getCamera().getLastViewMatrix();
+	
+}
+	
+
+Ogre::Matrix4 const &vl::Renderer::getLastProjectionMatrix(void) const
+{
+	// @todo does this work for deferred shading or FBOs?
+	// what projection and view matrices exacatly are left after
+	// rendering a frame?
+	// need to test more but view matrix seemed fine for deferred.
+	assert(_pipe->getWindows().size() > 0);
+	assert(_pipe->getWindows().at(0)->getChannels().size() > 0);
+	Channel* cha = _pipe->getWindows().at(0)->getChannels().at(0);
+	return cha->getCamera().getLastProjectionMatrix();
+	
+	
+	
+}
+
 
 /// --------------------------------------------------------------------------
 /// ----------------------- Project management -------------------------------

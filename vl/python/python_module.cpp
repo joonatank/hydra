@@ -722,8 +722,8 @@ void export_game(void)
 	;
 
 	python::class_<vl::Renderer, boost::noncopyable>("Renderer", python::no_init)
-		.add_property("view_matrix", python::make_function(&vl::Renderer::getViewMatrix, python::return_value_policy<python::copy_const_reference>()))
-		.add_property("projection_matrix", python::make_function(&vl::Renderer::getProjectionMatrix, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("view_matrix", python::make_function(&vl::Renderer::getLastViewMatrix, python::return_value_policy<python::copy_const_reference>()))
+		.add_property("projection_matrix", python::make_function(&vl::Renderer::getLastProjectionMatrix, python::return_value_policy<python::copy_const_reference>()))
 		.add_property("hmd_distortion_enabled", &vl::Renderer::isHMDdistortion, &vl::Renderer::enableHMDdistortion)
 		.add_property("hmd_distortion_scale", &vl::Renderer::getHMDdistortionScale, &vl::Renderer::setHMDdistortionScale)
 	;

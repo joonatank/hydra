@@ -19,6 +19,8 @@ vl::StereoCamera::StereoCamera(void)
 	: _camera(0)
 	, _ogre_camera(0)
 	, _is_hmd(false)
+	, _last_view_matrix(Ogre::Matrix4())
+	, _last_projection_matrix(Ogre::Matrix4())
 {}
 
 vl::StereoCamera::~StereoCamera(void)
@@ -44,7 +46,7 @@ vl::StereoCamera::setCamera(vl::CameraPtr cam)
 	{ _ogre_camera = 0; }
 }
 
-vl::Transform
+/*vl::Transform
 vl::StereoCamera::getViewTransform(void) const
 {
 	Ogre::Vector3 const &pos = _ogre_camera->getDerivedPosition();
@@ -52,6 +54,7 @@ vl::StereoCamera::getViewTransform(void) const
 
 	return Transform(pos, q);
 }
+*/
 
 void
 vl::StereoCamera::update(STEREO_EYE eye_cfg)
@@ -74,6 +77,9 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 
 	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(_head, eye.x);
 	_ogre_camera->setCustomProjectionMatrix(true, projMat);
+	
+	_last_projection_matrix = projMat;
+	
 
 	// Combine eye and camera positions
 	// Needs to be rotated with head for correct stereo
@@ -101,4 +107,8 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 
 	_ogre_camera->setPosition(eye_d);
 	_ogre_camera->setOrientation(eye_q);
+	
+	Ogre::Matrix4 mat = Ogre::Matrix4(_ogre_camera->getDerivedOrientation());
+	mat.setTrans(_ogre_camera->getDerivedPosition());
+	_last_view_matrix = mat;
 }

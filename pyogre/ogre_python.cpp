@@ -245,6 +245,8 @@ BOOST_PYTHON_MODULE(pyogre)
 		.add_static_property("identity", py::make_getter(&Ogre::Quaternion::IDENTITY, py::return_value_policy<py::return_by_value>()) )
 	;
 
+	Ogre::Vector3 (Ogre::Matrix4::*getTrans_ov0)() const = &Ogre::Matrix4::getTrans;
+
 	py::class_<Ogre::Matrix4>("Matrix", py::init<>())
 		.def(py::init<Ogre::Quaternion>())
 		.def(py::init<Ogre::Matrix4>())
@@ -252,9 +254,10 @@ BOOST_PYTHON_MODULE(pyogre)
 		.def("inverse", &Ogre::Matrix4::inverse)
 		.add_property("has_scale", &Ogre::Matrix4::hasScale)
 		.add_property("has_negative_scale", &Ogre::Matrix4::hasNegativeScale)
+		.add_property("position", getTrans_ov0, &Ogre::Matrix4::setTrans)
 		.add_property("to_quaternion", &Ogre::Matrix4::extractQuaternion)
-		.def("__getitem__", &hackwrappers::getMatrix4Item)
-		.def("__setitem__", &hackwrappers::setMatrix4Item)
+		//.def("__getitem__", &hackwrappers::getMatrix4Item)
+		//.def("__setitem__", &hackwrappers::setMatrix4Item)
 		// Operators
 		.def(py::self + py::self)
 		.def(py::self - py::self)
