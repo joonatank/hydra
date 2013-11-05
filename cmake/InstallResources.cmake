@@ -13,6 +13,7 @@ install( DIRECTORY ${DATA_PATH}/tracking DESTINATION data CONFIGURATIONS Release
 install( DIRECTORY ${DATA_PATH}/generated_physics_project DESTINATION data CONFIGURATIONS Release )
 install( DIRECTORY ${DATA_PATH}/perapora_project DESTINATION data CONFIGURATIONS Release )
 install( DIRECTORY ${DATA_PATH}/light_test_project DESTINATION data CONFIGURATIONS Release )
+install( DIRECTORY ${DATA_PATH}/dynamic_concave_raycast DESTINATION data CONFIGURATIONS Release )
 install( FILES ${DATA_PATH}/env.env DESTINATION data )
 install( FILES ${DATA_PATH}/multi_node.env DESTINATION data )
 install( FILES ${DATA_PATH}/env_side_by_side.env DESTINATION data )
