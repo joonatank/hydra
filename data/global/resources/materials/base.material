@@ -212,6 +212,16 @@ material collision_sphere/red : bling_phong/shadows
 //	set $diffuse_scene_blend "src_alpha one"
 }
 
+material collision/light : bling_phong/shadows
+{
+	set $emissiveCol "0.5 1 0.5 0.4"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+//	set $depthWrite off
+//	set $ambient_scene_blend "alpha_blend"
+//	set $diffuse_scene_blend "src_alpha one"
+}
+
 material finger_sphere/red : bling_phong/shadows
 {
 	set $emissiveCol "0.4 0 0 1"
