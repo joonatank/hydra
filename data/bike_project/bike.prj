@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<project_config name="bike">
+
+	<scenes>
+		<scene name="bike" use="true" use_new_mesh_manager="true">
+			<file>bike.scene</file>
+		</scene>
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">bike.py</file>
+	</scripts>
+
+</project_config>

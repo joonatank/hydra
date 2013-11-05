@@ -139,8 +139,12 @@ class Controller:
 				# TODO we need to have these configurable for now hard coded
 				# for ps2 one handed joystick
 				# TODO we need to clamp the result to zero if it's small enough
-				self.mov_dir = Vector3(evt.state.axes[3], 0, evt.state.axes[2])
-				#print("Object update joystick AXIS :", self.mov_dir)
+				# fix for splitfish (has a static error in z axis)
+				x = evt.state.axes[3]
+				z = evt.state.axes[2]
+				if(abs(z) < 0.025) : z = 0
+
+				self.mov_dir = Vector3(x, 0, z)
 
 	def reset_rotation(self):
 		self.rot_axis = Vector3.zero

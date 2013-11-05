@@ -1,0 +1,127 @@
+<?xml version="1.0" ?>
+<scene formatVersion="1.0.0">
+	<environment>
+		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
+		<colourAmbient b="0" g="0" r="0"/>
+	</environment>
+	<nodes>
+		<node name="Point">
+			<position x="3.01131" y="-4.54915" z="-0.995481"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<light castShadows="false" name="Point" type="point">
+				<lightAttenuation constant="1.0" linear="0.04" quadratic="0.0" range="5000"/>
+				<colourDiffuse b="1" g="1" r="1"/>
+				<colourSpecular b="1" g="1" r="1"/>
+			</light>
+		</node>
+		<node name="Camera">
+			<position x="3.14904" y="-0.90467" z="1.35664"/>
+			<quaternion w="1" x="0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<camera fov="28.841546255021967" name="Camera" projectionType="perspective">
+				<clipping farPlaneDist="100" nearPlaneDist="0.1"/>
+			</camera>
+		</node>
+		<node name="polkupyora_locomotif">
+			<position x="-0" y="0" z="0"/>
+			<quaternion w="1" x="0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<node name="kaantonivel">
+				<position x="-0" y="0.288578" z="0.733671"/>
+				<quaternion w="6.28004e-07" x="-1.22072e-07" y="-0.190809" z="0.981627"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="etulokari">
+					<position x="5.69568e-07" y="-0.0689754" z="-0.784411"/>
+					<quaternion w="0.686534" x="0.169319" y="-0.169319" z="0.686537"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="etulokari.mesh" name="etulokari"/>
+				</node>
+				<node name="eturengas">
+					<position x="-0.00649978" y="-0.0648902" z="-0.769699"/>
+					<quaternion w="0.702153" x="-0.0835425" y="0.0835407" z="0.702155"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="eturengas.mesh" name="eturengas"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_loco-stuur-1 (Defau">
+					<position x="5.68131e-08" y="-0.050899" z="-0.00809467"/>
+					<quaternion w="0.965926" x="-0.258819" y="-1.48555e-06" z="1.41433e-06"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_loco-stuur-1 (Default).mesh" name="User Library-bicycle-locomotief_loco-stuur-1 (Default)"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_loco-stuurpen-1 (De">
+					<position x="-2.84217e-14" y="5.96046e-08" z="-5.96046e-08"/>
+					<quaternion w="1" x="3.72529e-08" y="-7.29206e-07" z="7.29857e-07"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_loco-stuurpen-1 (Default).mesh" name="User Library-bicycle-locomotief_loco-stuurpen-1 (Default)"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_struurmoer-1 (Defau">
+					<position x="1.36816e-07" y="4.17233e-07" z="-0.13"/>
+					<quaternion w="0.0752831" x="-4.94835e-07" y="-1.76488e-06" z="0.997162"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_struurmoer-1 (Default).mesh" name="User Library-bicycle-locomotief_struurmoer-1 (Default)"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_voorfork-1 (Default">
+					<position x="5.94055e-07" y="2.26498e-06" z="-0.4"/>
+					<quaternion w="-1.44628e-06" x="-6.03214e-07" y="-1.79559e-06" z="1"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_voorfork-1 (Default).mesh" name="User Library-bicycle-locomotief_voorfork-1 (Default)"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_voorfork-kap-1 (Def">
+					<position x="4.81914e-07" y="1.49012e-06" z="-0.3992"/>
+					<quaternion w="0.707106" x="7.65102e-07" y="-1.23762e-06" z="0.707108"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_voorfork-kap-1 (Default).mesh" name="User Library-bicycle-locomotief_voorfork-kap-1 (Default)"/>
+				</node>
+				<node name="Instance of User Library-bicycle-locomotief_voorfork-onderlager">
+					<position x="5.29753e-07" y="1.84774e-06" z="-0.3902"/>
+					<quaternion w="-1.44628e-06" x="-6.03214e-07" y="-1.79559e-06" z="1"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="User Library-bicycle-locomotief_voorfork-onderlager-1 (Default).mesh" name="User Library-bicycle-locomotief_voorfork-onderlager-1 (Default)"/>
+				</node>
+			</node>
+			<node name="ketjusuoja">
+				<position x="0.051984" y="0" z="0"/>
+				<quaternion w="4.54856e-08" x="4.18621e-08" y="-0.0414484" z="0.999141"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="ketjusuoja.mesh" name="ketjusuoja"/>
+			</node>
+			<node name="poljinmekanismi">
+				<position x="0.0425" y="0" z="0"/>
+				<quaternion w="0.467799" x="0.530249" y="0.530249" z="-0.4678"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="poljinmekanismi.mesh" name="poljinmekanismi"/>
+			</node>
+			<node name="ritsi">
+				<position x="-0" y="-0.659382" z="0.434105"/>
+				<quaternion w="0.707106" x="0.00062262" y="-0.00062262" z="0.707107"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="ritsi.mesh" name="ritsi"/>
+			</node>
+			<node name="runko">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="runko.mesh" name="runko"/>
+			</node>
+			<node name="satula">
+				<position x="-0" y="-0.273449" z="0.67715"/>
+				<quaternion w="0.705593" x="-0.046247" y="-0.046247" z="-0.705593"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="satula.mesh" name="satula"/>
+			</node>
+			<node name="takalokari">
+				<position x="-0" y="-0.456922" z="0.053958"/>
+				<quaternion w="0.705299" x="-0.0505305" y="-0.0505305" z="-0.705299"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="takalokari.mesh" name="takalokari"/>
+			</node>
+			<node name="takarengas">
+				<position x="0.042504" y="-0.456054" z="0.060545"/>
+				<quaternion w="0.50785" x="0.492025" y="0.492025" z="-0.50785"/>
+				<scale x="1" y="1" z="1"/>
+				<entity meshFile="takarengas.mesh" name="takarengas"/>
+			</node>
+		</node>
+	</nodes>
+</scene>

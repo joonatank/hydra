@@ -70,6 +70,10 @@ copy_start_scripts( hydra
 	dynamic_concave_raycast/dynamic_concave_raycast.prj
 	"dynamic_concave_raycast" )
 	
+copy_start_scripts( hydra
+	bike_project/bike.prj
+	"bike" )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp

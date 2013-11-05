@@ -101,4 +101,6 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 
 	_ogre_camera->setPosition(eye_d);
 	_ogre_camera->setOrientation(eye_q);
+
+	Ogre::Matrix4 viewMat(eye_q);
 }

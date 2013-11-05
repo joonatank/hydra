@@ -1,0 +1,134 @@
+import * from "normal_map.material"
+
+material bike_stuff/base : bling_phong/shadows
+{
+	set $ambientCol "0 0.0 0.0 1"
+	// white
+	set $diffuseCol "1 1 1 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material bike_stuff/red : bike_stuff/base
+{
+	set $ambientCol "5 0.0 0.0 1"
+	// red
+	//set $diffuseCol "0.5 0 0 0.1"
+}
+
+material meter/regular : bike_stuff/base
+{
+	set_texture_alias diffuse_map 1a.jpg
+}
+
+material meter/round : bike_stuff/base
+{
+	set_texture_alias diffuse_map 1b_modified.png
+}
+
+material meter/grey : bike_stuff/base
+{
+	set_texture_alias diffuse_map 1c_modified.png
+}
+
+material meter/multi : bike_stuff/base
+{
+	set_texture_alias diffuse_map 1d.jpg
+}
+
+material bell/red : bike_stuff/red
+{
+	set_texture_alias diffuse_map 2a_modified.png
+}
+
+material bell/regular : bike_stuff/base
+{
+	set_texture_alias diffuse_map 2b_modified.png
+}
+
+material bell/push : bike_stuff/base
+{
+	set_texture_alias diffuse_map 2c_modified.png
+}
+
+material bell/fancy : bike_stuff/base
+{
+	set_texture_alias diffuse_map 2d_modified.png
+}
+
+material nav/bike : bike_stuff/base
+{
+	set_texture_alias diffuse_map 5a_modified.png
+}
+
+material nav/horizontal : bike_stuff/base
+{
+	set_texture_alias diffuse_map 5b_modified.png
+}
+
+material nav/horizontal2 : bike_stuff/base
+{
+	set_texture_alias diffuse_map 5c_modified.png
+}
+
+material nav/motor_bike : bike_stuff/base
+{
+	set_texture_alias diffuse_map 5d_modified.png
+}
+
+material battery/basic : bike_stuff/base
+{
+	set_texture_alias diffuse_map 3a_battery_black.png
+}
+
+material battery/grey : bike_stuff/base
+{
+	set_texture_alias diffuse_map 3b_battery_grey.png
+}
+
+material battery/square: bike_stuff/base
+{
+	set_texture_alias diffuse_map 3c_battery_square.png
+}
+
+material battery/round: bike_stuff/base
+{
+	set_texture_alias diffuse_map 3d_battery_round.png
+}
+
+
+material basket/large : bike_stuff/base
+{
+	set_texture_alias diffuse_map 4a_basket_large.jpg
+}
+
+material basket/small : bike_stuff/base
+{
+	set_texture_alias diffuse_map 4b_basket_small.jpg
+}
+
+material saddle_bags : bike_stuff/base
+{
+	set_texture_alias diffuse_map 4c_saddle_bags.jpg
+}
+
+material light/tube : bike_stuff/base
+{
+	set_texture_alias diffuse_map 6a_light_tube.png
+}
+
+material light/black : bike_stuff/base
+{
+	set_texture_alias diffuse_map 6b_light_black.jpg
+}
+
+material light/white : bike_stuff/base
+{
+	set_texture_alias diffuse_map 6c_light_white.jpg
+}
+
+material light/retro: bike_stuff/base
+{
+	set_texture_alias diffuse_map 6d_light_retro.jpg
+}
+
