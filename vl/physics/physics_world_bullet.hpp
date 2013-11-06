@@ -70,6 +70,7 @@ protected :
 
 	virtual void _collision_feedback(void);
 
+	vl::physics::RigidBodyRefPtr _findRigidBody(btRigidBody *body) const;
 private :
 	
 	SolverParameters _solver_params;

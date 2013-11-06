@@ -147,28 +147,13 @@ vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 co
 				rres.hit_fractions.at(i) = resultcb.m_hitFractions.at(i);			
 
 				btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
-
-				if(btrb) {
-				
-				// cast custom void pointer as string const and push it into our objectlist
-				// @todo: check if reinterpret userpointer is null! Also take account if collision
-				//object is a compound. Then the pointer is automatically null and not pointing to the root object.
-					std::string const *udata = reinterpret_cast<std::string const *>(btrb->getUserPointer());
-					if(udata)
-					{ 
-						RigidBodyRefPtr rb = this->_findRigidBody(*udata);
-						if(rb)
-						{
-							rres.hit_objects.at(i) = rb;
-							rres.names.at(i) = *udata;
-						}
-						
-				
-					
-					}
-				}
+				assert(btrb);
+				RigidBodyRefPtr body = _findRigidBody(btrb);
+				assert(body);
+				rres.hit_objects.at(i) = body;
+				rres.names.at(i) = body->getName();
 			}
-		}	
+		}
 	}
 	else
 	{
@@ -325,6 +310,22 @@ vl::physics::BulletWorld::_collision_feedback(void)
 					}
 				}
 			}
+		}
+	}
+}
+
+vl::physics::RigidBodyRefPtr vl::physics::BulletWorld::_findRigidBody(btRigidBody *body) const
+{
+	
+	RigidBodyList::const_iterator iter;
+	for(iter = _rigid_bodies.begin(); iter != _rigid_bodies.end(); ++iter)
+	{
+		vl::physics::BulletRigidBodyRefPtr bullet_body
+			= boost::dynamic_pointer_cast<BulletRigidBody>(*iter);
+		assert(bullet_body);
+		if(bullet_body->getNative() == body)
+		{
+			return *iter;
 		}
 	}
 }

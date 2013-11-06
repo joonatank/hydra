@@ -33,11 +33,6 @@ namespace vl {
 
 namespace physics {
 
-	// @warning added for raycast tests:
-	struct UserData
-	{
-		SceneNodePtr scene_node;
-	};
 
 /**	@class RigidBody
  *	@brief Abstract interface for Physics engine rigid body

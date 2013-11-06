@@ -169,10 +169,6 @@ vl::physics::World::createRigidBodyEx(RigidBody::ConstructionInfo const &info)
 
 	RigidBodyRefPtr body = RigidBody::create(info);
 	assert(body);
-	
-	// @warning: this sets the userdata pointer for using raycast:
-	void* udataptr = (void*)&(body->getName());
-	body->setUserData(udataptr);
 
 	_rigid_bodies.push_back(body);
 	assert(body->getMotionState() == info.state);
