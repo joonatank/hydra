@@ -9,6 +9,10 @@ and to have global script.
 -->
 <project_config name="global">
 	<scripts>
+		<file use="true">signal_implementation.py</file>
+		<file use="true">input_event_handlers.py</file>
 		<file use="true">global_script.py</file>
+		<file use="true">ray_dragger.py</file>
+		
 	</scripts>
 </project_config>

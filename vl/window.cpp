@@ -281,14 +281,7 @@ vl::Window::mouseMoved( OIS::MouseEvent const &evt )
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
 		
-		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
-		
-		// @todo: where to get cyclop position and orientation?:
-		//e.head_position = vl::Vector3::ZERO;
-		//e.head_orientation = vl::Quaternion::IDENTITY;
-		
-		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		
 		stream << e;
 		_sendEvent( data );
@@ -306,20 +299,13 @@ vl::Window::mousePressed( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 	}
 	else
 	{
-		
 		vl::cluster::EventData data( vl::cluster::EVT_MOUSE_PRESSED );
 		// TODO add support for the device ID from where the event originated
 		vl::cluster::ByteDataStream stream = data.getStream();
 		
-		// @warning added custom mouse event conversion so we can get camera projection for mouse picking.
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
 		vl::MouseEvent::BUTTON b_id = vl::MouseEvent::BUTTON(id);
 				
-		// @todo: where to get cyclop position and orientation?:
-		//e.head_position = vl::Vector3::ZERO;
-		//e.head_orientation = vl::Quaternion::IDENTITY;
-		
-		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
 		stream << b_id << e;
 		_sendEvent( data );
@@ -346,12 +332,6 @@ vl::Window::mouseReleased( OIS::MouseEvent const &evt, OIS::MouseButtonID id )
 		vl::MouseEvent e = vl::convert_ois_to_hydra(evt);
 		vl::MouseEvent::BUTTON b_id = vl::MouseEvent::BUTTON(id);
 				
-		// @todo: where to get cyclop position and orientation?:
-		//e.head_position = vl::Vector3::ZERO;
-		//e.head_orientation = vl::Quaternion::IDENTITY;
-		
-		//std::clog << " SENT EVENT: " << std::endl << e << std::endl;
-
 		//Button ID säilytä se jatkossa, ei tarvi tehdä tsekkauksia myöhemmin!
 		stream << b_id << e;
 		_sendEvent( data );
@@ -367,6 +347,7 @@ vl::Window::buttonPressed(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::BUTTON_PRESSED;
 	stream << index << e;
 	_sendEvent(data);
 
@@ -380,6 +361,7 @@ vl::Window::buttonReleased(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::BUTTON_RELEASED;
 	stream << index << e;
 	_sendEvent( data );
 
@@ -393,6 +375,7 @@ vl::Window::axisMoved(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::AXIS;
 	stream << index << e;
 	_sendEvent( data );
 	return true;
@@ -406,6 +389,7 @@ vl::Window::povMoved(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::POV;
 	stream << index << e;
 	_sendEvent( data );
 	*/
@@ -420,6 +404,7 @@ vl::Window::vector3Moved(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::VECTOR;
 	stream << index << e;
 	_sendEvent( data );
 
@@ -435,6 +420,7 @@ vl::Window::sliderMoved(OIS::JoyStickEvent const &evt, int index)
 	// TODO add support for the device ID from where the event originated
 	vl::cluster::ByteDataStream stream = data.getStream();
 	vl::JoystickEvent e = vl::convert_ois_to_hydra(evt);
+	e.type = vl::JoystickEvent::SLIDER;
 	stream << index << e;
 	_sendEvent( data );
 	*/

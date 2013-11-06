@@ -171,6 +171,14 @@ public :
 	virtual Ogre::Vector3 getCurrentPosition(void) const = 0;
 	virtual Ogre::Vector3 getCurrentAngle(void) const = 0;
 
+	//These belong to constraint api, altough I didn't have
+	//time to add it for everything so until now it's only added to
+	//6 dof:
+	virtual vl::Transform const  &getFrameOffsetA(void) const = 0;
+	virtual vl::Transform const &getFrameOffsetB(void) const = 0;
+	virtual void setFrameOffsetA(Transform const &) = 0;
+	virtual void setFrameOffsetB(Transform const &) = 0;
+
 	/// Index 0-2 for translation (x, y, z)
 	/// Index 3-5 for rotations (x, y, z)
 	virtual void enableSpring(int index, bool onOff) = 0;

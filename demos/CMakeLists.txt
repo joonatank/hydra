@@ -209,4 +209,4 @@ add_custom_command(TARGET hydra POST_BUILD
 # Install
 install( TARGETS hydra DESTINATION bin CONFIGURATIONS Release )
 install( FILES ${vl_SOURCE_DIR}/data/hydra.ini DESTINATION bin CONFIGURATIONS Release )
-
+install( FILES ${vl_SOURCE_DIR}/data/eyes.ini DESTINATION bin CONFIGURATIONS Release )

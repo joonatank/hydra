@@ -41,25 +41,34 @@ class Controller:
 		self.low_speed = speed
 		self.high_speed = high_speed
 		self.angular_speed = angular_speed
+		#Translational signal:
 		self.mov_dir = Vector3.zero
+		#Rotational signal:
 		self.rot_axis = Vector3.zero
+		#I believe this is reference object for rigidbody translation?
 		self.ref = reference
+		#Initial rotation eg. misalignment:
 		self.rotation = rotation
 		self.disabled = False
+		#Reference frame (transform) used for scene node translations?
 		self.frame = TS.LOCAL
+		#Reference used for scene node rotations?
 		self.rotation_frame = TS.LOCAL
 
 	def transform(self, nodes, t):
 		if self.disabled:
-			return;
-
-		if self.mov_dir.length() != 0:
-			v = self.mov_dir
-			# This isn't correct, we'd need a way to clamp the result
-			# to length = 1 but it isn't that important atm
-			#if self.mov_dir.length():
-			#	v = self.mov_dir - (self.mov_dir * (self.mov_dir.length() - 1))
-			mov = self.speed*float(t)*v
+			return
+			
+		v = self.mov_dir
+		mov_len = v.length()
+		
+		if mov_len != 0:
+			v /= mov_len
+			#Now the signal is being clamped to 1.0.
+			#Basically the multiplier is signal size
+			#if it's smaller than 1.0 or 1.0 if it's
+			#greater than it. Same for rotation.
+			mov = self.speed*float(t)*v*min(mov_len, 1.0)
 			# can not use for n in nodes because of missing
 			# by-value converter.
 			for i in range(len(nodes)):
@@ -80,12 +89,15 @@ class Controller:
 
 
 		axis = self.rot_axis
-		if axis.length() != 0:
-			axis.normalise()
-			angle = Radian(self.angular_speed*float(t))
-			q = Quaternion(angle, axis)
-			for i in range(len(nodes)):
-				nodes[i].rotate(q, self.rotation_frame)
+		axis_len = axis.normalise()
+		angle = Radian(self.angular_speed*float(t)*min(axis_len, 1.0))
+		q = Quaternion(angle, axis)
+		
+		#Bullet rigidbodies doesn't have rotate method so this won't work
+		#--> rigidbody controller won't work
+		for i in range(len(nodes)):
+			nodes[i].rotate(q, self.rotation_frame)
+		
 
 	def up(self):
 		self.mov_dir += Vector3.unit_y
@@ -112,27 +124,47 @@ class Controller:
 		self.rot_axis += Vector3.unit_y
 
 	def rotate_up(self):
-		self.rot_axis -= Vector3.unit_x
+		self.rot_axis += Vector3.unit_x
 
 	def rotate_down(self):
-		self.rot_axis += Vector3.unit_x
+		self.rot_axis -= Vector3.unit_x
 
 	def roll_right(self):
 		self.rot_axis -= Vector3.unit_z
 
 	def roll_left(self):
 		self.rot_axis += Vector3.unit_z
+		
+	##callbacks / slots operated by range variables. At the moment I don't know should these be additive or not.
+	#in few tests when using additive the controller couldn't stop (rounding and signal errors) so I assume these are correct now.
+	def translate_forward(self, value):
+		self.mov_dir.z = -value
 
+	def translate_vertical(self, value):
+		self.mov_dir.y = value
+
+	def translate_horizontal(self, value):
+		self.mov_dir.x = value
+
+	def rotate_around_vertical(self, value):
+		self.rot_axis.y = value
+
+	def rotate_around_horizontal(self, value):
+		self.rot_axis.x = value
+
+	def rotate_around_forward(self, value):
+		self.rot_axis.z = -value
+		
 	# TODO need to add a boolean to enable/disable the joystick
 	# now it will enable it for all objects not just camera
 	# Actually it needs to be enabled when it's created
 	# only camera controller will enable it
-	def update_joystick(self, evt, evt_type, i) :
+	def update_joystick(self, evt, i) :
 		# Override the move dir
 		# dunno if this is the best way to do it
 		# might need to add and clamp to avoid issues with using both
 		# joystick and keyboard
-		if evt_type == JOYSTICK_EVENT_TYPE.AXIS:
+		if evt.type == JOYSTICK_EVENT_TYPE.AXIS:
 			# TODO this causes problems if we release axis first
 			if evt.state.no_buttons_down :
 				# For some reason this doesn't reset to zero properly
@@ -145,7 +177,7 @@ class Controller:
 				if(abs(z) < 0.025) : z = 0
 
 				self.mov_dir = Vector3(x, 0, z)
-
+	
 	def reset_rotation(self):
 		self.rot_axis = Vector3.zero
 
@@ -183,6 +215,7 @@ class SelectionController(Controller):
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
 
+#This doesn't work because there's no rotate method for rigidbodies (defined in the end of Controller transform method)
 class RigidBodyController(Controller):
 	def __init__(self, body):
 		Controller.__init__(self)

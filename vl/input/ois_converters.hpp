@@ -35,25 +35,30 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 	JoystickEvent e;
 	e.info.dev_id = vl::dev_id_t( evt.device->getID() );
 	e.info.vendor_id = vl::vendor_id_t( evt.device->vendor() );
-	
-	size_t vecsize = evt.state.mButtons.size();
 
+	size_t vecsize = evt.state.mButtons.size();
+	
 	assert(vecsize <= e.state.buttons.size());
+	
 	for(size_t i = 0; i < vecsize; ++i)
 	{
 		e.state.buttons.at(i) = evt.state.mButtons[i];
 	}
 	
-	// @todo this is really slow, should use resize and at instead
-	// because it only has one memory allocation (push_back can have multiple)
-	for( std::vector<OIS::Axis>::const_iterator it = evt.state.mAxes.begin(); it != evt.state.mAxes.end(); ++it)
-	{
-		e.state.axes.push_back( vl::scalar(vl::scalar(it->abs)/vl::scalar(OIS::JoyStick::MAX_AXIS)) );
-	}
 	
-	for( std::vector<OIS::Vector3>::const_iterator it = evt.state.mVectors.begin(); it != evt.state.mVectors.end(); ++it)
+	vecsize = evt.state.mAxes.size();
+	e.state.axes.resize(vecsize);
+	for(size_t i = 0; i < vecsize; ++i)
+	{e.state.axes.at(i) = vl::scalar(evt.state.mAxes.at(i).abs/OIS::JoyStick::MAX_AXIS); }
+	
+	
+	vecsize = evt.state.mVectors.size();
+	e.state.vectors.resize(vecsize);
+	for(size_t i = 0; i < vecsize; ++i)
 	{
-		e.state.vectors.push_back( vl::Vector3(it->x, it->y, it->z) );
+		e.state.vectors.at(i) = vl::Vector3(evt.state.mVectors.at(i).x,
+											evt.state.mVectors.at(i).y,
+											evt.state.mVectors.at(i).z);
 	}
 	
 	return e;

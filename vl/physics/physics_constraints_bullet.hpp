@@ -460,6 +460,29 @@ public :
 		return Ogre::Vector3(x, y, z);
 	}
 
+	vl::Transform const &getFrameOffsetA(void) const
+	{
+		return convert_transform(_bt_constraint->getFrameOffsetA());
+	}
+	
+	vl::Transform const &getFrameOffsetB(void) const
+	{
+		return convert_transform(_bt_constraint->getFrameOffsetB());
+	}
+	
+	void setFrameOffsetA(Transform const &trans)
+	{
+		btTransform tr = convert_bt_transform(trans);
+		_bt_constraint->getFrameOffsetA() = tr;
+	}
+	
+	void setFrameOffsetB(Transform const &trans )
+	{
+		btTransform tr = convert_bt_transform(trans);
+		_bt_constraint->getFrameOffsetB() = tr;
+	}
+
+
 	void enableSpring(int index, bool onOff)
 	{ _bt_constraint->enableSpring(index, onOff); }
 

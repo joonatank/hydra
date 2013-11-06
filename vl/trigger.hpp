@@ -188,8 +188,13 @@ class JoystickTrigger : public BasicActionTrigger
 {
 public :
 	
-	typedef boost::signal< void( vl::JoystickEvent const&, vl::JoystickEvent::EventType, int) > Joystick_signal_t;
-		
+	typedef boost::signal< void( vl::JoystickEvent const&, int) > Joystick_signal_t;
+
+	//typedef boost::signal< void(vl::JoystickInfo const &info, std::vector<vl::scalar> const&, int) > Axis_signal_t;
+	//typedef boost::signal< void(vl::JoystickInfo const &info, std::vector<vl::Vector3> const&, int) > Vector_signal_t;
+	//typedef boost::signal< void(std::vector<vl::Slider const &>, int) > Slider_signal_t;
+	//typedef boost::signal< void(std::vector<vl::POV const &>, int) > POV_signal_t;
+
 	virtual std::string getTypeName( void ) const
 	{ return "JoystickTrigger"; }
 
@@ -198,11 +203,23 @@ public :
 	
 	
 	int addListener(Joystick_signal_t::slot_type const &slot);
-	
-	void update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index);
+	int addButtonPressedListener(Joystick_signal_t::slot_type const &slot);
+	int addButtonReleasedListener(Joystick_signal_t::slot_type const &slot);
+	int addAxisListener(Joystick_signal_t::slot_type const &slot);
+	int addVectorListener(Joystick_signal_t::slot_type const &slot);
+	//int addSliderListener(Joystick_signal_t::slot_type const &slot);
+	//int addPOVListener(Joystick_signal_t::slot_type const &slot);
+
+	void update(vl::JoystickEvent const& evt, int index);
 
 private:
 	Joystick_signal_t _joystick_signal;
+	Joystick_signal_t _button_pressed;
+	Joystick_signal_t _button_released;
+	Joystick_signal_t _axis_changed;
+	Joystick_signal_t _vector_changed;
+	//Joystick_signal_t _slider_changed;
+	//Joystick_signal_t _pov_changed;
 };
 
 

@@ -89,6 +89,28 @@ struct JoystickState
 
 	bool isAllButtonsDown(void) const
 	{ return buttons.all(); }
+
+	std::vector<vl::scalar> const &getRanges(void) const
+	{return axes;}
+	
+	std::vector<vl::Vector3> const &getVectors(void) const
+	{return vectors;}
+	
+	//Get states eg. buttons
+	std::vector<bool> const &getStates(void) const
+	{
+		
+		size_t vecsize = buttons.size();
+		std::vector<bool> vec;
+		vec.resize(vecsize);
+
+		for(size_t i = 0; i < vecsize; ++i)
+		{vec.at(i) = buttons.at(i);}
+		
+		return vec;
+	}
+
+
 };
 
 
@@ -118,15 +140,26 @@ struct JoystickEvent
 {
 	enum EventType
 	{
-		UNKNOWN=0,
-		BUTTON_PRESSED,
+		BUTTON_PRESSED=0,
 		BUTTON_RELEASED,
 		AXIS,
-		VECTOR
+		VECTOR,
+		POV,
+		SLIDER
 	};
 
 	JoystickEvent() : info(JoystickInfo()), state(JoystickState()) {}
 	
+	JoystickInfo const &getInfo(void) const
+	{return info;}
+	
+	JoystickState const &getState(void) const
+	{return state;}
+
+	EventType const &getType(void) const
+	{return type;}
+
+	EventType	type;
 	JoystickInfo info;
 	JoystickState state;
 };
@@ -149,7 +182,7 @@ namespace cluster {
 template<> inline
 ByteStream &operator<<(ByteStream &msg, vl::JoystickEvent const &evt)
 {
-	msg << evt.info.dev_id << evt.info.input_manager_id << evt.info.vendor_id;
+	msg << evt.type << evt.info.dev_id << evt.info.input_manager_id << evt.info.vendor_id;
 	msg << evt.state.axes << evt.state.buttons << evt.state.vectors;
 	return msg;
 }
@@ -157,7 +190,7 @@ ByteStream &operator<<(ByteStream &msg, vl::JoystickEvent const &evt)
 template<> inline
 ByteStream &operator>>(ByteStream &msg, vl::JoystickEvent &evt)
 {
-	msg >> evt.info.dev_id >> evt.info.input_manager_id >> evt.info.vendor_id;
+	msg >> evt.type >> evt.info.dev_id >> evt.info.input_manager_id >> evt.info.vendor_id;
 	msg >> evt.state.axes >> evt.state.buttons >> evt.state.vectors;
 	return msg;
 }

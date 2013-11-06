@@ -110,7 +110,7 @@ public :
 	void mousePressed(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	void mouseReleased(vl::MouseEvent const &evt, vl::MouseEvent::BUTTON b_id);
 	
-	void updateGameJoystick(vl::JoystickEvent const&, vl::JoystickEvent::EventType type, int index);
+	void updateGameJoystick(vl::JoystickEvent const&, int index);
 	//void updateJoystickButton(vl::JoystickEvent const &evt, int index);
 	//void updateJoystickAxis(vl::JoystickEvent const &evt, int index);
 	//void updateJoystickVector(vl::JoystickEvent const &evt, int index);

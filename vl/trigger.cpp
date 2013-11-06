@@ -91,18 +91,82 @@ vl::KeyTrigger::print(std::ostream& os) const
 ///---JoystickTrigger-------
 
 int
-vl::JoystickTrigger::addListener(Joystick_signal_t::slot_type const &slot)
+vl::JoystickTrigger::addListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
 {
 	_joystick_signal.connect(slot);
 	return 1;
 };
 
+int vl::JoystickTrigger::addButtonPressedListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+{
+	_button_pressed.connect(slot);
+	return 1;
+}
+
+int vl::JoystickTrigger::addButtonReleasedListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+{
+	_button_released.connect(slot);
+	return 1;
+}
+
+int vl::JoystickTrigger::addAxisListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+{
+	_axis_changed.connect(slot);
+	return 1;
+}
+
+int vl::JoystickTrigger::addVectorListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+{
+	_vector_changed.connect(slot);
+	return 1;
+}
+
+//int vl::JoystickTrigger::addSliderListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+//{
+//	_slider_changed.connect(slot);
+//	return 1;
+//}
+
+//int vl::JoystickTrigger::addPOVListener(vl::JoystickTrigger::Joystick_signal_t::slot_type const &slot)
+//{
+//	_pov_changed.connect(slot);
+//	return 1;
+//}
+
+
+
+
+
 void
-vl::JoystickTrigger::update(vl::JoystickEvent const& evt, vl::JoystickEvent::EventType type, int index)
+vl::JoystickTrigger::update(vl::JoystickEvent const& evt, int index)
 { 
 	// enable if we can't get this to python
 //	std::clog << "update funktio, trigger.cpp" << evt;
-	_joystick_signal(evt, type, index);
+	_joystick_signal(evt, index);
+	
+	switch(evt.getType()) {
+	case vl::JoystickEvent::BUTTON_PRESSED:
+		_button_pressed(evt, index);
+		break;
+	case vl::JoystickEvent::BUTTON_RELEASED:
+		_button_pressed(evt, index);
+		break;
+	case vl::JoystickEvent::AXIS:
+		_axis_changed(evt, index);
+		break;
+	case vl::JoystickEvent::POV:
+		//_pov_changed(evt, index);
+		break;
+	case vl::JoystickEvent::VECTOR:
+		_vector_changed(evt, index);
+		break;
+	case vl::JoystickEvent::SLIDER:
+		//_slider_changed(evt, index);
+		break;
+	default:
+		assert(false);
+	
+	}
 }
 
 
