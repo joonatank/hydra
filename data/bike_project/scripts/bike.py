@@ -136,6 +136,7 @@ class Part :
 		self.models = []
 		self.node = game.scene.createSceneNode(name)
 		self.index = 0
+		self.name = name
 
 	def add_model(self, model) :
 		self.models.append(model)
@@ -177,6 +178,41 @@ class Part :
 	# Shows all models in a column
 	def show_all_models(self) :
 		pass
+
+	def create_collision_model(self) :
+		print("Part:create_collision_model")
+		
+		# TODO Get the largest box containing all the objects
+		if len(self.models) > 0 :
+			model = self.models[0]
+			ms = game.physics_world.createMotionState(part.node.world_transformation, part.node)
+			shape = BoxShape.create(model.size/1000.0)
+			body = game.physics_world.createRigidBody("rb_"+self.name, 1.0, ms, shape, Vector3(1, 1, 1))
+			body.kinematic = True
+
+# Need physics for ray casting
+game.enablePhysics(True)
+#CUSTOM SOLVER PARAMETERS:
+solverparams = PhysicsSolverParameters()
+#Joint normal error reduction parameter (slow(0.0) - fast(1.0)):
+solverparams.erp = 0.8
+#Contact error reduction parameter (slow(0.0) - fast(1.0)):
+solverparams.erp2 = 0.8
+#Constraint force mixing parameter, when set to 0.0 constraints will be hard:
+solverparams.global_cfm = 0.0
+#On collisions how much the momentum is conserved:
+#(totally_inelastic(0.0) - totally_elastic(1.0))
+solverparams.restitution = 0.0
+#I have no idea of this, so setting it to default:
+solverparams.max_error_reduction = game.physics_world.solver_parameters.max_error_reduction
+#Internal time step (1/fps)
+solverparams.internal_time_step = 1.0 / 120.0
+#No idea what substep, has it something to do with interpolation, well higher
+#value should be more precise but wastes much more computing power?
+solverparams.max_sub_steps = 20
+#Now we set the solver parameters to current physics world:
+game.physics_world.solver_parameters = solverparams
+
 
 # 1. Mittarit
 # 1a lataus- ja nopeusmittari, valintapainikkeet
@@ -324,7 +360,10 @@ for i, opt in enumerate(options):
 	for model in opt :
 		model.create(part)
 		part.add_model(model)
-	opt[0].show()
+	
+	# Finalise
+	part.create_collision_model()
+	#opt[0].show()
 
 
 class PartSelection :
@@ -352,11 +391,11 @@ class PartSelection :
 selection = PartSelection(parts)
 # TODO switch direction and add SHIFT + TAB
 # for some reason the list is in the reverse order
-trigger = game.event_manager.createKeyTrigger(KC.TAB)
-trigger.addListener(selection.prev_selection)
+#trigger = game.event_manager.createKeyTrigger(KC.TAB)
+#trigger.addListener(selection.prev_selection)
 
-trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
-trigger.addListener(selection.next_selection)
+#trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
+#trigger.addListener(selection.next_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.C)
 trigger.addListener(game.scene.clearSelection)
@@ -441,4 +480,10 @@ trigger.addListener(selection.prev_model)
 
 trigger = game.event_manager.createKeyTrigger(KC.M)
 trigger.addListener(selection.next_model)
+
+#Of these two functions enable only either not both.
+#This will create the ray dragger and "wand":
+#dragger, joy_handler = createWandRayController("wand", "wand", False)
+#This will create the ray dragger and debug controller eg. keyboard controls for moving ray:
+dragger, debug_controller = createWandRayController("wand", "wand", False)
 
