@@ -27,7 +27,6 @@
 #include "animation/kinematic_body.hpp"
 
 
-
 vl::physics::BulletWorld::BulletWorld(void)
 	: _broadphase( new btDbvtBroadphase() ),
 	  _collision_config( new btDefaultCollisionConfiguration() ),
@@ -109,57 +108,94 @@ vl::physics::BulletWorld::setSolverParameters(vl::physics::SolverParameters cons
 // isn't a scene node anymore. Also at the moment using a return value as reference is dangerous because the local variable rres is going to be destroyed.
 // Using new or returning a copy of the rayresults data would suffice. This function is currently only for testing purposes, that's why it hasn't been structured wisely.
 // 
-vl::physics::RayResult
-vl::physics::BulletWorld::castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const
+vl::physics::RayHitResultList
+vl::physics::BulletWorld::castAllHitRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const
 {
 	btVector3 from = math::convert_bt_vec(rayfrom);
 	btVector3 to = math::convert_bt_vec(rayto);
-	
-	RayResult rres;
-	rres.start_point = rayfrom;
-	rres.end_point = rayto;
-	
+		
 	//First we need the correct Result callback, as default we want all collisions maybe changing later:
 	btCollisionWorld::AllHitsRayResultCallback resultcb(from, to);
 	//Run the native bullet raytest:
 	_dynamicsWorld->rayTest(from,to,resultcb);
 	
+	RayHitResultList hitlist;
+	
 	if(resultcb.hasHit())
 	{
-		
-		
 		//Now we shall parse through all hits and convert bullet's result format to hydra:
 		size_t vecsize = resultcb.m_collisionObjects.size();
+		
 		if(vecsize > 0)
 		{
-			rres.hit_points_world.resize(vecsize);
-			rres.hit_normals_world.resize(vecsize);
-			rres.hit_fractions.resize(vecsize);
-			rres.hit_objects.resize(vecsize);
-			rres.names.resize(vecsize);
-		
+			hitlist.resize(vecsize);
+			
 			for(unsigned int i = 0; i < vecsize; ++i)
 			{
-				rres.hit_points_world.at(i) = vl::math::convert_vec(resultcb.m_hitPointWorld.at(i));
-			
-				rres.hit_normals_world.at(i) =  vl::math::convert_vec(resultcb.m_hitNormalWorld.at(i));
-
-				rres.hit_fractions.at(i) = resultcb.m_hitFractions.at(i);			
-
+				RayHitResult rres;
+				rres.ray_start = rayfrom;
+				rres.ray_end = rayto;
+				rres.hit_point_world = vl::math::convert_vec(resultcb.m_hitPointWorld.at(i));
+				rres.hit_normal_world =  vl::math::convert_vec(resultcb.m_hitNormalWorld.at(i));
+				rres.hit_fraction = resultcb.m_hitFractions.at(i);
+				
 				btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObjects.at(i));
 				assert(btrb);
 				RigidBodyRefPtr body = _findRigidBody(btrb);
 				assert(body);
-				rres.hit_objects.at(i) = body;
-				rres.names.at(i) = body->getName();
+				rres.hit_object = body;
+				
+				hitlist.at(i) = rres;
 			}
+			//Sorting the list from smallest hit_fraction to largest. eg. first hit to last.
+			std::sort(hitlist.begin(), hitlist.end());
 		}
 	}
 	else
 	{
-		//What else?
+		//What else?, at the moment we return empty container.
 	}
-	return rres;
+	return hitlist;
+}
+
+vl::physics::RayHitResultList
+vl::physics::BulletWorld::castFirstHitRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const
+{
+	btVector3 from = math::convert_bt_vec(rayfrom);
+	btVector3 to = math::convert_bt_vec(rayto);
+		
+	//First we need the correct Result callback, as default we want all collisions maybe changing later:
+	btCollisionWorld::ClosestRayResultCallback resultcb(from, to);
+
+	//Run the native bullet raytest:
+	_dynamicsWorld->rayTest(from,to,resultcb);
+	
+	RayHitResultList hitlist;
+	
+	if(resultcb.hasHit())
+	{
+		RayHitResult rres;
+	
+		btRigidBody *btrb = dynamic_cast<btRigidBody*>(resultcb.m_collisionObject);
+		assert(btrb);
+		RigidBodyRefPtr body = _findRigidBody(btrb);
+		assert(body);
+		rres.hit_object = body;
+		
+		rres.ray_start = rayfrom;
+		rres.ray_end = rayto;
+
+		rres.hit_point_world = vl::math::convert_vec(resultcb.m_hitPointWorld);
+		rres.hit_normal_world =  vl::math::convert_vec(resultcb.m_hitNormalWorld);
+		rres.hit_fraction = resultcb.m_closestHitFraction;
+		
+		hitlist.push_back(rres);
+	}
+	else
+	{
+	//What else, currently returning empty RayHitResultList
+	}
+	return hitlist;
 }
 
 

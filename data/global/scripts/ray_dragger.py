@@ -133,15 +133,15 @@ class RayDragger(IRayDragger):
 		startpos = self.world_transformation.position
 		endpos_in_ray = -Vector3.unit_z * self.ray_max_distance
 		endpos = self.world_transformation * endpos_in_ray
-		result = game.physics_world.cast_ray(startpos, endpos)
+		result = game.physics_world.cast_first_hit_ray(startpos, endpos)
 		
 		#We have to be sure there were some results:
 		try:
-			hit_object = result.hit_objects[0]
+			hit_object = result[0].hit_object
 		except IndexError:
 			print("No hits to drag.")
 			return
-		hit_point = result.hit_points[0]
+		hit_point = result[0].hit_point
 		pivot_in_ray = self.world_transformation.inverted() * hit_point 
 		object_in_ray = self.world_transformation.inverted() * hit_object.motion_state.world_transformation
 		pivot_object_offset_in_ray = object_in_ray.position - pivot_in_ray
@@ -246,7 +246,8 @@ class WorldTransformGenerator:
 	was meant for sine wave generation (didn't have time to test it properly),
 	but I stripped all that for simplicity and left only keyboard controls. 
 	Current implementation depends on Signal().
-	Problem with the Signal is it's slowness. """
+	Problem with the Signal is it's slowness. At the moment reference
+	isn't applicable! """
 	def __init__(self, init_transform=Transform(), reference=Transform(), speed=10.0, angular_speed=1.0):
 		self.speed = speed
 		self.angular_speed = angular_speed

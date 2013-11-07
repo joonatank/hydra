@@ -72,19 +72,54 @@ struct SolverParameters
 	int max_sub_steps;
 };
 
-// @warning this is for raycasting:
-struct RayResult
+
+struct RayHitResult
 {
-	std::vector<std::string>	names;
-	RigidBodyList hit_objects;
-	std::vector<Ogre::Vector3>	hit_points_world;
-	std::vector<Ogre::Vector3>	hit_normals_world;
-	std::vector<vl::scalar>		hit_fractions;		//Eg. distance along the ray
-	Ogre::Vector3				start_point;
-	Ogre::Vector3				end_point;
+	RigidBodyRefPtr hit_object;
+	Ogre::Vector3 hit_point_world;
+	Ogre::Vector3 hit_normal_world;
+	vl::scalar hit_fraction;
+	Ogre::Vector3 ray_start;
+	Ogre::Vector3 ray_end;
+	
+	RayHitResult(void) : hit_point_world(vl::Vector3::ZERO), hit_normal_world(vl::Vector3::ZERO),
+						hit_fraction(0.0), ray_start(vl::Vector3::ZERO), ray_end(vl::Vector3::ZERO)
+	{}
+
+	bool operator==(RayHitResult const &other) const
+	{return hit_object == other.hit_object;}
+
+	bool operator<(RayHitResult const &other) const
+	{return hit_fraction < other.hit_fraction;}
+	
+	static bool smallest_hit_fraction_first(RayHitResult const &a, RayHitResult const &b)
+	{ return a.hit_fraction < b.hit_fraction; }
+	
+	
 };
 
-
+inline std::ostream &operator<<(std::ostream &os, RayHitResult const &res)
+	{ 
+		os << "----RayHitResult----" << std::endl;
+		os << "Ray beginning in world coordinates: " << res.ray_start << " and end: " << res.ray_end << std::endl;
+		os << "Hit fraction: " << res.hit_fraction << std::endl;
+		if(res.hit_object)
+		{os << "Hit object: " << res.hit_object->getName() << std::endl;}
+		else
+		{os << "Hit object: " << "None" << std::endl;}
+		os << "Hit point in world coordinates: " << res.hit_point_world << std::endl;
+		os << "Hit normal in world coordinates: " << res.hit_normal_world << std::endl;
+		return os;
+	}
+//Comparison operator for sorting rayhitresults:
+/*
+struct RayHitResultComparator
+{
+	bool operator()(RayHitResult const &a, RayHitResult &b) const {
+		return a.hit_fraction < b.hit_fraction;
+	}
+};
+*/
 
 
 /** @class World
@@ -180,10 +215,8 @@ public :
 
 	void removeTube(vl::physics::TubeRefPtr tube);
 
-	///-----------------------Ray casting/testing---------------
-	// @warning: might not work
-	virtual RayResult castRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const = 0;
-	
+	virtual RayHitResultList castAllHitRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const = 0;
+	virtual RayHitResultList castFirstHitRay(Ogre::Vector3 const &rayfrom, Ogre::Vector3 const &rayto) const = 0;
 	
 	RigidBodyList const &getBodies(void) const
 	{ return _rigid_bodies; }

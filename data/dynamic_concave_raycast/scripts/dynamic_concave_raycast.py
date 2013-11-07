@@ -101,6 +101,6 @@ rblist.append(createRB("pacman_cube", pacman_cube_shape, 1.0, Vector3(0.33, 0.33
 
 #Of these two functions enable only either not both.
 #This will create the ray dragger and "wand":
-dragger, joy_handler = createWandRayController("wand", "wand", False)
+#dragger, joy_handler = createWandRayController("wand", "wand", False)
 #This will create the ray dragger and debug controller eg. keyboard controls for moving ray:
-#dragger, debug_controller = createWandRayController("wand", "wand", True)
+dragger, debug_controller = createWandRayController("wand", "wand", True)

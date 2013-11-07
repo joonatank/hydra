@@ -147,7 +147,7 @@ namespace vl
 	typedef std::vector<EntityPtr> EntityList;
 	typedef std::vector<MovableObjectPtr> MovableObjectList;
 	typedef std::vector<CameraPtr> CameraList;
-
+	
 	struct null_deleter
 	{
 		void operator()(void const *) const
@@ -259,6 +259,7 @@ namespace physics
 	class SixDofConstraint;
 	class SliderConstraint;
 	class HingeConstraint;
+	struct RayHitResult;
 
 	typedef boost::shared_ptr<vl::physics::Constraint> ConstraintRefPtr;
 	typedef boost::shared_ptr<vl::physics::SixDofConstraint> SixDofConstraintRefPtr;
@@ -269,7 +270,7 @@ namespace physics
 	typedef std::vector<RigidBodyRefPtr> RigidBodyList;
 	typedef std::vector<ConstraintRefPtr> ConstraintList;
 	typedef std::vector<TubeRefPtr> TubeList;
-
+	typedef std::vector<RayHitResult> RayHitResultList;
 }
 
 namespace cluster
