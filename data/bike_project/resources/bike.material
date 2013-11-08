@@ -1,0 +1,274 @@
+
+material _missing_material_ 
+{
+	receive_shadows off
+	technique
+	{
+		pass
+		{
+			ambient 0.1 0.1 0.1 1.0
+			diffuse 0.8 0.0 0.0 1.0
+			specular 0.5 0.5 0.5 1.0 12.5
+			emissive 0.3 0.3 0.3 1.0
+		}
+	}
+}
+
+import * from "normal_map.material"
+
+material Material-23 : bling_phong/shadows
+{
+	set $ambientCol "0.776471 0.811765 0.870588 1"
+	set $diffuseCol "0.621177 0.649412 0.69647 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-12 : bling_phong/shadows
+{
+	set $ambientCol "0.25098 0.25098 0.25098 1"
+	set $diffuseCol "0.200784 0.200784 0.200784 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-10 : bling_phong/shadows
+{
+	set $ambientCol "0.752941 0.752941 0.752941 1"
+	set $diffuseCol "0.602353 0.602353 0.602353 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material kromi : bling_phong/shadows
+{
+	set $ambientCol "0.70248 0.734326 0.787398 1"
+	set $diffuseCol "0.561984 0.587461 0.629919 1"
+	set $specularCol "0.532643 0.532643 0.532643"
+	set $shininess 20
+}
+
+material alumiini : bling_phong/shadows
+{
+	set $ambientCol "0.4672 0.4672 0.4672 1"
+	set $diffuseCol "0.37376 0.37376 0.37376 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material muovi : bling_phong/shadows
+{
+	set $ambientCol "0.162641 0.162641 0.162641 1"
+	set $diffuseCol "0.130113 0.130113 0.130113 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-20 : bling_phong/shadows
+{
+	set $ambientCol "0 0 0 1"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-6 : bling_phong/shadows
+{
+	set $ambientCol "0.941176 0.67451 0.117647 1"
+	set $diffuseCol "0.752941 0.539608 0.0941176 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-19 : bling_phong/shadows
+{
+	set $ambientCol "0.776471 0.811765 0.870588 1"
+	set $diffuseCol "0.621177 0.649412 0.69647 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-41 : bling_phong/shadows
+{
+	set $ambientCol "0 0 0 1"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-15 : bling_phong/shadows
+{
+	set $ambientCol "0.501961 0.501961 0.501961 1"
+	set $diffuseCol "0.401569 0.401569 0.401569 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-33 : bling_phong/shadows
+{
+	set $ambientCol "0.909804 0.443137 0.031372 1"
+	set $diffuseCol "0.727843 0.35451 0.0250976 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material teras : bling_phong/shadows
+{
+	set $ambientCol "0.358839 0.352073 0.331774 1"
+	set $diffuseCol "0.287071 0.281658 0.265419 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-13 : bling_phong/shadows
+{
+	set $ambientCol "0.941176 0.67451 0.117647 1"
+	set $diffuseCol "0.752941 0.539608 0.0941176 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-30 : bling_phong/shadows
+{
+	set $ambientCol "0.25098 0.25098 0.25098 1"
+	set $diffuseCol "0.200784 0.200784 0.200784 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-29 : bling_phong/shadows
+{
+	set $ambientCol "1 1 0.501961 1"
+	set $diffuseCol "0.8 0.8 0.401569 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-24 : bling_phong/shadows
+{
+	set $ambientCol "0 0 0 1"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-22 : bling_phong/shadows
+{
+	set $ambientCol "1 0 0 1"
+	set $diffuseCol "0.8 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-11 : bling_phong/shadows
+{
+	set $ambientCol "1 1 1 1"
+	set $diffuseCol "0.8 0.8 0.8 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material jokin.001 : bling_phong/shadows
+{
+	set $ambientCol "0 0.168627 0.156863 1"
+	set $diffuseCol "0 0.134902 0.12549 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material kumi : bling_phong/shadows
+{
+	set $ambientCol "0 0 0 1"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material runkovari : bling_phong/shadows
+{
+	set $ambientCol "0.0110875 0.0104303 0.0104303 1"
+	set $diffuseCol "0.00887003 0.00834426 0.00834426 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-21 : bling_phong/shadows
+{
+	set $ambientCol "1 1 1 1"
+	set $diffuseCol "0.8 0.8 0.8 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-9 : bling_phong/shadows
+{
+	set $ambientCol "0.25098 0.25098 0.25098 1"
+	set $diffuseCol "0.200784 0.200784 0.200784 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-2 : bling_phong/shadows
+{
+	set $ambientCol "0.776471 0.811765 0.870588 1"
+	set $diffuseCol "0.621177 0.649412 0.69647 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-42 : bling_phong/shadows
+{
+	set $ambientCol "1 0 0 1"
+	set $diffuseCol "0.8 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-18 : bling_phong/shadows
+{
+	set $ambientCol "0 0 0 1"
+	set $diffuseCol "0 0 0 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-37 : bling_phong/shadows
+{
+	set $ambientCol "0.752941 0.752941 0.752941 1"
+	set $diffuseCol "0.602353 0.602353 0.602353 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-14 : bling_phong/shadows
+{
+	set $ambientCol "1 1 1 1"
+	set $diffuseCol "0.8 0.8 0.8 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-31 : bling_phong/shadows
+{
+	set $ambientCol "0.729412 0.356863 0.023529 1"
+	set $diffuseCol "0.58353 0.28549 0.0188232 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-3 : bling_phong/shadows
+{
+	set $ambientCol "0.776471 0.811765 0.870588 1"
+	set $diffuseCol "0.621177 0.649412 0.69647 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+
+material Material-27 : bling_phong/shadows
+{
+	set $ambientCol "0.752941 0.752941 0.752941 1"
+	set $diffuseCol "0.602353 0.602353 0.602353 1"
+	set $specularCol "0 0 0"
+	set $shininess 20
+}
+

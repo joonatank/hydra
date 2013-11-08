@@ -70,6 +70,10 @@ copy_start_scripts( hydra
 	dynamic_concave_raycast/dynamic_concave_raycast.prj
 	"dynamic_concave_raycast" )
 	
+copy_start_scripts( hydra
+	bike_project/bike.prj
+	"bike" )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
@@ -136,9 +140,9 @@ if(NOT EXISTS ${HYDRA_DEPENDENCIES_LIB_DIR})
 	message(FATAL_ERROR "Hydra dependencies lib dir doesn't exist.")
 endif()
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/x64\"")
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/PCAN-Basic API/x64\"")
 else()
-	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_BIN_DIR}/PCAN-Basic API/Win32\"")
+	set(PCAN_BINARY_DIR "\"${HYDRA_DEPENDENCIES_LIB_DIR}/PCAN-Basic API/Win32\"")
 endif()
 
 
