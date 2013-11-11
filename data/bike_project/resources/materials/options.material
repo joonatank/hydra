@@ -36,7 +36,7 @@ material meter/multi : bike_stuff/base
 	set_texture_alias diffuse_map 1d.jpg
 }
 
-material bell/red : bike_stuff/red
+material bell/red : bike_stuff/base
 {
 	set_texture_alias diffuse_map 2a_modified.png
 }
@@ -99,12 +99,17 @@ material battery/round: bike_stuff/base
 
 material basket/large : bike_stuff/base
 {
-	set_texture_alias diffuse_map 4a_basket_large.jpg
+	set_texture_alias diffuse_map 4a_basket_large.png
 }
 
 material basket/small : bike_stuff/base
 {
 	set_texture_alias diffuse_map 4b_basket_small.jpg
+}
+
+material basket/wicker : bike_stuff/base
+{
+	set_texture_alias diffuse_map 4c_basket_wicker.png
 }
 
 material saddle_bags : bike_stuff/base
@@ -129,6 +134,6 @@ material light/white : bike_stuff/base
 
 material light/retro: bike_stuff/base
 {
-	set_texture_alias diffuse_map 6d_light_retro.jpg
+	set_texture_alias diffuse_map 6d_light_retro.png
 }
 
