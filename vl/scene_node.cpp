@@ -167,21 +167,18 @@ vl::SceneNode::setScale(Ogre::Vector3 const &s)
 void 
 vl::SceneNode::setVisibility(bool visible, bool cascade)
 {
-	if( _visible != visible )
+	setDirty( DIRTY_VISIBILITY );
+	_visible = visible;
+
+	// Cascade to childs
+	if(cascade)
 	{
-		setDirty( DIRTY_VISIBILITY );
-		_visible = visible;
-
-		// Cascade to childs
-		if(cascade)
-		{
-			for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
-			{ (*iter)->setVisibility(_visible, cascade); }
-		}
-
-		for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
-		{ (*iter)->setVisible(_visible); }
+		for(SceneNodeList::iterator iter = _childs.begin(); iter != _childs.end(); ++iter)
+		{ (*iter)->setVisibility(_visible, cascade); }
 	}
+
+	for(MovableObjectList::iterator iter = _objects.begin(); iter != _objects.end(); ++iter)
+	{ (*iter)->setVisible(_visible); }
 }
 
 void 
