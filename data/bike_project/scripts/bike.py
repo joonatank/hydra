@@ -29,7 +29,7 @@ class CameraChanger :
 
 	def prev_view(self) :
 		self.view_index = self.view_index - 1
-		if len(self.views) < 0 : self.view_index = len(self.views) - 1
+		if self.view_index < 0 : self.view_index = len(self.views) - 1
 		self.camera_node.transformation = self.views[self.view_index]
 
 	def add_view(self, t) :
@@ -38,14 +38,22 @@ class CameraChanger :
 		if len(self.views) == 1:
 			self.camera_node.transformation = self.views[0]
 
+	# set an unique special view outside of the normal list
+	def set_special_view(self, t) :
+		self.special_view = t
+
+	# use the special view
+	def special_view(self):
+		self.camera_node.transformation = self.special_view 
+
 camera_changer = CameraChanger(camera)
 
 # side view
 camera_changer.add_view(Transform(Vector3(1, -1, 0), Quaternion(-0.7071, 0, -0.7071, 0)))
 # satula
 camera_changer.add_view(Transform(Vector3(0, -0.28, 0.8), Quaternion.identity))
-# back
-camera_changer.add_view(Transform(Vector3(0, -1, 2), Quaternion.identity))
+# back, not needed
+#camera_changer.add_view(Transform(Vector3(0, -1, 2), Quaternion.identity))
 
 # TODO add switching of camera view
 trigger = game.event_manager.createKeyTrigger(KC.Z)
@@ -57,6 +65,11 @@ trigger.addListener(camera_changer.prev_view)
 game.player.camera = "Camera"
 # TODO disable camera controller
 camera_controller = createCameraMovements(speed=1)
+camera_controller.disable()
+
+trigger = game.event_manager.createKeyTrigger(KC.F4)
+trigger.addListener(camera_controller.toggle_disable)
+
 # TODO we need to use selection based if we are using Oculus or not
 #camera_controller.head_direction = True
 # for the clouds we need to increase far clipping
@@ -74,6 +87,8 @@ game.scene.shadows.dir_light_extrusion_distance = 10
 
 ground = create_ground(size=40)
 ground.translate(0, -0.5, 0)
+
+game.scene.sky_dome = SkyDomeInfo("CloudySky")
 
 # TODO should add a prob under the bike
 
@@ -131,6 +146,12 @@ class Model :
 	def show(self) :
 		self.node.show()
 
+	def translate(self, x, y, z) :
+		self.node.translate(x, y, z)
+
+	def reset_transform(self):
+		self.node.transformation = Transform()
+
 class Part :
 	def __init__(self, name) :
 		self.models = []
@@ -165,9 +186,6 @@ class Part :
 	def translate(self, vec) :
 		self.node.translate(vec)
 
-	def rotate(self, q) :
-		self.node.rotate(q)
-
 	def transform(self, t) :
 		self.node.transform(t)
 
@@ -177,7 +195,47 @@ class Part :
 
 	# Shows all models in a column
 	def show_all_models(self) :
-		pass
+		for i, model in enumerate(self.models) :
+			model.show()
+			# TODO translate the model in y axis
+			# shit need index for this
+			model.translate(0, 0.3*i-0.7, 0)
+
+	def hide_extra_models(self) :
+		for model in self.models :
+			model.hide()
+			# TODO move back to y axis
+			model.reset_transform()
+		# show the only model
+		self.models[self.index].show()
+
+	# Main purpose for this function is to easily show all the models
+	# in the start of the simulation
+	# we can hide the ones not interest to us
+	def hide(self) :
+		# Hiding all the models here because this can be called after show all
+		# models and show next model will anyway show the next model
+		#
+		# Not a good idea since we need to also move the models
+		#
+		# Ah this cascades and hides all the models
+		# there is no way to preserve the previous state of the model
+		self.node.hide()
+
+
+	def show(self) :
+		#assert(self.index < len(self.models))
+		#self.models[self.index].show()
+		# Ah this cascades and shows all the models
+		# there is no way to preserve the previous state of the model
+		self.node.show()
+
+	def has_model(self, model_node) :
+		print("Trying to find model ", model_node.name)
+		for i in self.models:
+			if i.node.name == model_node.name :
+				return True
+		return False
 
 	def create_collision_model(self) :
 		print("Part:create_collision_model")
@@ -292,12 +350,12 @@ battery = Model("battery", "battery/basic", Vector3(400, 50, 200))
 battery_grey = Model("battery_grey", "battery/grey", Vector3(150, 100, 400))
 
 #3. Akku 3c akku, nelio 250 x 100 x 250 mm
-battery_square = Model("battery_square", "battery/square", Vector3(250, 100, 250))
+#battery_square = Model("battery_square", "battery/square", Vector3(250, 100, 250))
 
-#3. Akku 3d, akku, termarimalli (lierio) 450 x 120 x 120 mm
-battery_round = Model("battery_round", "battery/round", Vector3(450, 120, 120))
+#3. Akku 3d, akku, termarimalli (lierio) 450 x 120 x 120 m
+battery_round = Model("battery_round", "battery/round", Vector3(120, 120, 450))
 
-batteries = [battery, battery_grey, battery_square, battery_round]
+batteries = [battery, battery_grey, battery_round]
 
 
 # Optional, not yet models though
@@ -310,7 +368,9 @@ basket_large = Model("basket_large", "basket/large", Vector3(350, 300, 200))
 #4c kori 350 x 230 x 200
 basket_small = Model("basket_small", "basket/small", Vector3(350, 230, 200))
 
-baskets = [basket_large, basket_small]
+basket_wicker = Model("basket_wicker", "basket/wicker", Vector3(350, 230, 200))
+
+baskets = [basket_large, basket_small, basket_wicker]
 
 # Saddle bags (different from basket)
 #4d satulalaukku 300 x 250 x 40
@@ -351,9 +411,17 @@ for i, opt in enumerate(options):
 	name = "Part-" + str(i)
 	part = Part(name)
 	# TODO need to reorient this so that the bike is along x axis not z so we don't need to rotate the parts
-	part.translate(Vector3(-0.5, 1, i/2 - len(options)/4))
 	#part_node.rotate(Degree(90), Vector3(0, 1, 0))
 	parts.append(part)
+	# TODO need to be rotated to the left wall
+	#part.translate(Vector3(-0.5, 1, i/2 - len(options)/4))
+	# so that's something like
+	# [i/2 -len(options)/4, 1, -0.5]
+	part.translate(Vector3(i/4 - len(options)/8, 0.6, 1))
+	# and they need to be ralative to the camera because we want them to stay on the left wall when we
+	# change the camera view (they would otherwise be on the back where we have no wall)
+	#camera.addChild(part.node)
+
 	# Actually we need to generate all of them attach them to separate scene nodes and hide the ones not used
 	# use a master node for moving and the child nodes for hiding.
 	# Testing uvs
@@ -382,23 +450,112 @@ class PartSelection :
 		self.parts[self.index].add_to_selection()
 
 	def next_model(self) :
-		self.parts[self.index].next_model()
+		# Find the current selected model
+		print("Trying to get next model")
+		if len(game.scene.selection) == 0:
+			print("No selection")
+			return
+	
+		part = self.find_part(game.scene.selection[0])
+		
+		if part :
+			print("Found the part ", part.name)
+			part.next_model()
+		else :
+			print("No part found")
+
+	def find_part(self, part_node):
+		for i in self.parts :
+			if i.node.name == part_node.name:
+				return i
+		return None
 
 	def prev_model(self) :
-		self.parts[self.index].prev_model()
-
+		part = self.get_current_part()
+		
+		if part :
+			print("Found the part ", part.name)
+			part.prev_model()
+		else :
+			print("No part found")
+		
+	def get_current_part(self) :
+		# Find the current selected model
+		print("Trying to get previous model")
+		if len(game.scene.selection) == 0:
+			print("No selection")
+			return None
+	
+		return self.find_part(game.scene.selection[0])
+	
+	# Rotate current part 90 degrees along y-axis
+	def rotate(self):
+		part = self.get_current_part()
+		
+		if part :
+			part.rotate(90)
+		else :
+			print("No part selected")
 
 selection = PartSelection(parts)
-# TODO switch direction and add SHIFT + TAB
-# for some reason the list is in the reverse order
-#trigger = game.event_manager.createKeyTrigger(KC.TAB)
-#trigger.addListener(selection.prev_selection)
 
-#trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
-#trigger.addListener(selection.next_selection)
+# Not using keyboard selection for the moment (only wand selection)
+# For testing enabled
+#
+# Might need these for the start of the simulation for showing all the models
+# the other option would be to have two lists of them
+# which I rather not implement now
+trigger = game.event_manager.createKeyTrigger(KC.TAB)
+trigger.addListener(selection.prev_selection)
+
+trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
+trigger.addListener(selection.next_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.C)
 trigger.addListener(game.scene.clearSelection)
+
+# For the startup we need to show all the models
+class PartInspector :
+	def __init__(self, part_list) :
+		self.parts = part_list
+		self.index = 0
+
+	# show the next part with all it's models and nothing else
+	def show_next_part(self) :
+		if self.index == len(self.parts) : self.index = 0
+
+		# TODO this will leave the previous part in a weird state
+		# does it matter though as long as we don't roll the list
+		# multiple times and use clear after we are done
+
+		for part in self.parts:
+			#part.hide_extra_models()
+			part.hide()
+
+		parts[self.index].show_all_models()
+		#parts[self.index].show()
+
+		# increase index at the end so we always start from 0
+		self.index = self.index + 1
+
+	# show the prev part with all it's models and nothing else
+	# not implemented for the moment
+	def show_prev_part(self) :
+		pass
+
+	# return to the original state
+	def clear(self) :
+		for part in parts :
+			part.hide_extra_models()
+
+inspector = PartInspector(parts)
+
+trigger = game.event_manager.createKeyTrigger(KC.B)
+trigger.addListener(inspector.show_next_part)
+
+trigger = game.event_manager.createKeyTrigger(KC.H)
+trigger.addListener(inspector.clear)
+
 
 # TODO selection should have only moving and rotation 90 deg around y
 addMoveSelection(reference = camera)
@@ -412,7 +569,7 @@ class JoystickSelectionMover :
 		self.mov_dir = Vector3(0, 0, 0)
 		self.reference = reference
 
-	def joystick_updated(self, evt, evt_type, i):
+	def joystick_updated(self, evt, i):
 		if evt.state.is_button_down(10) :
 			x = evt.state.axes[3]
 			z = evt.state.axes[2]
@@ -428,22 +585,22 @@ class JoystickSelectionMover :
 			game.scene.selection[i].translate(self.velocity*self.mov_dir, self.reference)
 
 
-def joystick_select(evt, evt_type, i):
+def joystick_select(evt, i):
 	if evt.state.is_button_down(5) :
 		selection.prev_selection()
 	if evt.state.is_button_down(7) :
 		selection.next_selection()
 
-def joystick_change_model(evt, evt_type, i):
+def joystick_change_model(evt, i):
 	if evt.state.is_button_down(4) :
 		selection.next_model()
 	if evt.state.is_button_down(6) :
 		selection.prev_model()
 
-def joystick_print(evt, evt_type, i):
+def joystick_print(evt, i):
 	#print("joystick callback called : ", evt)
 	#print("state : ", evt.state)
-	#print("type : ", evt_type)
+	#print("type : "evt.type)
 
 	if evt.state.is_button_down(10) :
 		print("Button 10 is down") 
@@ -468,10 +625,14 @@ def joystick_print(evt, evt_type, i):
 joy_selection_controller = JoystickSelectionMover(camera)
 
 trigger = game.event_manager.createJoystickTrigger()
+# Disabled it's only for testing
 #trigger.addListener(joystick_print)
-trigger.addListener(joystick_select)
+# Disabled selecting with the joystick because we are using wand for it
+# enable if you need it for testing
+#trigger.addListener(joystick_select)
+# Change model of selected part with the directional pad
 trigger.addListener(joystick_change_model)
-trigger.addListener(joy_selection_controller.joystick_updated)
+#trigger.addListener(joy_selection_controller.joystick_updated)
 
 game.event_manager.frame_trigger.addListener(joy_selection_controller.progress)
 # Add switching between selected sub parts (model)
@@ -483,7 +644,7 @@ trigger.addListener(selection.next_model)
 
 #Of these two functions enable only either not both.
 #This will create the ray dragger and "wand":
-#dragger, joy_handler = createWandRayController("wand", "wand", False)
+dragger, joy_handler = createWandRayController("wand", "wand", False)
 #This will create the ray dragger and debug controller eg. keyboard controls for moving ray:
-dragger, debug_controller = createWandRayController("wand", "wand", False)
+#dragger, debug_controller = createWandRayController("wand", "wand", True)
 

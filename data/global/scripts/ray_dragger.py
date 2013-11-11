@@ -361,11 +361,15 @@ def createWandRayController(name="wand", tracker_name="wand", debug=False):
 		threshold is smaller than threshold size. Threshold size is set default as 0.03. ZeroCut(threshold_size)
 		Operators are kinda stupid hack at the moment... """
 		jhandler.connect_range(2, dragger.change_drag_distance, JoystickEventHandler.Flip(), JoystickEventHandler.ZeroCut())
+		# TODO Replace by button 8
+		# TODO Test the new function
 		jhandler.connect_action(0, dragger.toggle_drag)
+		#jhandler.connect_state(0, start_drag, stop_drag)
 		return dragger, jhandler
 	else:
 		""" This is for debugging part. If you want more dofs or change mapping feel free to edit. """
-		debug_movements = WorldTransformGenerator(Transform(), game.player.camera_node.world_transformation)
+		debug_movements = WorldTransformGenerator(Transform(), game.player.camera_node.world_transformation,
+				speed=1)
 		game.event_manager.frame_trigger.addListener(debug_movements.frame_callback)
 		#Connecting the generator to dragger's callback:
 		debug_movements.connect(dragger.tracker_callback)
@@ -414,3 +418,4 @@ def createWandRayController(name="wand", tracker_name="wand", debug=False):
 		trigger.addKeyUpListener(dragger.increase_drag_distance)
 		
 		return dragger, debug_movements
+

@@ -196,6 +196,12 @@ class Controller:
 	def enable(self):
 		self.disabled = False
 
+	def toggle_disable(self) :
+		if not self.disabled:
+			self.disable()
+		else :
+			self.enable()
+
 
 class ObjectController(Controller):
 	def __init__(self, node, speed = 5, angular_speed = Degree(90),
