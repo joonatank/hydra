@@ -586,16 +586,18 @@ class JoystickSelectionMover :
 
 
 def joystick_select(evt, i):
-	if evt.state.is_button_down(5) :
-		selection.prev_selection()
-	if evt.state.is_button_down(7) :
-		selection.next_selection()
+	if evt.type == JOYSTICK_EVENT_TYPE.BUTTON_PRESSED:
+		if evt.state.is_button_down(5) :
+			selection.prev_selection()
+		if evt.state.is_button_down(7) :
+			selection.next_selection()
 
 def joystick_change_model(evt, i):
-	if evt.state.is_button_down(4) :
-		selection.next_model()
-	if evt.state.is_button_down(6) :
-		selection.prev_model()
+	if evt.type == JOYSTICK_EVENT_TYPE.BUTTON_PRESSED:
+		if evt.state.is_button_down(4) :
+			selection.next_model()
+		if evt.state.is_button_down(6) :
+			selection.prev_model()
 
 def joystick_print(evt, i):
 	#print("joystick callback called : ", evt)
