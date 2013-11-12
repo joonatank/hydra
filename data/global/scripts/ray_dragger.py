@@ -344,8 +344,8 @@ def createWandRayController(name="wand", tracker_name="wand", debug=False):
 	This way we don't have to use tracker to control the dragger itself,
 	but we can use global Controller class to control the attached object.
 	RayDragger part will be merely a decorator for Ray or something similar. """
-	visual_ray = VisualRay(name)
-	dragger = RayDragger(visual_ray)
+	visual_ray = VisualRay(name, indicator_size=0.01)
+	dragger = RayDragger(visual_ray, speed=1.0)
 	game.event_manager.frame_trigger.addListener(dragger.frame_callback)
 	if not debug:
 		if game.event_manager.hasTrackerTrigger(tracker_name):
