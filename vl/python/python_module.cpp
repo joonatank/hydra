@@ -69,6 +69,8 @@
 #include "cluster/server.hpp"
 // Necessary for minor Renderer features
 #include "renderer.hpp"
+// Necessary for exposing serial
+#include "base/serial.hpp"
 
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -770,6 +772,21 @@ void export_game(void)
 	python::class_<vl::CadImporter, vl::CadImporterRefPtr, boost::noncopyable>("CadImporter", python::no_init)
 		.def("load", &vl::CadImporter::import)
 		.add_property("loading", &vl::CadImporter::isLoading)
+	;
+
+	// Doesn't work in python because we can't get int list working
+	// should just create a custom static container for it
+	//size_t (vl::Serial::*write_ov0)(std::vector<int> const &) = &vl::Serial::write;
+	void (vl::Serial::*write_ov0)(int) = &vl::Serial::write;
+	size_t (vl::Serial::*write_ov1)(std::string const &)= &vl::Serial::write;
+	
+	// dunno if we need noncopyable here or the ref pointer
+	python::class_<vl::Serial, vl::SerialRefPtr, boost::noncopyable>("Serial", python::init<>())
+		.def(python::init<std::string, size_t>())
+		.def("open", &vl::Serial::open)
+		.def("read", &vl::Serial::read)
+		.def("write", write_ov0)
+		.def("write", write_ov1)
 	;
 }
 

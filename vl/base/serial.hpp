@@ -62,6 +62,17 @@ public :
 	/// blocking
 	size_t write(std::vector<char> const &buf, size_t n_bytes);
 
+	/// For python
+	size_t write(std::string const &buf);
+	/// Does an automatic conversion from integers to bytes (truncating)
+	/// this is for sending 8byte integers nothing else if you need more
+	/// larger numbers you need to use char buffer
+	size_t write(std::vector<int> const &buf, size_t n_bytes);
+	void write(int val);
+
+	/// Unsafe
+	size_t write(char const *buf, size_t n_bytes);
+
 	/// @brief set timeout parameters, these only work for opened serial device
 	void set_read_timeout(uint32_t total_ms, uint32_t per_byte_ms);
 

@@ -183,6 +183,9 @@ namespace vl
 	typedef std::vector<KinematicBodyRefPtr> KinematicBodyList;
 	typedef std::vector<ConstraintRefPtr> ConstraintList;
 
+	class Serial;
+	typedef boost::shared_ptr<Serial> SerialRefPtr;
+
 	class InputDevice;
 	class Joystick;
 	class PCAN;

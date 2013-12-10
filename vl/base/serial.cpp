@@ -150,11 +150,45 @@ vl::Serial::write(std::vector<char> const &buf, size_t n_bytes)
 	if(buf.size() == 0)
 	{ throw(std::string("ERROR : in Serial::write buffer can't be zero length.")); }
 
-	if(n_bytes == 0)
-	{ n_bytes = buf.size(); }
+	size_t size = buf.size() < n_bytes ? buf.size() : n_bytes;
 
+	write(&buf[0], size);
+}
+
+size_t
+vl::Serial::write(std::string const &buf)
+{
+	return write(buf.c_str(), buf.size());
+}
+
+size_t
+vl::Serial::write(std::vector<int> const &buf, size_t n_bytes)
+{
+	size_t size = buf.size() < n_bytes ? buf.size() : n_bytes;
+	std::vector<char> b(size);
+	for(size_t i = 0; i < size; ++i)
+	{
+		b.at(i) = (char)buf.at(i);
+	}
+
+	return write(&b[0], size);
+}
+
+void
+vl::Serial::write(int val)
+{
+	size_t size = 1;
+	std::vector<char> b(size);
+	b.at(0) = (char)val;
+
+	write(&b[0], size);
+}
+
+size_t
+vl::Serial::write(char const *buf, size_t n_bytes)
+{
 	DWORD dwBytesWrite = 0;
-	if(!WriteFile(_hSerial, &buf[0], n_bytes, &dwBytesWrite, NULL))
+	if(!WriteFile(_hSerial, buf, n_bytes, &dwBytesWrite, NULL))
 	{
 		//error occurred. Report to user.
 		throw(std::string("ERROR : in Serial::write"));
@@ -162,7 +196,6 @@ vl::Serial::write(std::vector<char> const &buf, size_t n_bytes)
 
 	return dwBytesWrite;
 }
-
 
 void
 vl::Serial::set_read_timeout(uint32_t total_ms, uint32_t per_byte_ms)
