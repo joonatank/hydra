@@ -54,6 +54,9 @@ sun = create_sun()
 sun.orientation = Quaternion(-0.900988, 0.43373, 0, 0)
 sun.rotate(Degree(60), Vector3(0, 1, 0))
 
+hidden_colour = ColourValue(1.0, 0.0, 0)
+visible_colour = ColourValue(0.0, 1.0, 0)
+
 # Table for the different options
 #
 #
@@ -236,10 +239,81 @@ for i, opt in enumerate(options):
 		model.translate(0, 0.5 + j/3, i/2 -len(options)/8)
 
 
-class ModelSelection :
-	def __init__(self, models):
+class TextContainer:
+	def __init__(self, gui_node):
+		self.gui = gui_node
+		self.objects = []
 		self.index = 0
-		self.models = models
+
+	def toggle_gui(self) :
+		print("toggle gui")
+		if self.gui.visible:
+			self.gui.hide()
+			game.scene.clearSelection()
+		else:
+			self.gui.show()
+
+	def move_text_up(self, name):
+		print("TextContainer.move_text_up")
+
+	def move_text_down(self, name):
+		print("TextContainer.move_text_down")
+
+	# Input the name of the label object
+	def toggle_visible(self, name):
+		print("TextContainer.toggle_visible")
+		print("hiding object : ", name)
+		# TODO this should retrieve object from the objects not from the Scene
+		node = self.find_label(name)
+		obj = node.objects[0]
+		ho = self.find_object(name)
+		assert(ho)
+		if ho.visible:
+			ho.hide()
+			obj.colour = hidden_colour
+		else:
+			ho.show()
+			obj.colour = visible_colour
+
+	def unhide_all(self):
+		for node in self.objects :
+			obj = node.objects[0]
+			assert(obj)
+			obj.colour = visible_colour
+
+			# we need to unhide the object not the text
+			name = obj.caption
+			ho = game.scene.getSceneNode(name)
+			ho.show()
+
+	# TODO implement
+	def find_label(self, label_name) :
+		for n in self.objects :
+			if n.name == label_name :
+				return n
+		return None
+
+	def find_object(self, label_name) :
+		for n in self.objects :
+			if n.name == label_name :
+				obj = n.objects[0]
+				return game.scene.getSceneNode(obj.caption)
+		return None
+
+	def add_label(self, name):
+		obj_name = name + "_text"
+		text = game.scene.createMovableText(obj_name, name)
+		text.font_name = "BlueHighway-22"
+		#text.font_name = "StarWars"
+		text.colour = visible_colour
+		text.char_height = 0.03
+		text_n = game.scene.createSceneNode(obj_name)
+		text_n.attachObject(text)
+		text_n.translate(0.5, 0.2 + len(self.objects)/15, 0)
+		text_n.rotate(Degree(90), Vector3(0, 1, 0))
+		# TODO should be tied to the camera and hidable as a single object
+		gui.addChild(text_n)
+		self.objects.append(text_n)
 
 	# Should not need these anymore since we should be using get by name
 	# and a name list where the user can select
@@ -247,36 +321,25 @@ class ModelSelection :
 	# SceneNode directly might be bit complex with the python interface though
 	def next_selection(self) :
 		self.index = self.index + 1
-		if self.index >= len(models): self.index = 0
+		if self.index >= len(self.objects): self.index = 0
 		# does not work since we switched to text boxes
 		game.scene.clearSelection()
-		game.scene.addToSelection(self.models[self.index])
+		game.scene.addToSelection(self.objects[self.index])
 
 	def prev_selection(self) :
 		self.index = self.index - 1
-		if self.index < 0 : self.index = len(self.models) - 1
+		if self.index < 0 : self.index = len(self.objects) - 1
 		# does not work since we switched to text boxes
 		#self.models[self.index].add_to_selection()
 		game.scene.clearSelection()
-		game.scene.addToSelection(self.models[self.index])
+		game.scene.addToSelection(self.objects[self.index])
 
-texts = []
+
+gui = game.scene.createSceneNode("tree_gui")
+camera.addChild(gui)
+texts = TextContainer(gui)
 for i, model in enumerate(models):
-	obj_name = model.name + "_text"
-	text = game.scene.createMovableText(obj_name, model.name)
-	text.font_name = "BlueHighway-22"
-	#text.font_name = "StarWars"
-	text.colour = ColourValue(1, 0.0, 0)
-	text.char_height = 0.03
-	text_n = game.scene.createSceneNode(obj_name)
-	text_n.attachObject(text)
-	text_n.translate(0.5, 0.2 + i/15, 0)
-	text_n.rotate(Degree(90), Vector3(0, 1, 0))
-	# TODO should be tied to the camera and hidable as a single object
-	texts.append(text_n)
-
-# testing using the text objects instead of models
-selection = ModelSelection(texts)
+	texts.add_label(model.name)
 
 # Not using keyboard selection for the moment (only wand selection)
 # For testing enabled
@@ -285,13 +348,35 @@ selection = ModelSelection(texts)
 # the other option would be to have two lists of them
 # which I rather not implement now
 trigger = game.event_manager.createKeyTrigger(KC.TAB)
-trigger.addListener(selection.prev_selection)
+trigger.addListener(texts.prev_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
-trigger.addListener(selection.next_selection)
+trigger.addListener(texts.next_selection)
+
+# Toggle for hiding and showing the selected
+def hide_selected():
+	print("hide selected")
+	for i in range(len(game.scene.selection)):
+		# we need to hide the objects with name of the text
+		#print("hiding : ", obj.name)
+		node = game.scene.selection[i]
+
+		texts.toggle_visible(node.name)
 
 trigger = game.event_manager.createKeyTrigger(KC.C)
-trigger.addListener(game.scene.clearSelection)
+trigger.addListener(texts.toggle_gui)
+
+trigger = game.event_manager.createKeyTrigger(KC.H)
+trigger.addListener(hide_selected)
+
+trigger = game.event_manager.createKeyTrigger(KC.H, KEY_MOD.META)
+trigger.addListener(texts.unhide_all)
+
+trigger = game.event_manager.createKeyTrigger(KC.U)
+trigger.addListener(move_selection_up)
+
+trigger = game.event_manager.createKeyTrigger(KC.J)
+trigger.addListener(move_selection_down)
 
 # TODO add selection controller using input objects
 # gotten from the current selection name
