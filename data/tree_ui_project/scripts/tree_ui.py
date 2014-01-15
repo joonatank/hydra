@@ -26,13 +26,10 @@ reset_camera()
 trigger = game.event_manager.createKeyTrigger(KC.X)
 trigger.addListener(reset_camera)
 
-camera_controller = createCameraMovements(speed=1)
+camera_controller = create_camera_controller()
 
 trigger = game.event_manager.createKeyTrigger(KC.F4)
 trigger.addListener(camera_controller.toggle_disable)
-
-# TODO we need to use selection based if we are using Oculus or not
-#camera_controller.head_direction = True
 
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
@@ -372,11 +369,11 @@ trigger.addListener(hide_selected)
 trigger = game.event_manager.createKeyTrigger(KC.H, KEY_MOD.META)
 trigger.addListener(texts.unhide_all)
 
-trigger = game.event_manager.createKeyTrigger(KC.U)
-trigger.addListener(move_selection_up)
+#trigger = game.event_manager.createKeyTrigger(KC.U)
+#trigger.addListener(move_selection_up)
 
-trigger = game.event_manager.createKeyTrigger(KC.J)
-trigger.addListener(move_selection_down)
+#trigger = game.event_manager.createKeyTrigger(KC.J)
+#trigger.addListener(move_selection_down)
 
 # TODO add selection controller using input objects
 # gotten from the current selection name

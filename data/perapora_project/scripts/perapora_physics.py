@@ -6,7 +6,7 @@ camera = game.scene.createSceneNode(camera_name)
 camera.position = Vector3(-0.77, 0, 4)
 cam = game.scene.createCamera(camera_name)
 camera.attachObject(cam)
-createCameraMovements(camera)
+create_camera_controller()
 game.player.camera = camera_name
 
 # Setup environment
@@ -94,7 +94,8 @@ zoom.target_lin_motor_velocity = 0.5
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0), radius=0.5, mass=10)
 sphere.user_controlled = True
-addRigidBodyController(sphere)
+# TODO RigidBody controller ins't working
+#addRigidBodyController(sphere)
 
 # Add force action, just as an example
 # This does of course not work as we would like because applyForce is an

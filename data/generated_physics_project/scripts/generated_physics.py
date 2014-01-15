@@ -7,7 +7,7 @@ camera_n = game.scene.createSceneNode("Camera")
 camera = game.scene.createCamera("Camera")
 camera.near_clip = 0.001
 camera_n.attachObject(camera)
-createCameraMovements()
+create_camera_controller()
 camera_n.position = Vector3(0, 5, 20)
 
 game.player.camera = "Camera"
@@ -78,7 +78,13 @@ print('Adding set Liner velocity action to KC_T')
 trigger = game.event_manager.createKeyTrigger(KC.T)
 trigger.addListener(set_sphere_velocity)
 
-addRigidBodyController(user_sphere)
+# TODO we should move the rigid body controller here till it's needed in other
+# samples or we could actually move it to physics_script
+# the problem with that is the execution order
+# if that gets messed up so that physics_script is executed before global_script
+# stuff breaks
+# TODO this is broken
+#addRigidBodyController(user_sphere)
 
 cylinder = addCylinder('cylinder', "finger_sphere/green", Vector3(.0, 5, -5), mass=10)
 

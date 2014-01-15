@@ -6,30 +6,11 @@ def eulerToQuat(x, y, z):
 	q_z = Quaternion(Degree(z), Vector3(0, 0, 1))
 	return q_x*q_y*q_z
 
-def setVectorActionFromKey( vector_action, kc, mod ):
-	key_action = FloatActionMap.create()
-	key_action.action = vector_action
-	key_action.value = 1
-	trigger = game.event_manager.createKeyTrigger( kc, mod )
-	trigger.action_down = key_action
-
-	key_action = FloatActionMap.create()
-	key_action.action = vector_action
-	key_action.value = -1
-	trigger.action_up = key_action
-
-
-
-def addKeyActionsForAxis( trans_action, axis, kc_pos, kc_neg, mod = KEY_MOD.NONE ) :
-	float_action = VectorActionMap.create()
-	float_action.axis = axis
-	setVectorActionFromKey( float_action, kc_pos, mod )
-	float_action.action = trans_action
-
-	float_action = VectorActionMap.create()
-	float_action.axis = -axis
-	setVectorActionFromKey( float_action, kc_neg, mod )
-	float_action.action = trans_action
+# AXIS defines
+AXIS_X = 0
+AXIS_Y = 1
+AXIS_Z = 2
+AXIS_W = 3
 
 # TODO separate the interface and the progress implementation
 # so we can have controllers for a group of objects and selections
@@ -50,10 +31,16 @@ class Controller:
 		#Initial rotation eg. misalignment:
 		self.rotation = rotation
 		self.disabled = False
+		# Default to disabled joystick because they are same for all objects
+		# Enable them for camera only when creating camera controller
+		self.joystick_disabled = True
 		#Reference frame (transform) used for scene node translations?
 		self.frame = TS.LOCAL
 		#Reference used for scene node rotations?
 		self.rotation_frame = TS.LOCAL
+
+		# Error tolerance for joystick zero
+		self.joystick_tolerance = 0.025
 
 	def transform(self, nodes, t):
 		if self.disabled:
@@ -99,67 +86,50 @@ class Controller:
 			nodes[i].rotate(q, self.rotation_frame)
 		
 
-	def up(self):
-		self.mov_dir += Vector3.unit_y
+	def up(self, val):
+		self.mov_dir.y += val
 
-	def down(self):
-		self.mov_dir -= Vector3.unit_y
+	def down(self, val):
+		self.mov_dir.y -= val
 
-	def left(self):
-		self.mov_dir -= Vector3.unit_x
+	def left(self, val):
+		self.mov_dir.x -= val
 		
-	def right(self):
-		self.mov_dir += Vector3.unit_x
+	def right(self, val):
+		self.mov_dir.x += val
 
-	def forward(self):
-		self.mov_dir -= Vector3.unit_z
+	def forward(self, val):
+		self.mov_dir.z -= val
 
-	def backward(self):
-		self.mov_dir += Vector3.unit_z
+	def backward(self, val):
+		self.mov_dir.z += val
 
-	def rotate_right(self):
-		self.rot_axis -= Vector3.unit_y
+	def rotate_right(self, val):
+		self.rot_axis.y -= val
 
-	def rotate_left(self):
-		self.rot_axis += Vector3.unit_y
+	def rotate_left(self, val):
+		self.rot_axis.y += val
 
-	def rotate_up(self):
-		self.rot_axis += Vector3.unit_x
+	def rotate_up(self, val):
+		self.rot_axis.x += val
 
-	def rotate_down(self):
-		self.rot_axis -= Vector3.unit_x
+	def rotate_down(self, val):
+		self.rot_axis.x -= val
 
-	def roll_right(self):
-		self.rot_axis -= Vector3.unit_z
+	def roll_right(self, val):
+		self.rot_axis.z -= val
 
-	def roll_left(self):
-		self.rot_axis += Vector3.unit_z
-		
-	##callbacks / slots operated by range variables. At the moment I don't know should these be additive or not.
-	#in few tests when using additive the controller couldn't stop (rounding and signal errors) so I assume these are correct now.
-	def translate_forward(self, value):
-		self.mov_dir.z = -value
-
-	def translate_vertical(self, value):
-		self.mov_dir.y = value
-
-	def translate_horizontal(self, value):
-		self.mov_dir.x = value
-
-	def rotate_around_vertical(self, value):
-		self.rot_axis.y = value
-
-	def rotate_around_horizontal(self, value):
-		self.rot_axis.x = value
-
-	def rotate_around_forward(self, value):
-		self.rot_axis.z = -value
+	def roll_left(self, val):
+		self.rot_axis.z += val
 		
 	# TODO need to add a boolean to enable/disable the joystick
 	# now it will enable it for all objects not just camera
 	# Actually it needs to be enabled when it's created
 	# only camera controller will enable it
 	def update_joystick(self, evt, i) :
+		if self.joystick_disabled:
+			return
+
 		# Override the move dir
 		# dunno if this is the best way to do it
 		# might need to add and clamp to avoid issues with using both
@@ -172,9 +142,9 @@ class Controller:
 				# for ps2 one handed joystick
 				# TODO we need to clamp the result to zero if it's small enough
 				# fix for splitfish (has a static error in z axis)
-				x = evt.state.axes[3]
-				z = evt.state.axes[2]
-				if(abs(z) < 0.025) : z = 0
+				x = evt.state.axes[AXIS_Z]
+				z = evt.state.axes[AXIS_Y]
+				if(abs(z) < self.joystick_tolerance) : z = 0
 
 				self.mov_dir = Vector3(x, 0, z)
 	
@@ -192,6 +162,7 @@ class Controller:
 
 	def disable(self):
 		self.disabled = True
+		# TODO shouldn't these reset rotations and translations
 
 	def enable(self):
 		self.disabled = False
@@ -221,7 +192,8 @@ class SelectionController(Controller):
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
 
-#This doesn't work because there's no rotate method for rigidbodies (defined in the end of Controller transform method)
+# FIXME This doesn't work because there's no rotate method for rigidbodies
+# (defined in the end of Controller transform method)
 class RigidBodyController(Controller):
 	def __init__(self, body):
 		Controller.__init__(self)
@@ -242,130 +214,121 @@ class ActiveCameraController(Controller):
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
 
-# Old interface map it to new one and remove in Hydra-0.4
-# node is discarded as we are using active controller now
-def createCameraMovements(node = None, speed = 5, angular_speed = Degree(90)) :
-	return createCameraController(speed, angular_speed)
+from functools import partial
 
-# New system using classes and signal callbacks
-# TODO add a separate controller for joystick values
-# selectable using a flag for example
-# @return ActiveCameraController
-def createCameraController(speed = 5, angular_speed = Degree(90), high_speed = 10) :
-	print( 'Creating Active camera controller.')
+def create_camera_controller() :
+	print('Creating Active camera controller using config')
+	print('Options : ', game.options)
 
-	camera_movements = ActiveCameraController(speed, angular_speed, high_speed=high_speed)
+	# copy the options
+	opt = game.options.camera
+	print(opt)
 
-	trigger = game.event_manager.createKeyTrigger(KC.D)
-	trigger.addKeyDownListener(camera_movements.right)
-	trigger.addKeyUpListener(camera_movements.left)
+	controller = ActiveCameraController(opt.speed, opt.angular_speed,
+			high_speed=opt.high_speed)
 
-	trigger = game.event_manager.createKeyTrigger(KC.A)
-	trigger.addKeyDownListener(camera_movements.left)
-	trigger.addKeyUpListener(camera_movements.right)
+	# Configure
+	controller.head_direction = opt.head_direction
+	controller.disabled = opt.controller_disabled
 
-	trigger = game.event_manager.createKeyTrigger(KC.S)
-	trigger.addKeyDownListener(camera_movements.backward)
-	trigger.addKeyUpListener(camera_movements.forward)
+	# Use partial from functools to make this repetive task a little less daunting
+	#
+	# syntax would have controller.right = partial(controller.right, 1)
+	# and controller.left = partial(controller.right, -1)
+	#
+	# TODO
+	# This can be extended to cover all controllers with a single mapper function
+	# that takes a list of tuples to it and maps keys to functions
 
-	trigger = game.event_manager.createKeyTrigger(KC.W)
-	trigger.addKeyDownListener(camera_movements.forward)
-	trigger.addKeyUpListener(camera_movements.backward)
+	trig_list = [(controller.right, opt.right),
+			(controller.left, opt.left),
+			(controller.forward, opt.forward),
+			(controller.backward, opt.backward),
+			(controller.up, opt.up),
+			(controller.down, opt.down),
+			(controller.rotate_right, opt.rotate_right),
+			(controller.rotate_left, opt.rotate_left),
+			]
 
-	trigger = game.event_manager.createKeyTrigger(KC.PGUP)
-	trigger.addKeyDownListener(camera_movements.up)
-	trigger.addKeyUpListener(camera_movements.down)
-
-	trigger = game.event_manager.createKeyTrigger(KC.PGDOWN)
-	trigger.addKeyDownListener(camera_movements.down)
-	trigger.addKeyUpListener(camera_movements.up)
-
-	trigger = game.event_manager.createKeyTrigger(KC.Q)
-	trigger.addKeyDownListener(camera_movements.rotate_left)
-	trigger.addKeyUpListener(camera_movements.rotate_right)
-
-	trigger = game.event_manager.createKeyTrigger(KC.E)
-	trigger.addKeyDownListener(camera_movements.rotate_right)
-	trigger.addKeyUpListener(camera_movements.rotate_left)
+	for obj in trig_list:
+		# Function key pair (dunno might need to be key function pair)
+		f1 = partial(obj[0], val=1)
+		f2 = partial(obj[0], val=-1)
+		trigger = game.event_manager.createKeyTrigger(obj[1])
+		trigger.addKeyDownListener(f1)
+		trigger.addKeyUpListener(f2)
 
 	# Create speed toggle to both shifts
-	triggers = [game.event_manager.createKeyTrigger(KC.LSHIFT),
-		game.event_manager.createKeyTrigger(KC.RSHIFT)]
-	for t in triggers:
-		t.addKeyDownListener(camera_movements.toggle_high_speed)
-		t.addKeyUpListener(camera_movements.toggle_high_speed)
+	if not opt.high_speed_disabled:
+		if opt.high_speed < opt.speed :
+			print("Warning : camera high speed is lower than normal speed")
+
+		triggers = [game.event_manager.createKeyTrigger(KC.LSHIFT),
+			game.event_manager.createKeyTrigger(KC.RSHIFT)]
+		for t in triggers:
+			# This is kinda odd, since it allows us to enable high
+			# speed with key up and disable it with key down
+			t.addKeyDownListener(controller.toggle_high_speed)
+			t.addKeyUpListener(controller.toggle_high_speed)
 
 	# Joystick
-	trigger = game.event_manager.createJoystickTrigger()
-	trigger.addListener(camera_movements.update_joystick)
+	# TODO need to change the controller itself to enable configuring the joystick
+	controller.joystick_disabled = not opt.joystick_enabled
+	if not controller.joystick_disabled :
+		trigger = game.event_manager.createJoystickTrigger()
+		trigger.addListener(controller.update_joystick)
 
-	game.event_manager.frame_trigger.addListener(camera_movements.progress)
+	game.event_manager.frame_trigger.addListener(controller.progress)
 
-	return camera_movements
+	return controller 
 
 
-# TODO add a possibility to speed up movements using SHIFT modifier
-# @param speed linear speed of the selection
-# @param angular_speed rotation speed of the selection
+# Uses game.options.selection for configuring
+#
 # @param reference The object whom coordinate system is used for translation, usually camera
-def addMoveSelection(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
-	return createSelectionController(speed, angular_speed, reference, rotation)
+#
+# Doesn't need high speed imo
+#
+# TODO reference and orientation should be inside options
+# reference should use the current active camera by default
+# if that's enough for all cases we should disable changing of it
+def create_selection_controller(reference=None, rotation = Quaternion(1, 0, 0, 0)) :
+	opt = game.options.selection
+	print("Selection Controller options : ", opt)
 
-def createSelectionController(speed = 0.3, angular_speed = Degree(40), reference=None, rotation = Quaternion(1, 0, 0, 0)) :
-	selection_movements = SelectionController(speed, angular_speed, reference, rotation)
+	controller = SelectionController(opt.speed, opt.angular_speed,
+			reference, rotation)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
-	trigger.addKeyDownListener(selection_movements.right)
-	trigger.addKeyUpListener(selection_movements.left)
+	# TODO need to add rotations if they are not disabled
+	# TODO we should use KC.UNASSIGNED to disable specific direction
+	trig_list = [(controller.right, opt.right, KEY_MOD.NONE),
+			(controller.left, opt.left, KEY_MOD.NONE),
+			(controller.forward, opt.forward, KEY_MOD.NONE),
+			(controller.backward, opt.backward, KEY_MOD.NONE),
+			(controller.up, opt.up, KEY_MOD.NONE),
+			(controller.down, opt.down, KEY_MOD.NONE),
+			(controller.rotate_right, opt.right, KEY_MOD.CTRL),
+			(controller.rotate_left, opt.left, KEY_MOD.CTRL),
+			(controller.roll_left, opt.forward, KEY_MOD.CTRL),
+			(controller.roll_right, opt.backward, KEY_MOD.CTRL),
+			(controller.rotate_down, opt.up, KEY_MOD.CTRL),
+			(controller.rotate_up, opt.down, KEY_MOD.CTRL),
+			]
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
-	trigger.addKeyDownListener(selection_movements.left)
-	trigger.addKeyUpListener(selection_movements.right)
+	for obj in trig_list:
+		# Function key pair (dunno might need to be key function pair)
+		f1 = partial(obj[0], val=1)
+		f2 = partial(obj[0], val=-1)
+		trigger = game.event_manager.createKeyTrigger(obj[1], obj[2])
+		trigger.addKeyDownListener(f1)
+		trigger.addKeyUpListener(f2)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5)
-	trigger.addKeyDownListener(selection_movements.backward)
-	trigger.addKeyUpListener(selection_movements.forward)
+	game.event_manager.frame_trigger.addListener(controller.progress)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8)
-	trigger.addKeyDownListener(selection_movements.forward)
-	trigger.addKeyUpListener(selection_movements.backward)
+	return controller;
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9)
-	trigger.addKeyDownListener(selection_movements.up)
-	trigger.addKeyUpListener(selection_movements.down)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7)
-	trigger.addKeyDownListener(selection_movements.down)
-	trigger.addKeyUpListener(selection_movements.up)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_right)
-	trigger.addKeyUpListener(selection_movements.rotate_left)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_left)
-	trigger.addKeyUpListener(selection_movements.rotate_right)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.roll_right)
-	trigger.addKeyUpListener(selection_movements.roll_left)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.roll_left)
-	trigger.addKeyUpListener(selection_movements.roll_right)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_up)
-	trigger.addKeyUpListener(selection_movements.rotate_down)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7, KEY_MOD.CTRL)
-	trigger.addKeyDownListener(selection_movements.rotate_down)
-	trigger.addKeyUpListener(selection_movements.rotate_up)
-
-	game.event_manager.frame_trigger.addListener(selection_movements.progress)
-
-	return selection_movements;
-
+# TODO where is this used?
+#
 # @param tracker the tracker used for moving the objects
 # @param trigger the trigger used to trigger start moving and stop moving
 def addTrackerMoveSelection(tracker_trigger_name, trigger) :
@@ -389,6 +352,10 @@ def addTrackerMoveSelection(tracker_trigger_name, trigger) :
 	else:
 		print("ERROR : No such trigger. Not adding tracker move selection.")
 
+# TODO is this used in anywhere else than generated_physics? if not move it there
+# Used in robot_project, generated_physics, perapora_physics, perapora_kinematics
+#
+# FIXME doesn't work at the moment because RigidBody doesn't have rotate method
 def addRigidBodyController(body):
 	controller = RigidBodyController(body)
 
@@ -418,79 +385,7 @@ def addRigidBodyController(body):
 
 	game.event_manager.frame_trigger.addListener(controller.progress)
 
-# Fine using the new event interface
-def addQuitEvent( kc, key_mod = KEY_MOD.NONE ) :
-	trigger = game.event_manager.createKeyTrigger(kc, key_mod)
-	trigger.addKeyDownListener(game.quit)
 
-def addToggleMusicEvent( kc ) :
-	print( 'Creating Toggle Music Event to ' + getPythonKeyName(kc) )
-	trigger = game.event_manager.createKeyTrigger( kc )
-	trigger.addKeyDownListener(game.toggleBackgroundSound)
-
-
-def addScreenshotAction( kc ) :
-	print( 'Adding screenshot action to ' + getPythonKeyName(kc) )
-	trigger = game.event_manager.createKeyTrigger( kc )
-	trigger.addKeyDownListener(game.player.takeScreenshot)
-
-
-# Class to handle camera switching between two cameras
-class ChangeCamera :
-	def __init__(self, cam1, cam2):
-	    self.camera1 = cam1
-	    self.camera2 = cam2
-	    self.on = True
-	    self.switch()
-
-	def switch(self):
-		if(self.on):
-			game.player.camera = self.camera1
-		else:
-			game.player.camera = self.camera2
-		self.on = not self.on
-
-g_change_camera = None
-
-# Change camera toggle
-# Use one Key in this case b to change between two active cameras
-# Requirement : Camera names must be correct for this to work
-#
-# If the camera name is incorrect the action will not change the camera
-# An error message is printed to std::cerr and the program continues normally
-def addToggleActiveCamera( camera1, camera2 ) :
-	print( 'Creating Toggle Activate Camera between ' + camera1 + ' and ' + camera2 )
-	# Needs to use global because otherwise it would go out of scope
-	g_change_camera = ChangeCamera(camera1, camera2)
-	trigger = game.event_manager.createKeyTrigger(KC.B)
-	trigger.addKeyDownListener(g_change_camera.switch)
-
-# TODO replace with a general purpose toggle
-# converts void parameter to bool parameter so we can map
-# void events (like key presses) to bool functions (like setVisible)
-class HideToggle:
-	def __init__(self, node):
-		self.on = False
-		self.node = node
-
-	def switch(self):
-		if self.on:
-			self.node.show()
-		else:
-			self.node.hide()
-		self.on = not self.on
-
-g_hide_toggles = []
-
-def addHideEvent(node, kc) :
-	print( 'Creating Hide Event for ' + str(node) + ' to ' + getPythonKeyName(kc) )
-	# Does not have Delay between changes, but only works on key down
-	# so user would need to press key up and down multiple times
-	toggle = HideToggle(node)
-	# Uses global storage so they don't go out of scope
-	g_hide_toggles.append(toggle)
-	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addKeyDownListener(toggle.switch)
 
 def addToggleStereo(kc) :
 	class StereoToggle:
@@ -513,6 +408,11 @@ def addToggleConsole(kc) :
 		trigger.addKeyDownListener(game.gui.console.toggle_visible)
 
 # Selection Buffer
+# TODO this is not properly named
+# a selection set is the thing that is game.scene.selection
+# this is a SelectionBuffer that allows switching between SelectionSets
+# 
+# We still need to implement SelectionSet that replaces the one in game.scene.selection
 class SelectionSet:
 	def __init__(self):
 		self.selection = []
@@ -546,8 +446,6 @@ class SelectionSet:
 
 # Create a basic directional light with a decent angle
 # Return the sun scene node
-# TODO this should be a bit more complex and use the sky simulator
-# so the sun angle and intensity is dependent on the sky state
 def create_sun():
 	sun = game.scene.createSceneNode("sun")
 	sun_l = game.scene.createLight("sun")
@@ -580,6 +478,8 @@ def toggle_pause():
 	else:
 		game.play()
 
+
+#### Head Tracking stuff ####
 # Callback for setting head transformation
 def setHeadTransform(t):
 	game.player.head_transformation = t
@@ -622,18 +522,24 @@ def initialise_head_tracker():
 
 	# has traditional head tracker
 	# does not have head tracker
+#### Head Tracking stuff ####
+
 
 initialise_head_tracker()
 
 
 # Add some global events that are useful no matter what the scene/project is
 print( 'Adding game events' )
-addScreenshotAction(KC.F10)
+
+trigger = game.event_manager.createKeyTrigger(KC.F10)
+trigger.addKeyDownListener(game.player.takeScreenshot)
 addToggleConsole(KC.GRAVE)
 addToggleStereo(KC.F12)
 
-#addQuitEvent(KC.ESCAPE)
+#trigger = game.event_manager.createKeyTrigger(KC.ESCAPE)
+#trigger.addKeyDownListener(game.quit)
 
+# TODO Should only be enabled if we have HMD connected
 def enable_hmd_distortion():
 	print("Enabling HMD distortion.")
 	renderer.hmd_distortion_enabled = True

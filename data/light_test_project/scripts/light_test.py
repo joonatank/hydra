@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
+# Create a Camera and set it to be used
 camera = game.scene.createSceneNode("camera")
 camera.position = Vector3(0, 3, 15)
 cam = game.scene.createCamera("camera")
 camera.attachObject(cam)
-createCameraMovements(camera, speed=10)
-
+# TODO fix this to use Camera object instead of name
 game.player.camera = "camera"
+
+# TODO these should be configured using options and created in global script
+create_camera_controller()
+
 
 # Create ground plane
 # Create a large plane for shader testing
@@ -134,7 +138,7 @@ class Lights :
 		# along which the sun would move.
 		self.sun_n.orientation = Quaternion(0.753, -0.58, -0.13, -0.29)
 		game.scene.addToSelection(self.sun_n)
-		createSelectionController()
+		create_selection_controller()
 
 	def _create_spots(self):
 		self.spot1 = game.scene.createLight("spot")

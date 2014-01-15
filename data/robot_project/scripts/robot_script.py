@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-print('Getting Camera SceneNode')
 camera_name = "Camera"
-if game.scene.hasSceneNode( camera_name ) :
-	camera = game.scene.getSceneNode( camera_name )
-	createCameraMovements(camera)
+create_camera_controller()
 game.player.camera = camera_name
 
 # Create physics
@@ -58,5 +55,6 @@ physics_fixed_constraint(link3_body, link4_body, transform)
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0))
 sphere.user_controlled = True
-addRigidBodyController(sphere)
+# Rigid body controller doesn't work because RigidBody doesn't have rotate method
+#addRigidBodyController(sphere)
 

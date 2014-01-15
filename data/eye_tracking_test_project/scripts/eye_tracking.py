@@ -12,7 +12,7 @@ camera.position = Vector3(0, 3, 15)
 cam = game.scene.createCamera("camera")
 camera.attachObject(cam)
 
-createCameraMovements(camera, speed=10)
+create_camera_controller()
 
 game.player.camera = "camera"
 

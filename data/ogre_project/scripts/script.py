@@ -15,31 +15,26 @@
 
 camera = game.scene.getSceneNode("CameraNode")
 camera.position = Vector3(0, 3, 15)
-camera_controller = createCameraMovements(camera, speed=10)
-# TODO we need to use selection based if we are using Oculus or not
-camera_controller.head_direction = True
-# for the clouds we need to increase far clipping
-cam = game.scene.getCamera("Omakamera")
-cam.far_clip = 5e5
+# TODO these should be configured using options and created in global script
+create_camera_controller()
+
+def hide_ogre():
+	if ogre.visible:
+		ogre.hide()
+	else : 
+		ogre.show()
 
 ogre = game.scene.getSceneNode("ogre")
-addHideEvent(ogre, KC.H)
-createSelectionController(speed=5, angular_speed=Degree(60), reference=camera)
-key = game.event_manager.createKeyTrigger(KC.SPACE)
-addTrackerMoveSelection("fingerTrigger", key)
-ogre.position = Vector3(0, 2.5, 0)
+trigger = game.event_manager.createKeyTrigger(KC.H)
+trigger.addListener(hide_ogre)
 
-# ActiveCamera toggle, supports two cameras. Parameters passed are camera names
-# first one is the camera not active at the moment, second one is active at the moment
-addToggleActiveCamera("Omakamera", "OutsideCamera")
+ogre.position = Vector3(0, 2.5, 0)
 
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
 game.scene.shadows.texture_size = 4096
 game.scene.shadows.max_distance = 50
 game.scene.shadows.dir_light_extrusion_distance = 100
-# SkyX does not work with reloading the scene
-#game.scene.sky.preset = "sunset" #"clear"
 
 ground = create_ground(size=100)
 
@@ -123,9 +118,6 @@ def printAnalog(val):
 analog = game.create_analog_client("meh@localhost")
 analog.n_sensors = 1
 analog.get_sensor(0).addListener(printAnalog)
-
-#ogre.rotate(Quaternion(0.7071, 0, -0.7071, 0))
-#game.scene.addToSelection(lightpulp_n)
 
 # Start with paused and toggle state with space
 # TODO this is pretty useless because all events except for physics

@@ -9,7 +9,7 @@
 
 camera = game.scene.getSceneNode("editor/camera")
 #camera.position = Vector3(0, 3, 15)
-createCameraMovements(speed=10)
+create_camera_controller()
 
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()

@@ -13,7 +13,7 @@ Vec3 = Vector3
 def initphysics():
     ##Warning this function has to be run before using any physics.
     ##Also it's return value has to be assigned into a variable named "phy"
-    createCameraMovements(10)               
+    create_camera_controller()               
     game.enablePhysics( True )
     #CUSTOM SOLVER PARAMETERS:
     solverparams = PhysicsSolverParameters() 

@@ -64,8 +64,13 @@ trigger.addListener(camera_changer.prev_view)
 
 game.player.camera = "Camera"
 # TODO disable camera controller
-camera_controller = createCameraMovements(speed=1)
-camera_controller.disable()
+# TODO these should be configured using options and created in global script
+game.options.camera_speed = 1
+game.options.camera_high_speed_disabled = True
+# start the controller as disabled
+game.options.camera_controller_disabled = True
+camera_controller = create_camera_controller()
+#camera_controller.disable()
 
 trigger = game.event_manager.createKeyTrigger(KC.F4)
 trigger.addListener(camera_controller.toggle_disable)
@@ -558,7 +563,7 @@ trigger.addListener(inspector.clear)
 
 
 # TODO selection should have only moving and rotation 90 deg around y
-addMoveSelection(reference = camera)
+create_selection_controller(reference = camera)
 
 # TODO add changing the selection from dir pad buttons in a joystick
 

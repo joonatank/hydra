@@ -7,7 +7,7 @@ camera_n = game.scene.createSceneNode("Camera")
 camera = game.scene.createCamera("Camera")
 camera.near_clip = 0.001
 camera_n.attachObject(camera)
-createCameraMovements()
+create_camera_controller()
 camera_n.position = Vector3(0, 5, 20)
 
 game.player.camera = "Camera"

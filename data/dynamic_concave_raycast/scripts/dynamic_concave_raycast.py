@@ -1,5 +1,5 @@
 ﻿def initphysics():
-	createCameraMovements(10)
+	create_camera_controller()
 	game.enablePhysics(True)
 #CUSTOM SOLVER PARAMETERS:
 	solverparams = PhysicsSolverParameters()

@@ -9,6 +9,10 @@ and to have global script.
 -->
 <project_config name="global">
 	<scripts>
+		<!-- TODO global options should be removed after it's included
+			 inside the c++ code because it needs always be read and always
+			 be the first ran script -->
+		<file use="true">global_options.py</file>
 		<file use="true">signal_implementation.py</file>
 		<file use="true">input_event_handlers.py</file>
 		<file use="true">global_script.py</file>
