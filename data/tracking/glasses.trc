@@ -20,10 +20,10 @@
 			</sensor>
 		</tracker>
 	</client>
-	<client type="VRPN" host="localhost" port="3884">
-		<tracker name="eye">
+	<client type="VRPN" host="localhost" port="3883">
+		<tracker name="wand">
 			<sensor num="0">
-				<trigger type="VRPN" name="eyeTrigger" />
+				<trigger type="VRPN" name="wand" />
 			</sensor>
 		</tracker>
 	</client>
