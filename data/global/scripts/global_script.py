@@ -66,13 +66,10 @@ class Controller:
 				# but on the other hand local reference is
 				# impossible to indicate if the list contains
 				# more than one element
-				try:
-					if self.ref:
-						nodes[i].translate(self.rotation * mov, self.ref)
-					else:
-						nodes[i].translate(self.rotation * mov, self.frame)
-				except:
-					nodes[i].translate(self.rotation * mov)
+				if self.ref:
+					nodes[i].translate(self.rotation * mov, self.ref)
+				else:
+					nodes[i].translate(self.rotation * mov, self.frame)
 
 
 		axis = self.rot_axis
@@ -80,8 +77,7 @@ class Controller:
 		angle = Radian(self.angular_speed*float(t)*min(axis_len, 1.0))
 		q = Quaternion(angle, axis)
 		
-		#Bullet rigidbodies doesn't have rotate method so this won't work
-		#--> rigidbody controller won't work
+		# TODO this shouldn't be called if rot is zero
 		for i in range(len(nodes)):
 			nodes[i].rotate(q, self.rotation_frame)
 		
@@ -192,8 +188,6 @@ class SelectionController(Controller):
 	def progress(self, t):
 		self.transform(game.scene.selection, t)
 
-# FIXME This doesn't work because there's no rotate method for rigidbodies
-# (defined in the end of Controller transform method)
 class RigidBodyController(Controller):
 	def __init__(self, body):
 		Controller.__init__(self)
@@ -352,38 +346,32 @@ def addTrackerMoveSelection(tracker_trigger_name, trigger) :
 	else:
 		print("ERROR : No such trigger. Not adding tracker move selection.")
 
-# TODO is this used in anywhere else than generated_physics? if not move it there
 # Used in robot_project, generated_physics, perapora_physics, perapora_kinematics
-#
-# FIXME doesn't work at the moment because RigidBody doesn't have rotate method
 def addRigidBodyController(body):
 	controller = RigidBodyController(body)
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD6)
-	trigger.addKeyDownListener(controller.right)
-	trigger.addKeyUpListener(controller.left)
+	trig_list = [(controller.right, KC.K),
+			(controller.left, KC.H),
+			(controller.forward, KC.U),
+			(controller.backward, KC.J),
+			(controller.up, KC.O),
+			(controller.down, KC.Y),
+			]
 
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD4)
-	trigger.addKeyDownListener(controller.left)
-	trigger.addKeyUpListener(controller.right)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD8)
-	trigger.addKeyDownListener(controller.forward)
-	trigger.addKeyUpListener(controller.backward)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD5)
-	trigger.addKeyDownListener(controller.backward)
-	trigger.addKeyUpListener(controller.forward)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD9)
-	trigger.addKeyDownListener(controller.up)
-	trigger.addKeyUpListener(controller.down)
-
-	trigger = game.event_manager.createKeyTrigger(KC.NUMPAD7)
-	trigger.addKeyDownListener(controller.down)
-	trigger.addKeyUpListener(controller.up)
+	for obj in trig_list:
+		# Function key pair (dunno might need to be key function pair)
+		f1 = partial(obj[0], val=1)
+		f2 = partial(obj[0], val=-1)
+		trigger = game.event_manager.createKeyTrigger(obj[1])
+		trigger.addKeyDownListener(f1)
+		trigger.addKeyUpListener(f2)
 
 	game.event_manager.frame_trigger.addListener(controller.progress)
+
+	# TODO this should probably be relative to camera for most use cases
+	# using PARENT because otherwise rotation of the body would cause problems
+	controller.frame = TS.PARENT
+	return controller
 
 
 

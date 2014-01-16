@@ -99,26 +99,25 @@ vl::ObjectInterface::translate(Ogre::Vector3 const &v, vl::ObjectInterfacePtr re
 	}
 }
 
-/// @todo change setPosition to setTransform
 void 
 vl::ObjectInterface::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
 {
 	switch(space)
 	{
 	case TS_LOCAL:
-		setPosition(getTransform().position + getTransform().rotate(v));
+		setTransform(Transform(getTransform().quaternion, getTransform().position + getTransform().rotate(v)));
 		break;
 
 	case TS_PARENT:
-		setPosition(getTransform().position + v);
+		setTransform(Transform(getTransform().quaternion, getTransform().position + v));
 		break;
 
 	case TS_WORLD:
 	{
 		// Seems to translate stuff in world properly
 		Transform wt = getParentWorldTransform().inverted();
-		Ogre::Vector3 mov = getTransform().position + wt.quaternion*v;
-		setPosition(mov);
+		Ogre::Vector3 pos = getTransform().position + wt.quaternion*v;
+		setTransform(Transform(getTransform().quaternion, pos));
 	}
 	break;
 
@@ -130,6 +129,7 @@ vl::ObjectInterface::translate(Ogre::Vector3 const &v, vl::TransformSpace space)
 void 
 vl::ObjectInterface::translate(Ogre::Vector3 const &v)
 {
+	// is this LOCAL or PARENT?
 	translate(v, TS_LOCAL);
 }
 

@@ -38,7 +38,7 @@ namespace physics {
  *	@brief Abstract interface for Physics engine rigid body
  *	Derived classes implement this for specific physics engines.
  */
-class HYDRA_API RigidBody : vl::ObjectInterface
+class HYDRA_API RigidBody : public vl::ObjectInterface
 {
 
 public :
@@ -116,8 +116,6 @@ public :
 
 	virtual Ogre::Real getAngularDamping(void) const = 0;
 
-	virtual void translate(Ogre::Vector3 const &v) = 0;
-
 	/// Doesn't set mass if we have no inertia tensor use setMassProps
 	/// it might work, if you set the mass first and the inertia tensor after that
  	virtual void setMass(Ogre::Real mass) = 0;
@@ -162,12 +160,11 @@ public :
 
 	virtual void *getUserData(void) = 0;
 
-	virtual vl::Transform getWorldTransform(void) const = 0;
-
-	virtual void setWorldTransform(Transform const &worldTrans) = 0;
-
 	vl::Transform const &getTransform(void) const
-	{ return getWorldTransform(); }
+	{
+		_wt = getWorldTransform();
+		return _wt;
+	}
 
 	void setTransform(Transform const &worldTrans)
 	{ setWorldTransform(worldTrans); }
@@ -206,6 +203,7 @@ public :
 	virtual void setFriction(vl::scalar const&) = 0;
 	virtual void setSleepingThresholds(vl::scalar const&,vl::scalar const&) = 0;
 
+	
 protected :
 	RigidBody(ConstructionInfo const &info);
 
@@ -214,6 +212,9 @@ protected :
 	CollisionShapeRefPtr _shape;
 
 	bool _is_dynamic;
+	
+	// need to store the world transform because some methods return const refs
+	mutable Transform _wt;
 
 };	// class RigidBody
 

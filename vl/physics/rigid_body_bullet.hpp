@@ -139,9 +139,6 @@ public :
 	Ogre::Real getAngularDamping(void) const
 	{ return _bt_body->getAngularDamping(); }
 
-	void translate(Ogre::Vector3 const &v)
-	{ _bt_body->translate(convert_bt_vec(v)); }
-
 	void setMass(Ogre::Real mass)
 	{
 		if(!_bt_body->getInvInertiaDiagLocal().isZero())

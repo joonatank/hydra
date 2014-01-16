@@ -271,8 +271,7 @@ vaantomoottori.addListener(setBodyTransform)
 pos = Vector3(-3, 3, -0.5)
 box = addBox("user_box", "finger_sphere/green", pos, mass=10)
 box.user_controlled = True
-# TODO RigidBody controller ins't working
-#addRigidBodyController(box)
+addRigidBodyController(box)
 
 # Static box
 pos = Vector3(-2, 0.75, -2.5)

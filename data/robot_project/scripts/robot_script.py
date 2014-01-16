@@ -55,6 +55,5 @@ physics_fixed_constraint(link3_body, link4_body, transform)
 
 sphere = addSphere("sphere1", "finger_sphere/blue", Vector3(5.0, 20, 0))
 sphere.user_controlled = True
-# Rigid body controller doesn't work because RigidBody doesn't have rotate method
-#addRigidBodyController(sphere)
+addRigidBodyController(sphere)
 
