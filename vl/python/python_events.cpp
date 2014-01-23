@@ -26,9 +26,6 @@
 #include "event_manager.hpp"
 #include "trigger.hpp"
 
-// Necessary for joystick handler
-#include "animation/constraints_handlers.hpp"
-
 // Necessary because referenced by the Actions
 #include "scene_manager.hpp"
 #include "game_manager.hpp"
@@ -38,10 +35,6 @@
 #include "keycode.hpp"
 
 // Input
-//#include "input/joystick_event.hpp"
-#include "input/serial_joystick_event.hpp"
-#include "input/serial_joystick.hpp"
-#include "input/joystick.hpp"
 #include "input/pcan.hpp"
 //#include "input/mouse_event.hpp"
 
@@ -55,7 +48,6 @@
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(createKeyTrigger_ov, createKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getKeyTrigger_ov, getKeyTrigger, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(hasKeyTrigger_ov, hasKeyTrigger, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(getJoystick_ov, getJoystick, 0, 1)
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_axis_constraint_ovs, set_axis_constraint, 2, 4)
 
@@ -90,7 +82,6 @@ void export_managers(void)
 			python::return_value_policy<python::reference_existing_object>() )
 		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>()) )
-		.def("getJoystick", &vl::EventManager::getJoystick, getJoystick_ov())
 		.def("get_pcan", &vl::EventManager::getPCAN)
 		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
 			python::return_value_policy<python::reference_existing_object>())
@@ -144,16 +135,6 @@ void export_managers(void)
 	;
 
 	/// Input
-	
-	bool (vl::SerialJoystickEvent::*isButtonDown_ov0)(size_t) const = &vl::SerialJoystickEvent::isButtonDown;
-
-	python::class_<vl::SerialJoystickEvent>("SerialJoystickEvent", python::init<>())
-		.def_readonly("axis_x", &vl::SerialJoystickEvent::axis_x)
-		.def_readonly("axis_y", &vl::SerialJoystickEvent::axis_y)
-		.def_readonly("axis_z", &vl::SerialJoystickEvent::axis_z)
-		.def("is_button_down", isButtonDown_ov0)
-		.def(python::self_ns::str(python::self_ns::self))
-	;
 
 	python::class_<std::vector<int8_t> >("bytevec")
 		.def(python::vector_indexing_suite< std::vector<int8_t> >())
@@ -240,27 +221,7 @@ void export_managers(void)
 		.value("MB_7", vl::MouseEvent::MB_7)
 	;
 
-	
-	/// Handlers
-	python::class_<vl::JoystickHandler, vl::JoystickHandlerRefPtr, boost::noncopyable>("JoystickHandler", python::no_init)
-	;
-
-	python::class_<vl::ConstraintJoystickHandler, vl::ConstraintJoystickHandlerRefPtr, boost::noncopyable, python::bases<vl::JoystickHandler> >("ConstraintJoystickHandler", python::no_init)
-		.def("set_axis_constraint", &vl::ConstraintJoystickHandler::set_axis_constraint, set_axis_constraint_ovs())
-		//.def("set_axis_constraint", set_axis_constraint_ov1)
-		.add_property("velocity_multiplier", &vl::ConstraintJoystickHandler::get_velocity_multiplier, &vl::ConstraintJoystickHandler::set_velocity_multiplier)
-		.def("create", &vl::ConstraintJoystickHandler::create)
-		.staticmethod("create")
-	;
-
 	python::class_<vl::InputDevice, vl::InputDeviceRefPtr, boost::noncopyable>("InputDevice", python::no_init)
-	;
-
-	python::class_<vl::Joystick, vl::JoystickRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("Joystick", python::no_init)
-		.def("addListener", toast::python::signal_connect<void (SerialJoystickEvent const &)>(&vl::Joystick::addListener))
-		.def("add_handler", &vl::Joystick::add_handler)
-		.def("remove_handler", &vl::Joystick::remove_handler)
-		.add_property("zero_size", &vl::Joystick::get_zero_size, &vl::Joystick::set_zero_size)
 	;
 
 	python::class_<vl::PCAN, vl::PCANRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("PCAN", python::no_init)

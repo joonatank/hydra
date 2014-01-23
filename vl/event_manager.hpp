@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file event_manager.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -24,8 +24,6 @@
 #include "trigger.hpp"
 
 #include "tracker.hpp"
-
-#include "input/serial_joystick_event.hpp"
 
 #include "input/joystick_event.hpp"
 
@@ -123,20 +121,7 @@ public :
 
 	void destroyTimeTrigger(vl::TimeTrigger *trigger);
 
-	/// @todo add params to get specifc joystick and also allow for fallbacks
-	/// @param name only valid values are COM ports for now
-	/// @return valid pointer if such joystick exists, NULL pointer if not
-	// only com ports are supported by name
-	// the full name is comX:N
-	// where X is the serial port number (in Windows)
-	// and N is the joystick number in that serial port
-	// comX is a short hand for comX:0
-	JoystickRefPtr getJoystick(std::string const &name = "default");
-
 	PCANRefPtr getPCAN(void);
-
-	void update_joystick(vl::SerialJoystickEvent const &evt);
-
 
 	/// @brief called from GameManager to update input devices
 	void mainloop(vl::time const &elapsed_time);
@@ -157,10 +142,6 @@ private :
 
 	void _update_key_modifers(std::bitset<8> new_mod);
 
-	JoystickRefPtr _getSerialJoystick(std::string const &name);
-
-	JoystickRefPtr _getGameJoystick(std::string const &name);
-
 /// Data
 private :
 	std::vector<vl::TrackerTrigger *> _tracker_triggers;
@@ -175,14 +156,7 @@ private :
 
 	std::vector<OIS::KeyCode> _keys_down;
 
-	std::map<std::string, JoystickRefPtr> _joysticks;
-
-	std::map<std::string, SerialJoystickRefPtr> _serial_joysticks;
-
 	std::vector<TimeTrigger *> _time_triggers;
-
-	// stored also separately to avoid searching and casting
-	JoystickRefPtr _game_joystick;
 
 	PCANRefPtr _pcan;
 

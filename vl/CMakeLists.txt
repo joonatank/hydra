@@ -87,9 +87,6 @@ source_group(HydraMain\\math FILES ${MATH_HEADERS} ${MATH_SRC})
 if(WIN32)
 	set(INPUT_HEADERS
 		input/input.hpp
-		input/serial_joystick_event.hpp
-		input/serial_joystick.hpp
-		input/joystick.hpp
 		input/ois_converters.hpp
 		input/pcan.hpp
 		input/mouse.hpp
@@ -97,8 +94,6 @@ if(WIN32)
 		input/joystick_event.hpp
 		)
 	set(INPUT_SRC
-		input/serial_joystick.cpp
-		input/joystick.cpp
 		input/pcan.cpp
 		input/mouse.cpp
 		)
@@ -189,14 +184,12 @@ source_group(HydraMain\\physics FILES ${PHYSICS_HEADERS} ${PHYSICS_SRC})
 
 set(ANIMATION_HEADERS
 	animation/constraints.hpp
-	animation/constraints_handlers.hpp
 	animation/animation.hpp
 	animation/kinematic_body.hpp
 	animation/kinematic_world.hpp
 	)
 set(ANIMATION_SRC
 	animation/constraints.cpp
-	animation/constraints_handlers.cpp
 	animation/animation.cpp
 	animation/kinematic_body.cpp
 	animation/kinematic_world.cpp

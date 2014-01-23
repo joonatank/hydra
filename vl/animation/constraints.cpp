@@ -215,6 +215,8 @@ vl::FixedConstraint::FixedConstraint(std::string const &name,
 void
 vl::SliderConstraint::setVelocity(vl::scalar velocity)
 {
+	// @fixme this is stupid design choice like really brain dead
+	//
 	// @todo does this need to set to lower limit if velocity is negative?
 	// yes because speed is always positive
 	if(velocity < 0)

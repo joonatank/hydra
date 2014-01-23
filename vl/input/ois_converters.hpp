@@ -18,7 +18,6 @@
 #ifndef HYDRA_INPUT_OIS_CONVERS_HPP
 #define HYDRA_INPUT_OIS_CONVERS_HPP
 
-#include "input/serial_joystick_event.hpp"
 #include "input/mouse_event.hpp"
 #include "input/joystick_event.hpp"
 

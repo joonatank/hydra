@@ -64,6 +64,8 @@ public :
 
 	virtual bool isActuator(void) const = 0;
 
+	virtual vl::scalar getVelocity(void) const = 0;
+
 	virtual void setVelocity(vl::scalar velocity) = 0;
 
 	virtual void addVelocity(vl::scalar velocity) = 0;
@@ -147,6 +149,8 @@ public :
 
 	virtual bool isActuator(void) const { return false; }
 
+	virtual vl::scalar getVelocity(void) const { return 0; }
+
 	virtual void setVelocity(vl::scalar velocity) {}
 
 	virtual void addVelocity(vl::scalar velocity) {}
@@ -204,6 +208,9 @@ public :
 
 	virtual bool isActuator(void) const
 	{ return _actuator; }
+
+	virtual vl::scalar getVelocity(void) const
+	{ return vl::sign(_target_position)*_speed; }
 
 	/// Sets the target to maximum and controls the approaching velocity
 	/// provides a servo motor control for the constraint
@@ -276,6 +283,8 @@ private :
 
 	bool _actuator;
 	vl::scalar _target_position;
+	// @fixme having speed (always positive) and switching target position 
+	// to positive and negative upper limit is a brain dead design choice.
 	vl::scalar _speed;
 
 };	// class SliderConstraint
@@ -299,6 +308,9 @@ public :
 
 	virtual bool isActuator(void) const
 	{ return _actuator; }
+
+	virtual vl::scalar getVelocity(void) const
+	{ return Ogre::Radian(vl::sign(_target)*_speed).valueRadians(); }
 
 	/// Sets the target to maximum and controls the approaching velocity
 	/// provides a servo motor control for the constraint
@@ -377,6 +389,7 @@ private :
 
 	bool _actuator;
 	Ogre::Radian _target;
+	// @fixme same bs here speed should be velocity
 	Ogre::Radian _speed;
 
 };	// class HingeConstraint

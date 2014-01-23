@@ -32,7 +32,6 @@
 #include <OIS/OISKeyboard.h>
 
 #include "input/joystick_event.hpp"
-#include "input/serial_joystick_event.hpp"
 #include "input/mouse_event.hpp"
 
 // Necessary for loading meshes to Server

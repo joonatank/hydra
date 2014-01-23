@@ -116,24 +116,6 @@ target_link_libraries( test_euler_angles ${Ogre_LIBRARY} ${Boost_FILESYSTEM_LIBR
 
 #add_test( env_settings ${PROJECT_BINARY_DIR}/test_env_settings )
 
-# @todo Linux support missing
-if(WIN32)
-	add_executable(serial_reader
-		serial_reader.cpp
-		${HydraMain_SOURCE_DIR}/input/input.hpp
-		${HydraMain_SOURCE_DIR}/input/joystick.hpp
-		${HydraMain_SOURCE_DIR}/input/joystick.cpp
-		${HydraMain_SOURCE_DIR}/input/serial_joystick.cpp
-		${HydraMain_SOURCE_DIR}/input/serial_joystick.hpp
-		${HydraMain_SOURCE_DIR}/base/serial.cpp
-		${HydraMain_SOURCE_DIR}/base/serial.hpp
-		)
-
-	target_link_libraries(serial_reader
-		${Boost_FILESYSTEM_LIBRARIES}
-		${Boost_PROGRAM_OPTIONS_LIBRARIES}
-		)
-endif()
 
 # Test project settings
 # FIXME these use old interface

@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-01
  *	@file typedefs.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -187,20 +187,10 @@ namespace vl
 	typedef boost::shared_ptr<Serial> SerialRefPtr;
 
 	class InputDevice;
-	class Joystick;
 	class PCAN;
-	class GameJoystick;
-	class SerialJoystick;
-	class JoystickHandler;
-	class ConstraintJoystickHandler;
 	class MouseHandler;
 	typedef boost::shared_ptr<InputDevice> InputDeviceRefPtr;
-	typedef boost::shared_ptr<Joystick> JoystickRefPtr;
 	typedef boost::shared_ptr<PCAN> PCANRefPtr;
-	typedef boost::shared_ptr<GameJoystick> GameJoystickRefPtr;
-	typedef boost::shared_ptr<SerialJoystick> SerialJoystickRefPtr;
-	typedef boost::shared_ptr<JoystickHandler> JoystickHandlerRefPtr;
-	typedef boost::shared_ptr<ConstraintJoystickHandler> ConstraintJoystickHandlerRefPtr;
 	typedef boost::shared_ptr<MouseHandler> MouseHandlerRefPtr;
 
 namespace gui

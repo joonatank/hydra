@@ -27,7 +27,6 @@
 // Necessary for copying ipd
 #include "player.hpp"
 
-#include "input/serial_joystick_event.hpp"
 #include "input/ois_converters.hpp"
 #include "input/mouse_event.hpp"
 

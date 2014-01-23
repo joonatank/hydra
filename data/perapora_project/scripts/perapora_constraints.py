@@ -168,47 +168,29 @@ pulttaus_hinge.actuator = True
 # Hide links
 game.scene.hideSceneNodes("nivel*")
 
-# Joystick control
-# Falls back to game joysticks, if none exists the movements
-# are just disabled...
-try :
-	left_joy = game.event_manager.getJoystick("COM4:0")
-	right_joy = game.event_manager.getJoystick("COM4:1")
-	left_joy.zero_size = 0.1
-	right_joy.zero_size = 0.1
+def joystick_control(evt, i):
+	speed = 0.4
+	if evt.type == JOYSTICK_EVENT_TYPE.AXIS:
+		# TODO set buttons
+		if evt.state.is_button_down(0) :
+			#print("Move boom.")
+			x = evt.state.axes[2]
+			z = evt.state.axes[1]
+			y = evt.state.axes[0]
+			# TODO
+			# there is no 4th component in the vector
+			#w = evt.state.axes[4]
+			puomi_hinge.velocity = y*speed
+			kaanto_hinge.velocity = z*speed
+			zoom.velocity = x*speed
+			#pulttaus_hinge = w*speed
+		#if evt.state.is_button_down(7) :
+		#	motor_hinge
+		
 
-	joy_handler = ConstraintJoystickHandler.create()
-	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(zoom, 1)
-	joy_handler.set_axis_constraint(pulttaus_hinge, 0)
-	joy_handler.set_axis_constraint(motor_hinge, 1, 0)
-	left_joy.add_handler(joy_handler)
+trigger = game.event_manager.createJoystickTrigger()
+trigger.addListener(joystick_control)
 
-	joy_handler = ConstraintJoystickHandler.create()
-	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(puomi_hinge, 1)
-	joy_handler.set_axis_constraint(kaanto_hinge, 0)
-	right_joy.add_handler(joy_handler)
-except :
-	# Lets just assume that the serial port doesn't exist as the c++
-	# exceptions has not been exposed to python
-	# Should expose the exceptions as it can throw because there was no such
-	# serial port and because there wasn't enough joysticks in there.
-	print("No COM4 serial port. Creating GameJoystick interface.")
-	# Create game joystick
-	# The game joystick needs completely different mapping and is
-	# alone where the serial joysticks are together
-	joy = game.event_manager.getJoystick()
-	joy.zero_size = 0.1
-
-	joy_handler = ConstraintJoystickHandler.create()
-	joy_handler.velocity_multiplier = 0.4
-	joy_handler.set_axis_constraint(puomi_hinge, 1)
-	joy_handler.set_axis_constraint(kaanto_hinge, 0)
-	joy_handler.set_axis_constraint(zoom, 1, 0)
-	joy_handler.set_axis_constraint(pulttaus_hinge, 0, 0)
-	joy_handler.set_axis_constraint(motor_hinge, 1, 1)
-	joy.add_handler(joy_handler)
 
 def boom_up():
 	puomi_hinge.target = Radian(-1)

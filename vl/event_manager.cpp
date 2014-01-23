@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file event_manager.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -18,9 +18,6 @@
 #include "base/exceptions.hpp"
 
 #include "base/string_utils.hpp"
-
-#include "input/serial_joystick.hpp"
-#include "input/joystick.hpp"
 
 #include "input/ois_converters.hpp"
 
@@ -303,23 +300,6 @@ vl::EventManager::destroyTimeTrigger(vl::TimeTrigger *trigger)
 	}
 }
 
-
-vl::JoystickRefPtr
-vl::EventManager::getJoystick(std::string const &name)
-{
-	std::string str(name);
-	vl::to_lower(str);
-	
-	if(str.substr(0, 3) != "com")
-	{
-		return _getGameJoystick("default");
-	}
-	else
-	{
-		return _getSerialJoystick(str);
-	}
-}
-
 vl::PCANRefPtr
 vl::EventManager::getPCAN(void)
 {
@@ -348,19 +328,12 @@ vl::EventManager::removeAll(void)
 	delete _frame_trigger;
 	_frame_trigger = 0;
 
-	// Joysticks are destroyed when they go out of scope
-	_joysticks.clear();
-
-	_serial_joysticks.clear();
-
 	for(std::vector<TimeTrigger *>::iterator iter = _time_triggers.begin();
 		iter != _time_triggers.end(); ++iter)
 	{
 		delete *iter;
 	}
 	_time_triggers.clear();
-
-	_game_joystick.reset();
 
 	for(std::vector<MouseTrigger *>::iterator iter = _mouse_triggers.begin();
 		iter != _mouse_triggers.end(); ++iter)
@@ -378,103 +351,9 @@ vl::EventManager::removeAll(void)
 
 }
 
-
-vl::JoystickRefPtr
-vl::EventManager::_getSerialJoystick(std::string const &name)
-{
-	std::string serial_port;
-	std::string real_name;
-	if(name.size() > 3)
-	{
-		serial_port = name.substr(0, 4);
-	}
-	else
-	{
-		serial_port = "com1";
-	}
-
-	/// No joystick specified default to 0
-	if(name.size() < 6)
-	{
-		real_name = serial_port + ":0";
-	}
-	else
-	{ real_name = name; }
-
-	/// try to find already created joystick
-	{
-		std::map<std::string, JoystickRefPtr>::iterator joy_iter = _joysticks.find(real_name);
-		if(joy_iter != _joysticks.end())
-		{
-			return joy_iter->second;
-		}
-	}
-
-	std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.find(serial_port);
-	
-	// Create the serial connection
-	if(iter == _serial_joysticks.end())
-	{
-		SerialJoystickRefPtr sj = SerialJoystick::create(real_name);
-		_serial_joysticks[serial_port] = sj; 
-	}
-
-	// Get the joystick from connection
-	iter = _serial_joysticks.find(serial_port);
-	if(iter != _serial_joysticks.end())
-	{
-		std::stringstream ss(real_name.substr(5));
-		int number;
-		ss >> number;
-		if(number >= iter->second->getNJoysticks())
-		{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Too few joysticks in the serial connection.")); }
-		
-		JoystickRefPtr joy = iter->second->getJoystick(number);
-		_joysticks[real_name] = joy;
-		return joy;
-	}
-
-}
-
-vl::JoystickRefPtr
-vl::EventManager::_getGameJoystick(std::string const &name)
-{
-	std::map<std::string, JoystickRefPtr>::iterator iter = _joysticks.find(name);
-	if(iter != _joysticks.end())
-	{
-		return iter->second;
-	}
-	else
-	{
-		// Create game joystick if not already created
-		if(!_game_joystick)
-		{ _game_joystick = Joystick::create(); }
-
-		_joysticks[name] = _game_joystick;
-		return _game_joystick;
-	}
-}
-
-void
-vl::EventManager::update_joystick(vl::SerialJoystickEvent const &evt)
-{
-	// @todo should we add it if it doesn't exist already?
-	if(_game_joystick)
-	{
-		// Copy values from OIS to our structure
-		_game_joystick->_update(evt);
-	}
-}
-
 void
 vl::EventManager::mainloop(vl::time const &elapsed_time)
 {
-	for(std::map<std::string, SerialJoystickRefPtr>::iterator iter = _serial_joysticks.begin();
-		iter != _serial_joysticks.end(); ++iter)
-	{
-		iter->second->mainloop();
-	}
-
 	for(std::vector<TimeTrigger *>::iterator iter = _time_triggers.begin();
 		iter != _time_triggers.end(); ++iter)
 	{
