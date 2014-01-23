@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file game_manager.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -35,30 +35,24 @@
 // Physics
 #include "physics/physics_world.hpp"
 
+/// Move to FileManager
 /// File Loaders
 #include "dotscene_loader.hpp"
 #include "hsf_loader.hpp"
 #include "collada/dae_importer.hpp"
-
 #include "cad_importer.hpp"
 
 // File writers
 #include "collada/dae_exporter.hpp"
+#include "hsf_writer.hpp"
 
 #include "animation/kinematic_world.hpp"
 
 // Necessary for passing Settings to a callback signal
 #include "settings.hpp"
 
-
-#include "input/vrpn_analog_client.hpp"
-// Necessary for creating and processing trackers
-#include "input/tracker.hpp"
-#include "input/tracker_serializer.hpp"
 // Necessary for unloading a scene
 #include "scene_node.hpp"
-
-#include "hsf_writer.hpp"
 
 #include "game_object.hpp"
 // Necessary for reading parameters from EnvSettings
@@ -69,11 +63,10 @@
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt)
 	: _session(session)
 	, _python(0)
-	, _resource_man(new vl::ResourceManager)
-	, _event_man(new vl::EventManager)
+	, _resource_manager(new vl::ResourceManager)
+	, _input_manager(new vl::EventManager(_resource_manager.get()))
 	, _scene_manager(0)
 	, _player(0)
-	, _trackers( new vl::Clients( _event_man ) )
 	, _logger(logger)
 	, _auto_start(true)
 	, _options(opt)
@@ -85,7 +78,7 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 
 	_kinematic_world.reset(new vl::KinematicWorld(this));
 
-	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_man)));
+	_mesh_manager.reset(new MeshManager(new MasterMeshLoaderCallback(_resource_manager)));
 	_python = new vl::PythonContextImpl( this );
 
 	_material_manager.reset(new MaterialManager(_session));
@@ -128,11 +121,9 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 
 vl::GameManager::~GameManager(void )
 {
-	_trackers.reset();
-
 	delete _scene_manager;
 	delete _python;
-	delete _event_man;
+	delete _input_manager;
 	delete _fsm;
 }
 
@@ -160,14 +151,6 @@ vl::GameManager::step(void)
 	// Process input devices
 	getEventManager()->mainloop(getDeltaTime());
 
-	// Process Tracking
-	// If we have a tracker object update it, the update will handle all the
-	// callbacks and appropriate updates (head matrix and scene nodes).
-	// needs to be processed even if paused so we have perspective modifications
-	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
-	{
-		_trackers->getTrackerPtr(i)->mainloop();
-	}
 
 	if(_eye_tracker)
 	{ _eye_tracker->progress(); }
@@ -179,10 +162,7 @@ vl::GameManager::step(void)
 	}
 
 	if(isPlaying())
-	{
-		for(size_t i = 0; i < _analog_clients.size(); ++i )
-		{ _analog_clients.at(i)->mainloop(); }
-		
+	{	
 		vl::chrono c;
 		_kinematic_world->step(getDeltaTime());
 		_rendering_report[PT_KINEMATICS].push(c.elapsed());
@@ -466,7 +446,7 @@ vl::GameManager::_destroyDynamicObjects(void)
 	}
 
 	/// Destroy dynamic events i.e. all events except those we have created
-	_event_man->removeAll();
+	_input_manager->removeTriggers();
 	_createQuitEvent();
 
 	// Reset player
@@ -509,15 +489,6 @@ vl::GameManager::loadScenes(vl::config::ProjSettings const &proj, LOADER_FLAGS f
 	{
 		loadScene(proj.getCase().getScene(i), flags);
 	}
-}
-
-vl::vrpn_analog_client_ref_ptr
-vl::GameManager::createAnalogClient(std::string const &name)
-{
-	vrpn_analog_client_ref_ptr ptr(new vrpn_analog_client);
-	ptr->_create(name);
-	_analog_clients.push_back(ptr);
-	return ptr;
 }
 
 void
@@ -865,7 +836,7 @@ vl::GameManager::_removeAll(void)
 	// @todo this is problematic because it removes both Quit and Console events
 	// also, which are rather necessary for us.
 	std::clog << "vl::GameManager::removeAll : destroy events" << std::endl;
-	_event_man->removeAll();
+	_input_manager->removeTriggers();
 	_createQuitEvent();
 
 	// Game objects need to be first because they can own bodies and nodes
@@ -933,24 +904,9 @@ vl::GameManager::_removeAll(void)
 void
 vl::GameManager::_createTrackers(vl::config::EnvSettings const &env)
 {
-	assert(_trackers);
-
 	std::vector<std::string> tracking_files = env.getTrackingFiles();
 
-	std::cout << vl::TRACE << "Processing " << tracking_files.size()
-		<< " tracking files." << std::endl;
-
-	/// @todo This part is the great time consumer, need to pin point the time hog
-	for( std::vector<std::string>::const_iterator iter = tracking_files.begin();
-		 iter != tracking_files.end(); ++iter )
-	{
-		// Read a file
-		vl::TextResource resource;
-		getResourceManager()->loadResource(*iter, resource);
-
-		vl::TrackerSerializer ser(_trackers);
-		ser.parseTrackers(resource);
-	}
+	_input_manager->loadTrackingFiles(tracking_files);
 }
 
 void
@@ -1049,9 +1005,9 @@ vl::GameManager::_initialiseOculus(void)
 		// Create Tracker Trigger
 		_oculus_tracker = new TrackerTrigger;
 		// Check that we don't already have a trigger
-		if(_event_man->hasTrackerTrigger("headTrigger"))
+		if(_input_manager->hasTrackerTrigger("headTrigger"))
 		{ BOOST_THROW_EXCEPTION(vl::exception()); }
-		_oculus_tracker = _event_man->createTrackerTrigger("headTrigger");
+		_oculus_tracker = _input_manager->createTrackerTrigger("headTrigger");
 	}
 	// Ignore exceptions
 	catch(vl::exception const &e)

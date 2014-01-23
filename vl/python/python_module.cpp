@@ -709,14 +709,12 @@ void export_game(void)
 		/// @todo add step function, needs to rename the current one in GameManager which is internal
 		/// called from Config...
 		/// python step function should step the simulation with a delta time (or a default one like 1/60 s)
-		.add_property("tracker_clients", &vl::GameManager::getTrackerClients)
 		.add_property("mesh_manager", &vl::GameManager::getMeshManager)
 		.add_property("material_manager", &vl::GameManager::getMaterialManager)
 		.add_property("eye_tracker", &vl::GameManager::getEyeTracker)
 		.def("load_scene", loadScene_ov0)
 		.def("load_scene", loadScene_ov1)
 		.def("save_scene", &vl::GameManager::saveScene)
-		.def("create_analog_client", &vl::GameManager::createAnalogClient)
 	;
 
 	python::class_<vl::cluster::Server, boost::noncopyable, vl::cluster::ServerRefPtr>("Server", python::no_init)

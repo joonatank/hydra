@@ -15,24 +15,33 @@
 
 #include "event_manager.hpp"
 
+/// Base stuff
 #include "base/exceptions.hpp"
-
 #include "base/string_utils.hpp"
-
-#include "input/ois_converters.hpp"
-
 #include "logger.hpp"
 
+/// Helpers
+#include "input/ois_converters.hpp"
+
+/// Input Devices
+#include "input/vrpn_analog_client.hpp"
+#include "input/tracker.hpp"
+#include "input/tracker_serializer.hpp"
 #include "input/pcan.hpp"
 
-vl::EventManager::EventManager( void )
+/// Necessary for file loading
+#include "resource_manager.hpp"
+
+vl::EventManager::EventManager(ResourceManager *res_man)
 	: _frame_trigger(0)
 	, _key_modifiers(KEY_MOD_NONE)
+	, _trackers(new vl::Clients(this))
+	, _resource_manager(res_man)
 {}
 
 vl::EventManager::~EventManager( void )
 {
-	removeAll();
+	removeTriggers();
 
 	// Cleanup objects created from environment config
 	for(std::vector<vl::TrackerTrigger *>::iterator iter = _tracker_triggers.begin();
@@ -311,8 +320,28 @@ vl::EventManager::getPCAN(void)
 	return _pcan;
 }
 
+vl::vrpn_analog_client_ref_ptr
+vl::EventManager::createAnalogClient(std::string const &name)
+{
+	vrpn_analog_client_ref_ptr client;
+	std::map<std::string, vrpn_analog_client_ref_ptr>::iterator iter
+		= _analog_clients.find(name);
+	if(iter == _analog_clients.end())
+	{
+		client.reset(new vrpn_analog_client);
+		client->_create(name);
+		_analog_clients[name] = client;
+	}
+	else
+	{
+		client = iter->second;
+	}
+	
+	return client;
+}
+
 void
-vl::EventManager::removeAll(void)
+vl::EventManager::removeTriggers(void)
 {
 	// We don't destroy tracker triggers because this function is ment
 	// to use when reloading or reseting python context
@@ -354,18 +383,69 @@ vl::EventManager::removeAll(void)
 void
 vl::EventManager::mainloop(vl::time const &elapsed_time)
 {
+	// Processing order should be
+	// - tracking
+	// - input devices
+	// - timers
+	// - frame trigger
+	// for the moment we have no control over input devices though
+	// (might need to add buffer for them)
+
+	// Process Tracking
+	// If we have a tracker object update it, the update will handle all the
+	// callbacks and appropriate updates (head matrix and scene nodes).
+	// needs to be processed even if paused so we have perspective modifications
+	for( size_t i = 0; i < _trackers->getNTrackers(); ++i )
+	{
+		_trackers->getTrackerPtr(i)->mainloop();
+	}
+	
+	// Process analog tracking devices
+	for(std::map<std::string, vrpn_analog_client_ref_ptr>::iterator iter = _analog_clients.begin(); 
+		iter != _analog_clients.end(); ++iter )
+	{ iter->second->mainloop(); }
+	
+	
+
+	if(_pcan)
+	{ _pcan->mainloop(); }
+
 	for(std::vector<TimeTrigger *>::iterator iter = _time_triggers.begin();
 		iter != _time_triggers.end(); ++iter)
 	{
 		(*iter)->update(elapsed_time);
 	}
 
-	if(_pcan)
-	{ _pcan->mainloop(); }
-
 	if(_frame_trigger)
 	{ _frame_trigger->update(elapsed_time); }
 }
+
+
+
+/// ------------------------------- File Loading -----------------------------
+void
+vl::EventManager::loadTrackingFiles(std::vector<std::string> const &files)
+{
+	assert(_resource_manager && _trackers);
+
+	std::cout << vl::TRACE << "Processing " << files.size()
+		<< " tracking files." << std::endl;
+
+	/// @todo This part is the great time consumer, need to pin point the time hog
+	for( std::vector<std::string>::const_iterator iter = files.begin();
+		 iter != files.end(); ++iter )
+	{
+		// Read a file
+		vl::TextResource resource;
+		_resource_manager->loadResource(*iter, resource);
+
+		vl::TrackerSerializer ser(_trackers);
+		ser.parseTrackers(resource);
+	}
+}
+
+
+
 
 /// --------------------------- Protected ------------------------------------
 vl::TrackerTrigger *

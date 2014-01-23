@@ -36,7 +36,9 @@ namespace vl
 class HYDRA_API EventManager
 {
 public :
-	EventManager( void );
+	/// @brief Constructor
+	/// @param res_man ResourceManager used for FileLoading
+	EventManager(ResourceManager *res_man);
 
 	~EventManager( void );
 
@@ -105,11 +107,23 @@ public :
 
 	PCANRefPtr getPCAN(void);
 
+	vl::ClientsRefPtr getTrackerClients(void)
+	{ return _trackers; }
+
+	/// @brief create an vrpn analog object or retrieve an already created
+	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
+
 	/// @brief called from GameManager to update input devices
 	void mainloop(vl::time const &elapsed_time);
 
 	/// @brief remove all triggers
-	void removeAll(void);
+	void removeTriggers(void);
+
+
+	/// File Loaders
+
+	/// @brief Load tracking files
+	void loadTrackingFiles(std::vector<std::string> const &files);
 
 private :
 	vl::TrackerTrigger *_findTrackerTrigger( std::string const &name );
@@ -142,7 +156,15 @@ private :
 
 	PCANRefPtr _pcan;
 
+
+	/// Tracking
+	vl::ClientsRefPtr _trackers;
+	/// name client map
+	std::map<std::string, vrpn_analog_client_ref_ptr> _analog_clients;
 	
+	/// Resources
+	ResourceManager *_resource_manager;
+
 };	// class EventManager
 
 inline std::ostream &

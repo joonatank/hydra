@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-12
  *	@file game_manager.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -61,8 +61,6 @@
 #include "eye_tracker.hpp"
 // Necessary for creating a proper implementation of callback functor
 #include "cad_importer.hpp"
-
-//#include "oculus.hpp"
 
 namespace vl
 {
@@ -147,10 +145,10 @@ public :
 	{ return assert_return(_player); }
 
 	ResourceManagerRefPtr getResourceManager(void)
-	{ return assert_return(_resource_man); }
+	{ return assert_return(_resource_manager); }
 
 	EventManagerPtr getEventManager(void)
-	{ return assert_return(_event_man); }
+	{ return assert_return(_input_manager); }
 
 	vl::SceneManagerPtr getSceneManager(void)
 	{ return assert_return(_scene_manager); }
@@ -172,9 +170,6 @@ public :
 
 	/// @brief Step the simulation forward
 	void step(void);
-
-	vl::ClientsRefPtr getTrackerClients( void )
-	{ return assert_return(_trackers); }
 
 	vl::Logger *getLogger(void)
 	{ return assert_return(_logger); }
@@ -324,8 +319,6 @@ public :
 	vl::time const &getDeltaTime(void) const
 	{ return _delta_time; }
 
-	vrpn_analog_client_ref_ptr createAnalogClient(std::string const &name);
-
 	/// @todo this is bad
 	/// We can not allow reseting the options like this.
 	/// We need to either use a init function that takes these options as a parameter
@@ -440,17 +433,18 @@ private :
 	// Where objects are registered
 	vl::Session *_session;
 
+	/// Managers
 	vl::PythonContextPtr _python;
-	vl::ResourceManagerRefPtr _resource_man;
-	vl::EventManagerPtr _event_man;
+	vl::ResourceManagerRefPtr _resource_manager;
+	vl::EventManagerPtr _input_manager;
 	vl::SceneManagerPtr _scene_manager;
+	vl::MeshManagerRefPtr _mesh_manager;
+	vl::MaterialManagerRefPtr _material_manager;
+
 
 	PlayerPtr _player;
 
 	CadImporterRefPtr _cad_importer;
-
-	/// Tracking
-	vl::ClientsRefPtr _trackers;
 
 	vl::gui::GUIRefPtr _gui;
 
@@ -458,9 +452,6 @@ private :
 	vl::Report<vl::time> _init_report;
 
 	vl::Logger *_logger;
-
-	vl::MeshManagerRefPtr _mesh_manager;
-	vl::MaterialManagerRefPtr _material_manager;
 
 	/// Timers
 	vl::chrono _program_timer;
@@ -473,8 +464,6 @@ private :
 
 	/// Non physics constraints
 	KinematicWorldRefPtr _kinematic_world;
-
-	std::vector<vrpn_analog_client_ref_ptr> _analog_clients;
 
 	EyeTrackerRefPtr _eye_tracker;
 

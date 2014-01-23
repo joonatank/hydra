@@ -84,6 +84,8 @@ void export_managers(void)
 			python::return_value_policy<python::reference_existing_object>())
 		.def("createJoystickTrigger", &vl::EventManager::createJoystickTrigger,
 			python::return_value_policy<python::reference_existing_object>())
+		.add_property("tracker_clients", &vl::EventManager::getTrackerClients)
+		.def("create_analog_client", &vl::EventManager::createAnalogClient)
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	
