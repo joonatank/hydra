@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2010 - 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2010-05
  *	@file vrpn_tracker.cpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
@@ -20,10 +20,10 @@
  *	specific sensors.
  */
 
-#ifndef VL_VRPN_TRACKER_HPP
-#define VL_VRPN_TRACKER_HPP
+#ifndef HYDRA_VRPN_TRACKER_HPP
+#define HYDRA_VRPN_TRACKER_HPP
 
-#ifdef VL_WIN32
+#ifdef _WIN32
 #include <WinSock2.h>
 #include <Windows.h>
 #endif
@@ -97,4 +97,4 @@ private :
 
 }	// namespace vl
 
-#endif
+#endif	// HYDRA_VRPN_TRACKER_HPP

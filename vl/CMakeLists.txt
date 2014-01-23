@@ -15,10 +15,6 @@ cmake_minimum_required(VERSION 2.6)
 
 set(SRC
 	object_interface.cpp
-	tracker.cpp
-	vrpn_tracker.cpp
-	vrpn_analog_client.cpp
-	tracker_serializer.cpp
 	settings.cpp
 	resource.cpp
 	game_manager.cpp
@@ -92,10 +88,19 @@ if(WIN32)
 		input/mouse.hpp
 		input/mouse_event.hpp
 		input/joystick_event.hpp
+		input/tracker.hpp
+		input/tracker_serializer.hpp
+		input/vrpn_tracker.hpp
+		input/vrpn_analog_client.hpp
+		input/keycode.hpp
 		)
 	set(INPUT_SRC
 		input/pcan.cpp
 		input/mouse.cpp
+		input/tracker.cpp
+		input/vrpn_tracker.cpp
+		input/vrpn_analog_client.cpp
+		input/tracker_serializer.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()
@@ -214,7 +219,6 @@ source_group(HydraMain\\python FILES ${PYTHON_HEADERS} ${PYTHON_SRC})
 set( HEADERS
 	defines.hpp
 	object_interface.hpp
-	tracker.hpp
 	entity.hpp
 	light.hpp
 	camera.hpp
@@ -228,9 +232,6 @@ set( HEADERS
 	mesh_manager.hpp
 	material.hpp
 	material_manager.hpp
-	tracker_serializer.hpp
-	vrpn_tracker.hpp
-	vrpn_analog_client.hpp
 	settings.hpp
 	game_manager.hpp
 	player.hpp
@@ -242,7 +243,6 @@ set( HEADERS
 	scene_node.hpp
 	trigger.hpp
 	event_manager.hpp
-	keycode.hpp
 	logger.hpp
 	distrib_settings.hpp
 	program_options.hpp

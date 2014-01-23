@@ -50,10 +50,11 @@
 // Necessary for passing Settings to a callback signal
 #include "settings.hpp"
 
-#include "vrpn_analog_client.hpp"
+
+#include "input/vrpn_analog_client.hpp"
 // Necessary for creating and processing trackers
-#include "tracker.hpp"
-#include "tracker_serializer.hpp"
+#include "input/tracker.hpp"
+#include "input/tracker_serializer.hpp"
 // Necessary for unloading a scene
 #include "scene_node.hpp"
 

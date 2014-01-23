@@ -23,6 +23,35 @@
 namespace vl
 {
 
+/// Keyboard modifiers
+enum KEY_MOD
+{
+	KEY_MOD_NONE = 0,		// No modifier is on
+	KEY_MOD_META = 1 << 1,	// Alt modifier, either alt
+	KEY_MOD_CTRL = 1 << 2,	// Control modifier, either control
+	KEY_MOD_SHIFT = 1 << 3,	// Shift modifier, either shift
+	KEY_MOD_SUPER = 1 << 4,	// Windows key modifier
+	// TODO missing menu modifier if one likes it
+};
+
+inline vl::KEY_MOD getModifier( OIS::KeyCode kc )
+{
+	// Shift
+	if( kc == OIS::KC_LSHIFT || kc == OIS::KC_RSHIFT )
+	{ return vl::KEY_MOD_SHIFT; }
+	// Alt
+	else if( kc == OIS::KC_LMENU || kc == OIS::KC_RMENU )
+	{ return vl::KEY_MOD_META; }
+	// Control
+	else if( kc == OIS::KC_RCONTROL || kc == OIS::KC_LCONTROL )
+	{ return vl::KEY_MOD_CTRL; }
+	// Windows
+	else if( kc == OIS::KC_LWIN || kc == OIS::KC_RWIN )
+	{ return vl::KEY_MOD_SUPER;	}
+
+	return vl::KEY_MOD_NONE;
+}
+
 inline std::string getKeyName( OIS::KeyCode key )
 {
 	using namespace OIS;

@@ -26,19 +26,14 @@
 #include "event_manager.hpp"
 #include "trigger.hpp"
 
-// Necessary because referenced by the Actions
-#include "scene_manager.hpp"
-#include "game_manager.hpp"
-#include "player.hpp"
-
 // Necessary for transforming OIS keycodes to python
-#include "keycode.hpp"
+#include "input/keycode.hpp"
 
 // Input
 #include "input/pcan.hpp"
 //#include "input/mouse_event.hpp"
 
-#include "vrpn_analog_client.hpp"
+#include "input/vrpn_analog_client.hpp"
 
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>

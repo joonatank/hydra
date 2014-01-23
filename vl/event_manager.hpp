@@ -23,7 +23,7 @@
 
 #include "trigger.hpp"
 
-#include "tracker.hpp"
+#include "input/tracker.hpp"
 
 #include "input/joystick_event.hpp"
 
@@ -32,24 +32,6 @@
 
 namespace vl
 {
-
-inline vl::KEY_MOD getModifier( OIS::KeyCode kc )
-{
-	// Shift
-	if( kc == OIS::KC_LSHIFT || kc == OIS::KC_RSHIFT )
-	{ return vl::KEY_MOD_SHIFT; }
-	// Alt
-	else if( kc == OIS::KC_LMENU || kc == OIS::KC_RMENU )
-	{ return vl::KEY_MOD_META; }
-	// Control
-	else if( kc == OIS::KC_RCONTROL || kc == OIS::KC_LCONTROL )
-	{ return vl::KEY_MOD_CTRL; }
-	// Windows
-	else if( kc == OIS::KC_LWIN || kc == OIS::KC_RWIN )
-	{ return vl::KEY_MOD_SUPER;	}
-
-	return vl::KEY_MOD_NONE;
-}
 
 class HYDRA_API EventManager
 {
