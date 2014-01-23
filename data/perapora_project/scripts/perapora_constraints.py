@@ -170,20 +170,20 @@ game.scene.hideSceneNodes("nivel*")
 
 def joystick_control(evt, i):
 	speed = 0.4
+	# TODO this doesn't clear the speed when button is lifted
 	if evt.type == JOYSTICK_EVENT_TYPE.AXIS:
 		# TODO set buttons
 		if evt.state.is_button_down(0) :
-			#print("Move boom.")
-			x = evt.state.axes[2]
+			x = evt.state.axes[0]
 			z = evt.state.axes[1]
-			y = evt.state.axes[0]
-			# TODO
-			# there is no 4th component in the vector
-			#w = evt.state.axes[4]
-			puomi_hinge.velocity = y*speed
-			kaanto_hinge.velocity = z*speed
-			zoom.velocity = x*speed
-			#pulttaus_hinge = w*speed
+			y = evt.state.axes[2]
+			w = evt.state.axes[3]
+			#print("Axes : ({}, {}, {}, {})".format(x, y, z, w))
+			puomi_hinge.velocity = x*speed
+			kaanto_hinge.velocity = y*speed
+			zoom.velocity = z*speed
+			# pulttaus doesn't do anything
+			pulttaus_hinge = w*speed
 		#if evt.state.is_button_down(7) :
 		#	motor_hinge
 		

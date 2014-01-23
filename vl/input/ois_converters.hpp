@@ -48,7 +48,7 @@ convert_ois_to_hydra(OIS::JoyStickEvent const &evt)
 	vecsize = evt.state.mAxes.size();
 	e.state.axes.resize(vecsize);
 	for(size_t i = 0; i < vecsize; ++i)
-	{e.state.axes.at(i) = vl::scalar(evt.state.mAxes.at(i).abs/OIS::JoyStick::MAX_AXIS); }
+	{e.state.axes.at(i) = vl::scalar(evt.state.mAxes.at(i).abs)/OIS::JoyStick::MAX_AXIS; }
 	
 	
 	vecsize = evt.state.mVectors.size();
