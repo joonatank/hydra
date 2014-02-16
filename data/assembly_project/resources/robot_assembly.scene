@@ -1,0 +1,111 @@
+<?xml version="1.0" ?>
+<scene formatVersion="1.0.0">
+	<environment>
+		<colourAmbient b="0" g="0" r="0"/>
+		<colourBackground b="0.0508761" g="0.0508761" r="0.0508761"/>
+	</environment>
+	<nodes>
+		<node name="IRB6650S_90-390_M2005_REV1_01">
+			<position x="-0" y="0" z="0"/>
+			<quaternion w="1" x="-0" y="0" z="0"/>
+			<scale x="1" y="1" z="1"/>
+			<node name="1_vaihe">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-1-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-1-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-1-1 ()"/>
+				</node>
+			</node>
+			<node name="2_vaihe">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-12-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-12-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-12-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-16-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-16-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-16-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-2-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-2-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-2-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-8-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-8-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-8-1 ()"/>
+				</node>
+			</node>
+			<node name="3_vaihe">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-3-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-3-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-3-1 ()"/>
+				</node>
+			</node>
+			<node name="4_vaihe">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-10-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-10-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-10-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-4-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-4-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-4-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-5-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-5-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-5-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-9-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-9-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-9-1 ()"/>
+				</node>
+			</node>
+			<node name="5_vaihe">
+				<position x="-0" y="0" z="0"/>
+				<quaternion w="1" x="-0" y="0" z="0"/>
+				<scale x="1" y="1" z="1"/>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-6-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-6-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-6-1 ()"/>
+				</node>
+				<node name="Instance of IRB6650S_90-390_M2005_REV1_01-7-1 ()">
+					<position x="-0" y="0" z="0"/>
+					<quaternion w="1" x="-0" y="0" z="0"/>
+					<scale x="1" y="1" z="1"/>
+					<entity meshFile="IRB6650S_90-390_M2005_REV1_01-7-1 ().mesh" name="IRB6650S_90-390_M2005_REV1_01-7-1 ()"/>
+				</node>
+			</node>
+		</node>
+	</nodes>
+</scene>

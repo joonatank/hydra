@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!--
+Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
+2014-02
+
+Assembly project
+-->
+<project_config name="ogre">
+
+	<scenes>
+		<scene name="assembly" use="true" use_new_mesh_manager="true">
+			<file>robot_assembly.scene</file>
+		</scene>
+	</scenes>
+
+	<scripts>
+		<!--
+		N scripts files can be present
+		They all are of python scripts and have extensions .py
+
+		They are in scripts directory relative to the project directory
+		-->
+		<file use="true">assembly.py</file>
+	</scripts>
+
+</project_config>

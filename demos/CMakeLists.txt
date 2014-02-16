@@ -78,6 +78,10 @@ copy_start_scripts( hydra
 	tree_ui_project/tree_ui.prj
 	"tree_ui" )
 
+copy_start_scripts( hydra
+	assembly_project/assembly.prj
+	"assembly" )
+
 add_executable( fake_tracking_server
 	fake_tracking_server.cpp
 	${HydraMain_SOURCE_DIR}/base/sleep.hpp
