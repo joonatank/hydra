@@ -92,46 +92,6 @@ struct Tracking
 
 };	// struct Tracking
 
-/// @todo Channel should have projection parameter
-/// At the moment we need to use wall if we want to set projection
-struct HYDRA_API Channel
-{
-	Channel(std::string const &nam, Rect<double> const &a, 
-		Wall const &w, vl::Colour const &colour)
-		: name(nam), wall(w), area(a), background_colour(colour)
-	{}
-
-	/// Minimal constructor
-	Channel(std::string const &nam)
-		: name(nam)
-		, area(1, 1, 0, 0)
-		, background_colour(0, 0, 0)
-	{}
-
-	/// Default constructor for vector resizes
-	Channel( void )
-	{}
-
-	bool empty( void ) const
-	{ return( name.empty() && wall.empty() && area == Rect<double>() ); }
-
-	std::string name;
-
-	Wall wall;
-
-	Rect<double> area;
-
-	vl::Colour background_colour;
-
-	// User projection matrices that can be used instead of wall or fov
-	// @todo not sure if this is proper place for them though.
-	Ogre::Matrix4 user_projection_left;
-	Ogre::Matrix4 user_projection_right;
-
-};	// struct Channel
-
-std::ostream &operator<<(std::ostream &os, Channel const &c);
-
 struct HYDRA_API Projection
 {
 	enum Type
@@ -155,9 +115,18 @@ struct HYDRA_API Projection
 		, use_asymmetric_stereo(false)
 	{}
 
+	bool empty(void) const
+	{
+		if(type == PERSPECTIVE && fov == 60 && perspective_type == FOV 
+			&& !use_asymmetric_stereo && wall.empty())
+		{ return true; }
+	}
+
 	Type type;
 
 	PerspectiveType perspective_type;
+
+	Wall wall;
 
 	// Field-of-View in Degrees
 	double fov;
@@ -170,6 +139,46 @@ struct HYDRA_API Projection
 };	// struct Projection
 
 std::ostream &operator<<(std::ostream &os, Projection const &p);
+
+/// @todo Channel should have projection parameter
+/// At the moment we need to use wall if we want to set projection
+struct HYDRA_API Channel
+{
+	Channel(std::string const &nam, Rect<double> const &a, 
+		Projection const &p, vl::Colour const &colour)
+		: name(nam), projection(p), area(a), background_colour(colour)
+	{}
+
+	/// Minimal constructor
+	Channel(std::string const &nam)
+		: name(nam)
+		, area(1, 1, 0, 0)
+		, background_colour(0, 0, 0)
+	{}
+
+	/// Default constructor for vector resizes
+	Channel( void )
+	{}
+
+	bool empty( void ) const
+	{ return( name.empty() && projection.empty() && area == Rect<double>() ); }
+
+	std::string name;
+
+	Projection projection;
+
+	Rect<double> area;
+
+	vl::Colour background_colour;
+
+	// User projection matrices that can be used instead of wall or fov
+	// @todo not sure if this is proper place for them though.
+	Ogre::Matrix4 user_projection_left;
+	Ogre::Matrix4 user_projection_right;
+
+};	// struct Channel
+
+std::ostream &operator<<(std::ostream &os, Channel const &c);
 
 /// The rendering element that can be individually rendered
 /// usually either a window or a FBO
@@ -186,15 +195,19 @@ struct HYDRA_API Renderer
 
 	Renderer(void)
 		: type(WINDOW)
-		, projection()
 		, hardware_gamma(false)
 		, stereo_type(ST_DEFAULT)
+		, ipd(0.065)
+		, fps(60)
 	{}
 
 	Type type;
-	Projection projection;
 
 	bool hardware_gamma;
+
+	// Inter pupilar distance
+	double ipd;
+	uint32_t fps;
 
 	// Stereo type
 	// Provides a global default for all Windows

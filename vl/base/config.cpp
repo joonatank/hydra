@@ -59,7 +59,7 @@ vl::config::convert_stereo(std::string const &stereo)
 std::ostream &
 vl::config::operator<<(std::ostream &os, vl::config::Channel const &c)
 {
-	os << c.name << " : " << c.wall << " : " << c.area 
+	os << c.name << " : " << c.projection << " : " << c.area 
 		<< " : " << c.background_colour << std::endl;
 	return os;
 }

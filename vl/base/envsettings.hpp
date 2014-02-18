@@ -210,19 +210,12 @@ public :
 	void setServer( Server const &server )
 	{ _server = server; }
 
-	/**	@brief set the amount of interpupilar distance used for stereo
-	 *	@param ipd the distance in meters
-	 *	@todo move to Renderer
-	 */
-	void setIPD( double ipd )
-	{ _ipd = ipd; }
-
 	/**	@brief get the amount of interpupilar distance used for stereo
 	 *	@return interpupilar distance in meters
 	 *	@todo move to Renderer
 	 */
 	double getIPD( void ) const
-	{ return _ipd; }
+	{ return _renderer.ipd; }
 
 	/**	@brief Set how much information user wants
 	 *	@param level vl::LogLevel
@@ -269,11 +262,8 @@ public :
 	/// Defaults to 60.
 	/// Only meaningful for the master as it controls the slaves.
 	uint32_t getFPS(void) const
-	{ return _fps; }
+	{ return _renderer.fps; }
 
-	void setFPS(uint32_t fps)
-	{ _fps = fps; }
-	
 	void addProgram(Program const &prog);
 	
 	std::vector<Program> getUsedPrograms(void) const;
@@ -302,18 +292,12 @@ private :
 	// @todo walls can be removed they are now stored in Window
 	std::vector<Wall> _walls;
 
-	// Inter pupilar distance
-	// @todo should be in Renderer
-	double _ipd;
-
 	// Is this structure for a slave or a master
 	bool _slave;
 
 	vl::config::LogLevel _level;
 
 	std::string _log_dir;
-
-	uint32_t _fps;
 
 };	// class EnvSettings
 
@@ -354,19 +338,13 @@ protected :
 
 	void processChannel( rapidxml::xml_node<>* XMLNode, vl::config::Window &window );
 
-	void processStereo(rapidxml::xml_node<> *xml_node);
-
-	void processIPD(rapidxml::xml_node<> *xml_node);
-
-	void processFPS(rapidxml::xml_node<> *xml_node);
-
 	void processPrograms(rapidxml::xml_node<> *xml_node);
 
 	void processProgram(rapidxml::xml_node<> *xml_node);
 
 	void processRenderer(rapidxml::xml_node<> *xml_node, Renderer &renderer);
 
-	void processProjection(rapidxml::xml_node<> *xml_node, Projection &projection);
+	void processProjection(rapidxml::xml_node<> *xml_node, Projection &projection, std::string const &channel_name);
 
 	/// Do everything that needs data from multiple sections of the file
 	/// because sections can be in any order.

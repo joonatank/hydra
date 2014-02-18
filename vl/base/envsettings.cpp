@@ -26,9 +26,7 @@
 
 /// ------------------------- EnvSettings ------------------------------------
 vl::config::EnvSettings::EnvSettings( void )
-	: _ipd(0)
-	, _slave(false)
-	, _fps(60)
+	: _slave(false)
 {}
 
 vl::config::EnvSettings::~EnvSettings( void )
@@ -488,25 +486,25 @@ vl::config::EnvSerializer::processConfig( rapidxml::xml_node<>* xml_root )
 	// because stereo is copied to Window
 	xml_elem = xml_root->first_node("stereo");
 	if( xml_elem )
-	{ processStereo( xml_elem ); }
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("old env config")); }
 
 	xml_elem = xml_root->first_node("ipd");
 	if( xml_elem )
-	{ processIPD( xml_elem ); }
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("old env config")); }
 
 	xml_elem = xml_root->first_node("fps");
 	if( xml_elem )
-	{ processFPS( xml_elem ); }
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("old env config")); }
+
+	xml_elem = xml_root->first_node("projection");
+	if( xml_elem )
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("old env config")); }
 
 	// renderer and projection needs to be processed before Nodes (master and slave)
 	// because the global configs are copied to every node
 	xml_elem = xml_root->first_node("renderer");
 	if( xml_elem )
 	{ processRenderer(xml_elem, _env->getRenderer()); }
-
-	xml_elem = xml_root->first_node("projection");
-	if( xml_elem )
-	{ processProjection(xml_elem, _env->getRenderer().projection); }
 
 	xml_elem = xml_root->first_node("master");
 	if( xml_elem )
@@ -753,66 +751,14 @@ vl::config::EnvSerializer::processChannel( rapidxml::xml_node<>* xml_node,
 		background_col = vl::Colour(col.r, col.g, col.b, col.a);
 	}
 
-	rapidxml::xml_node<> *wall_elem = xml_node->first_node("wall");
-	if( wall_elem )
-	{ wall_name = wall_elem->value(); }
+	Projection proj;
+	rapidxml::xml_node<> *proj_elem = xml_node->first_node("projection");
+	if(proj_elem)
+	{ processProjection(proj_elem, proj, channel_name); }
 	
-	window.add_channel(Channel(channel_name, r, Wall(), background_col));
-	// this needs to be a reference because we use it to set the proper
-	// channel later on
-	// Nope we should not add pointers because window is a temporary object
-	if(!wall_name.empty())
-	{
-		_wall_map[channel_name] = wall_name;
-	}
-}
-
-void
-vl::config::EnvSerializer::processStereo( rapidxml::xml_node<>* xml_node )
-{
-	// We are using the value to determine on or off state
-	// and type attribute for the stereo
-	// if no type attribute is defined default to ST_DEFAULT for ON
-	// and ST_OFF for OFF
-	// if no value is defined default to ON
-
-	StereoType type = ST_DEFAULT;
-	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
-	if(attrib)
-	{ type = convert_stereo(attrib->value()); }
-
-	bool stereo = vl::from_string<bool>(xml_node->value());
-
-	if(stereo && type == ST_OFF)
-	{ type = ST_DEFAULT; }
-	else if(!stereo)
-	{ type = ST_OFF; }
-
-	_env->getRenderer().stereo_type = type;
-
-	_checkUniqueNode(xml_node);
-}
-
-void
-vl::config::EnvSerializer::processIPD(rapidxml::xml_node<>* xml_node)
-{
-	/// IPD can be either negative or positive doesn't matter
-	/// if it's negative it will do swap eyes
-	double ipd = vl::from_string<double>(xml_node->value());
-
-	_env->setIPD(ipd);
-
-	_checkUniqueNode(xml_node);
-}
-
-void
-vl::config::EnvSerializer::processFPS(rapidxml::xml_node<> *xml_node)
-{
-	uint32_t fps = vl::from_string<uint32_t>(xml_node->value());
-
-	_env->setFPS(fps);
-
-	_checkUniqueNode(xml_node);
+	Channel chan(channel_name, r, proj, background_col);
+	chan.projection = proj;
+	window.add_channel(chan);
 }
 
 void
@@ -898,10 +844,35 @@ vl::config::EnvSerializer::processRenderer(rapidxml::xml_node<> *xml_node, vl::c
 	{
 		renderer.hardware_gamma = vl::from_string<bool>(attrib->value());
 	}
+
+	attrib = xml_node->first_attribute("fps");
+	if(attrib)
+	{
+		renderer.fps = vl::from_string<float>(attrib->value());
+	}
+
+	attrib = xml_node->first_attribute("stereo");
+	if(attrib)
+	{
+		if(vl::from_string<bool>(attrib->value()))
+		{
+			renderer.stereo_type = ST_DEFAULT;
+		}
+		else
+		{
+			renderer.stereo_type = ST_OFF;
+		}
+	}
+
+	attrib = xml_node->first_attribute("ipd");
+	if(attrib)
+	{
+		renderer.ipd = vl::from_string<double>(attrib->value());
+	}
 }
 
 void
-vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl::config::Projection &projection)
+vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl::config::Projection &projection, std::string const &channel_name)
 {
 	rapidxml::xml_attribute<> *attrib = xml_node->first_attribute("type");
 	if(attrib)
@@ -919,43 +890,54 @@ vl::config::EnvSerializer::processProjection(rapidxml::xml_node<> *xml_node, vl:
 		}
 	}
 
-	rapidxml::xml_node<> *xml_pers = xml_node->first_node("perspective");
-	if(xml_pers)
+	attrib = xml_node->first_attribute("surface");
+	if(attrib)
 	{
-		attrib = xml_pers->first_attribute("type");
+		// Process perspective type
+		std::string surface(attrib->value());
+		vl::to_lower(surface);
+		if(surface == "fov")
+		{
+			projection.perspective_type = Projection::FOV;
+		}
+		else if(surface == "wall")
+		{
+			projection.perspective_type = Projection::WALL;
+		}
+	}
+
+	attrib = xml_node->first_attribute("asymmetric_stereo_frustum");
+	if(attrib)
+	{
+		projection.use_asymmetric_stereo = vl::from_string<bool>(attrib->value());
+	}
+
+	rapidxml::xml_node<> *wall = xml_node->first_node("wall");
+	rapidxml::xml_node<> *fov = xml_node->first_node("fov");
+
+	if(fov)
+	{
+		attrib = fov->first_attribute("angle");
 		if(attrib)
-		{
-			// Process perspective type
-			std::string type(attrib->value());
-			vl::to_lower(type);
-			if(type == "fov")
-			{
-				projection.perspective_type = Projection::FOV;
-			}
-			else if(type == "wall")
-			{
-				projection.perspective_type = Projection::WALL;
-			}
-		}
-
-		attrib = xml_pers->first_attribute("asymmetric_stereo_frustum");
+		{ projection.fov = vl::from_string<double>(attrib->value()); }
+		attrib = fov->first_attribute("horizontal");
 		if(attrib)
+		{ projection.horizontal = vl::from_string<double>(attrib->value()); }
+	}
+
+	if(wall)
+	{
+		std::string wall_name = wall->value();
+		std::clog << "Projection : Wall name = " << wall_name << std::endl;
+
+		// this needs to be a reference because we use it to set the proper
+		// channel later on
+		// Nope we should not add pointers because window is a temporary object
+		if(!wall_name.empty())
 		{
-			projection.use_asymmetric_stereo = vl::from_string<bool>(attrib->value());
+			_wall_map[channel_name] = wall_name;
 		}
 
-		rapidxml::xml_node<> *wall = xml_pers->first_node("wall");
-		rapidxml::xml_node<> *fov = xml_pers->first_node("fov");
-
-		if(fov)
-		{
-			attrib = fov->first_attribute("angle");
-			if(attrib)
-			{ projection.fov = vl::from_string<double>(attrib->value()); }
-			attrib = fov->first_attribute("horizontal");
-			if(attrib)
-			{ projection.horizontal = vl::from_string<double>(attrib->value()); }
-		}
 	}
 }
 
@@ -970,7 +952,7 @@ vl::config::EnvSerializer::finalise(void)
 		// @todo this will throw if the Channel or Wall can not be found by name
 		Channel &chan = _env->findChannel(iter->first);
 		Wall const &wall = _env->findWall(iter->second);
-		chan.wall = wall;
+		chan.projection.wall = wall;
 	}
 }
 

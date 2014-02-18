@@ -626,15 +626,14 @@ vl::Window::_createNative(void)
 	/// @todo Channel creation should be in Renderer and we should 
 	/// attach channels to Windows. It's more logical.
 	/// This will also allow dynamic channel creation and destruction.
-	vl::config::Projection const &projection = _window_config.renderer.projection;
 	for(size_t i = 0; i < _window_config.get_n_channels(); ++i)
 	{
 		config::Channel channel_config = _window_config.get_channel(i);
 
-		if(channel_config.wall.empty())
+		if(channel_config.projection.wall.empty())
 		{ std::cout << vl::TRACE << "No wall for channel " << channel_config.name << std::endl; }
 
-		vl::Wall const &wall = channel_config.wall;
+		vl::Wall const &wall = channel_config.projection.wall;
 		config::Renderer::Type renderer_type = _window_config.renderer.type;
 
 		RENDER_MODE rend_mode(RM_WINDOW);
@@ -652,26 +651,21 @@ vl::Window::_createNative(void)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
 			channel_config.area.w /= 2;
-			_create_channel(channel_config, HS_LEFT, projection, 
-				rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
 			channel_config.area.x += channel_config.area.w;
-			_create_channel(channel_config, HS_RIGHT, projection, 
-				rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
 		}
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
 		else if(hasStereo())
 		{
-			_create_channel(channel_config, HS_LEFT, projection, 
-				rend_mode, _window_config.fsaa);
-			_create_channel(channel_config, HS_RIGHT, projection, 
-				rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
 		}
 		// no stereo
 		else
 		{
-			_create_channel(channel_config, HS_MONO, projection, 
-				rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_MONO, rend_mode, _window_config.fsaa);
 		}
 	}
 
@@ -759,13 +753,13 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
-			vl::config::Projection const &projection,
 			RENDER_MODE render_mode, uint32_t fsaa)
 {
 	// @todo replace with throwing because this is user controlled
 	assert(!chan_cfg.name.empty());
 
-	Wall const &wall = chan_cfg.wall;
+	vl::config::Projection const &projection = chan_cfg.projection;
+	Wall const &wall = projection.wall;
 
 	// Make a copy of channel config and rename it
 	vl::config::Channel channel_config(chan_cfg);

@@ -651,8 +651,8 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 			// Also because projection matrices do not need to be recalculated
 			// at every frame because the screens are tied to head
 			// we can use static projections which are faster.
-			win.renderer.projection.perspective_type = config::Projection::USER;
-			win.renderer.projection.use_asymmetric_stereo = false;
+			chan.projection.perspective_type = config::Projection::USER;
+			chan.projection.use_asymmetric_stereo = false;
 
 			// copy the Channel config i.e. projection matrices
 			_game_manager->getOculus()->copyConfig(chan);

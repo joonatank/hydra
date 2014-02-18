@@ -116,7 +116,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<( vl::cluster::ByteStream& msg, vl::config::Channel const &chan )
 {
-	msg << chan.name << chan.wall << chan.area << chan.background_colour 
+	msg << chan.name << chan.projection << chan.area << chan.background_colour 
 		<< chan.user_projection_left << chan.user_projection_right;
 
 	return msg;
@@ -126,7 +126,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>( vl::cluster::ByteStream& msg, vl::config::Channel &chan )
 {
-	msg >> chan.name >> chan.wall >> chan.area >> chan.background_colour
+	msg >> chan.name >> chan.projection >> chan.area >> chan.background_colour
 		>> chan.user_projection_left >> chan.user_projection_right;
 
 	return msg;
@@ -136,7 +136,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Renderer const &rend)
 {
-	msg << rend.type << rend.projection << rend.hardware_gamma;
+	msg << rend.type << rend.hardware_gamma << rend.ipd;
 
 	return msg;
 }
@@ -145,7 +145,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Renderer &rend)
 {
-	msg >> rend.type >> rend.projection >> rend.hardware_gamma;
+	msg >> rend.type >> rend.hardware_gamma >> rend.ipd;
 
 	return msg;
 }
@@ -154,7 +154,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Projection const &projection)
 {
-	msg << projection.type << projection.perspective_type << projection.fov 
+	msg << projection.type << projection.perspective_type << projection.wall << projection.fov 
 		<< projection.horizontal;
 
 	return msg;
@@ -164,7 +164,7 @@ template<>
 vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Projection &projection)
 {
-	msg >> projection.type >> projection.perspective_type >> projection.fov
+	msg >> projection.type >> projection.perspective_type >> projection.wall >> projection.fov
 		>> projection.horizontal;
 
 	return msg;
