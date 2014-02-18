@@ -42,6 +42,28 @@ enum RENDER_MODE
 	RM_OCULUS,
 };
 
+inline std::string getRenderModeName(RENDER_MODE rm)
+{
+	switch(rm)
+	{
+	case RM_WINDOW:
+		return "RM_WINDOW";
+	case RM_FBO:
+		return "RM_FBO";
+	case RM_MRT_STEREO:
+		return "RM_MRT_STEREO";
+	case RM_DEFERRED:
+		return "RM_DEFERRED";
+	case RM_DEFERRED_MRT_STEREO:
+		return "RM_DEFERRED_MRT_STEREO";
+	case RM_OCULUS:
+		return "RM_OCULUS";
+	default:
+		return "RM_UNKNOWN";
+	}
+	
+}
+
 class Channel
 {
 public:
@@ -122,7 +144,7 @@ private :
 
 	void _initialise_mrt(vl::CameraPtr camera);
 
-	Ogre::RenderTexture *_create_fbo(vl::CameraPtr camera, std::string const &name, Ogre::PixelFormat pf);
+	Ogre::RenderTexture *_create_fbo(std::string const &name, Ogre::PixelFormat pf);
 
 	Ogre::SceneNode *_create_screen_quad(std::string const &name, std::string const &material_name);
 
@@ -171,6 +193,7 @@ private:
 	std::vector<Ogre::TexturePtr> _fbo_textures;
 
 	Ogre::Camera *_rtt_camera;
+	Ogre::SceneNode* _quad_node;
 
 	vl::Window *_parent;
 

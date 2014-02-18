@@ -646,17 +646,8 @@ vl::Window::_createNative(void)
 		if(_window_config.stereo_type == vl::config::ST_OCULUS)
 		{ rend_mode = RM_OCULUS; }
 
-		// We already have a window so it should be safe to check for stereo
-		// quad buffer stereo
-		if(hasStereo())
-		{
-			_create_channel(channel_config, HS_LEFT, projection, 
-				rend_mode, _window_config.fsaa);
-			_create_channel(channel_config, HS_RIGHT, projection, 
-				rend_mode, _window_config.fsaa);
-		}
 		// For now lets try if side-by-side stereo is good enough for Oculus
-		else if(_window_config.stereo_type == vl::config::ST_SIDE_BY_SIDE
+		if(_window_config.stereo_type == vl::config::ST_SIDE_BY_SIDE
 			|| _window_config.stereo_type == vl::config::ST_OCULUS)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
@@ -664,6 +655,15 @@ vl::Window::_createNative(void)
 			_create_channel(channel_config, HS_LEFT, projection, 
 				rend_mode, _window_config.fsaa);
 			channel_config.area.x += channel_config.area.w;
+			_create_channel(channel_config, HS_RIGHT, projection, 
+				rend_mode, _window_config.fsaa);
+		}
+		// We already have a window so it should be safe to check for stereo
+		// quad buffer stereo
+		else if(hasStereo())
+		{
+			_create_channel(channel_config, HS_LEFT, projection, 
+				rend_mode, _window_config.fsaa);
 			_create_channel(channel_config, HS_RIGHT, projection, 
 				rend_mode, _window_config.fsaa);
 		}

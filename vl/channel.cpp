@@ -45,6 +45,7 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	, _stereo_eye_cfg(HS_UNDEFINED)
 	, _render_mode(rm)
 	, _mrt(0)
+	, _quad_node(0)
 	, _parent(parent)
 {
 	assert(_viewport);
@@ -56,7 +57,8 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	_viewport->setAutoUpdated(false);
 	_size = config.area;
 
-	std::clog << "Channel::Channel : name " << _name << std::endl;
+	std::clog << "Channel::Channel : name " << _name 
+		<< " with render mode " << getRenderModeName(_render_mode) << std::endl;
 
 	Ogre::Matrix4 const &left = config.user_projection_left;
 	Ogre::Matrix4 const &right = config.user_projection_right;
@@ -91,9 +93,9 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	std::string name(getName() + "/MRT");
 
 	// Ogre::PF_FLOAT32_RGBA
-	Ogre::RenderTexture *fbo0 = _create_fbo(camera, name + "/fbo_0", Ogre::PF_FLOAT32_RGBA);
-	Ogre::RenderTexture *fbo1 = _create_fbo(camera, name + "/fbo_1", Ogre::PF_FLOAT32_RGBA);
-	Ogre::RenderTexture *fbo2 = _create_fbo(camera, name + "/fbo_2", Ogre::PF_FLOAT32_RGBA);
+	Ogre::RenderTexture *fbo0 = _create_fbo(name + "/fbo_0", Ogre::PF_FLOAT32_RGBA);
+	Ogre::RenderTexture *fbo1 = _create_fbo(name + "/fbo_1", Ogre::PF_FLOAT32_RGBA);
+	Ogre::RenderTexture *fbo2 = _create_fbo(name + "/fbo_2", Ogre::PF_FLOAT32_RGBA);
 
 	// Using a material defined in the deferred_shading materials
 	// basic lighting material that iterates over all lights
@@ -255,6 +257,11 @@ vl::Channel::update(void)
 	/// This would actually need the StereoCamera to replace our Camera.
 	_camera.setIPD(_player->getIPD());
 
+	if(_quad_node)
+	{ _quad_node->setVisible(true); }
+
+	// doesn't make a difference (well not noticable anyway)
+	//_viewport->clear();
 	if(_render_mode == RM_FBO || _render_mode == RM_OCULUS)
 	{ _render_to_fbo(); }
 	else if(_render_mode == RM_DEFERRED)
@@ -264,8 +271,11 @@ vl::Channel::update(void)
 void
 vl::Channel::draw(void)
 {
-	// @todo this should be replaced with single inline function call
+	// Clearing a viewport here fucks up the FBO rendering (no kidding)
+	
+	// @todo this should be replaced with single inline function call 
 	// that hides the implementation (OpenGL) details
+	// Actually we should implement this as an member variable to remove the branching.
 	//
 	// Switching back buffers only works with HydraGL not Ogre RenderingSystem_GL
 	// because Ogre does not correctly unbind framebuffers after using them.
@@ -306,6 +316,9 @@ vl::Channel::draw(void)
 	// Must be using this stupid syntax for
 	// keeping track of the batches and triangles
 	_viewport->getTarget()->_updateViewport(_viewport, true);
+
+	if(_quad_node)
+	{ _quad_node->setVisible(false); }
 }
 
 
@@ -385,6 +398,11 @@ vl::Channel::_render_to_fbo(void)
 {
 	assert(_fbo);
 
+	// beginUpdate and endUpdate screws the GUI and makes the
+	// second window black in both windowed and FBO modes
+	// without them though FBO bleeds to second channel
+	//_fbo->_beginUpdate();
+	_viewport->clear();
 	_camera.update(_stereo_eye_cfg);
 	_fbo->update();
 }
@@ -537,7 +555,7 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	std::string name("internal/" + getName());
 	std::string material_name(name + "/fbo_material");
 	std::string texture_name(name + "/rtt_tex");
-	_fbo = _create_fbo(camera, name, Ogre::PF_R8G8B8);
+	_fbo = _create_fbo(name, Ogre::PF_R8G8B8);
 
 	Ogre::ResourcePtr base_mat_res = Ogre::MaterialManager::getSingleton().getByName(base_material);
 	Ogre::MaterialPtr fbo_material = static_cast<Ogre::Material *>(base_mat_res.get())->clone(material_name);
@@ -568,6 +586,8 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	// Set viewport attributes
 	// @todo there is a possibility to use material scheme in the viewport
 	// this could help us with deferred and forward rendering selection
+	// Without setVisisbilityMask the second channel in Oculus gets copied from another FBO
+	// with it only the first one gets copied from the original FBO
 	_viewport->setVisibilityMask(_get_window_mask());
 	_viewport->setShadowsEnabled(false);
 	_viewport->setSkiesEnabled(false);
@@ -594,16 +614,16 @@ vl::Channel::_create_screen_quad(std::string const &name, std::string const &mat
 	std::string sn_name = name + "/screen_quad";
 	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
 	assert(sm);
-	Ogre::SceneNode* miniScreenNode = sm->getRootSceneNode()->createChildSceneNode(sn_name);
-	miniScreenNode->attachObject(quad);
+	_quad_node = sm->getRootSceneNode()->createChildSceneNode(sn_name);
+	_quad_node->attachObject(quad);
 
 	quad->setMaterial(material_name);
 
-	return miniScreenNode;
+	return _quad_node;
 }
 
 Ogre::RenderTexture *
-vl::Channel::_create_fbo(vl::CameraPtr camera, std::string const &name, Ogre::PixelFormat pf)
+vl::Channel::_create_fbo(std::string const &name, Ogre::PixelFormat pf)
 {
 	std::string fbo_tex_name(name + "/rtt_tex");
 	std::string material_name(name + "/fbo_material");
