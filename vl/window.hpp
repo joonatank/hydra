@@ -130,10 +130,15 @@ public:
 	/// Called from Pipe when window is atteched
 	void _createNative(void);
 
+	Ogre::RenderWindow *getNative(void)
+	{ return _ogre_window; }
+
 private :
 	virtual void serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits) const;
 
 	virtual void deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits);
+
+	void _create_channels(void);
 
 	/// @todo should Ogre::RenderWindow be passed to constructor or created here?
 	Ogre::RenderWindow *_createOgreWindow(vl::config::Window const &winConf);

@@ -68,7 +68,7 @@ class Channel
 {
 public:
 	Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent);
+		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent);
 
 	void setCamera(vl::CameraPtr cam);
 
@@ -87,13 +87,6 @@ public:
 	STEREO_EYE getStereoEyeCfg(void) const
 	{ return _stereo_eye_cfg; }
 
-	/// @todo this is really odd
-	/// why does a Channel hold stereo config?
-	/// for split screen stereo it's understandable because it's fixed
-	/// for channels that handle both eyes it's really confusing.
-	void setStereoEyeCfg(STEREO_EYE eye_cfg)
-	{ _stereo_eye_cfg = eye_cfg; }
-	
 	/// Necessary to provide getter/setter because player does not exists
 	/// when the Channel is created.
 	Player *getPlayer(void) const
@@ -146,7 +139,7 @@ private :
 
 	Ogre::RenderTexture *_create_fbo(std::string const &name, Ogre::PixelFormat pf);
 
-	Ogre::SceneNode *_create_screen_quad(std::string const &name, std::string const &material_name);
+	void _create_screen_quad(std::string const &name, std::string const &material_name);
 
 	void _deferred_geometry_pass(void);
 
@@ -194,6 +187,8 @@ private:
 
 	Ogre::Camera *_rtt_camera;
 	Ogre::SceneNode* _quad_node;
+
+	int _draw_buffer;
 
 	vl::Window *_parent;
 

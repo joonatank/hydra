@@ -615,14 +615,8 @@ vl::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 }
 
 void
-vl::Window::_createNative(void)
+vl::Window::_create_channels(void)
 {
-	std::clog << "vl::Window::_createNative" << std::endl;
-
-	_ogre_window = _createOgreWindow(_window_config);
-
-	_createInputHandling();
-
 	/// @todo Channel creation should be in Renderer and we should 
 	/// attach channels to Windows. It's more logical.
 	/// This will also allow dynamic channel creation and destruction.
@@ -630,10 +624,6 @@ vl::Window::_createNative(void)
 	{
 		config::Channel channel_config = _window_config.get_channel(i);
 
-		if(channel_config.projection.wall.empty())
-		{ std::cout << vl::TRACE << "No wall for channel " << channel_config.name << std::endl; }
-
-		vl::Wall const &wall = channel_config.projection.wall;
 		config::Renderer::Type renderer_type = _window_config.renderer.type;
 
 		RENDER_MODE rend_mode(RM_WINDOW);
@@ -651,7 +641,10 @@ vl::Window::_createNative(void)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
 			channel_config.area.w /= 2;
+			std::string base_name = channel_config.name;
+			channel_config.name = base_name + "_left";
 			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			channel_config.name = base_name + "_right";
 			channel_config.area.x += channel_config.area.w;
 			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
 		}
@@ -659,7 +652,10 @@ vl::Window::_createNative(void)
 		// quad buffer stereo
 		else if(hasStereo())
 		{
+			std::string base_name = channel_config.name;
+			channel_config.name = base_name + "_left";
 			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			channel_config.name = base_name + "_right";
 			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
 		}
 		// no stereo
@@ -668,6 +664,18 @@ vl::Window::_createNative(void)
 			_create_channel(channel_config, HS_MONO, rend_mode, _window_config.fsaa);
 		}
 	}
+}
+
+void
+vl::Window::_createNative(void)
+{
+	std::clog << "vl::Window::_createNative" << std::endl;
+
+	_ogre_window = _createOgreWindow(_window_config);
+
+	_createInputHandling();
+
+	_create_channels();
 
 	// We need to set the aspect ratio for the cameras
 	// @todo not the proper place to set them though
@@ -755,55 +763,14 @@ vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
 			RENDER_MODE render_mode, uint32_t fsaa)
 {
-	// @todo replace with throwing because this is user controlled
-	assert(!chan_cfg.name.empty());
-
-	vl::config::Projection const &projection = chan_cfg.projection;
-	Wall const &wall = projection.wall;
-
-	// Make a copy of channel config and rename it
-	vl::config::Channel channel_config(chan_cfg);
-	channel_config.name += ("_" + stereo_eye_to_string(stereo_cfg));
-
 	/// We don't yet have a valid SceneManager
 	/// So we need to wait till the camera is set here
-	vl::Rect<double> const &rect = channel_config.area;
+	vl::Rect<double> const &rect = chan_cfg.area;
 	assert(rect.valid());
 	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
 
-	Channel *channel = new Channel(channel_config, view, render_mode, fsaa, this);
+	Channel *channel = new Channel(chan_cfg, view, render_mode, fsaa, stereo_cfg, this);
 	_channels.push_back(channel);
-
-	/// Set frustum
-
-	channel->getCamera().getFrustum().enableAsymmetricStereoFrustum(projection.use_asymmetric_stereo);
-	/// @todo these can be removed when we have checked that this config is working
-	if(channel->getCamera().getFrustum().isAsymmetricStereoFrustum())
-	{
-		std::clog << "EXPERIMENTAL : Using asymmetric stereo frustum." << std::endl;
-	}
-	else
-	{
-		std::clog << "NOT Using asymmetric stereo frustum." << std::endl;
-	}
-
-	channel->getCamera().getFrustum().setWall(wall);
-	channel->getCamera().getFrustum().setFov(Ogre::Degree(projection.fov));
-	if(projection.perspective_type == vl::config::Projection::FOV)
-	{
-		std::clog << "Setting channel " << channel->getName() << " to use FOV frustum." << std::endl;
-		channel->getCamera().getFrustum().setType(Frustum::FOV);
-	}
-	else if(projection.perspective_type == vl::config::Projection::USER)
-	{
-		std::clog << "Setting channel " << channel->getName() << " to use USER frustum." << std::endl;
-		channel->getCamera().getFrustum().setType(Frustum::USER);
-	}
-	else
-	{
-		std::clog << "Setting channel " << channel->getName() << " to use Wall frustum." << std::endl;
-		channel->getCamera().getFrustum().setType(Frustum::WALL);
-	}
 
 	// set the aspect ratio
 	// @todo this is still rather hackish
@@ -814,9 +781,6 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	Rect<double> size = channel->getSize();
 	vl::scalar aspect = _window_config.area.w*size.w / (_window_config.area.h*size.h);
 	channel->getCamera().getFrustum().setAspect(aspect);
-
-	// @todo what does this do and why?
-	channel->setStereoEyeCfg(stereo_cfg);
 
 	return channel;
 }

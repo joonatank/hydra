@@ -36,18 +36,22 @@
 
 /// ---------------------------------- Public --------------------------------
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		RENDER_MODE rm, uint32_t fsaa, vl::Window *parent)
+		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent)
 	: _name(config.name)
 	, _camera()
 	, _viewport(view)
 	, _fbo(0)
 	, _fsaa(fsaa)
-	, _stereo_eye_cfg(HS_UNDEFINED)
+	, _stereo_eye_cfg(stereo_cfg)
 	, _render_mode(rm)
 	, _mrt(0)
 	, _quad_node(0)
+	, _draw_buffer(GL_BACK)
 	, _parent(parent)
 {
+	if(_name.empty())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Channel has no name")); }
+
 	assert(_viewport);
 	assert(_parent);
 
@@ -60,9 +64,61 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	std::clog << "Channel::Channel : name " << _name 
 		<< " with render mode " << getRenderModeName(_render_mode) << std::endl;
 
+	/// Configure Frustum
+	
+	_camera.getFrustum().enableAsymmetricStereoFrustum(config.projection.use_asymmetric_stereo);
+	/// @todo these can be removed when we have checked that this config is working
+	if(_camera.getFrustum().isAsymmetricStereoFrustum())
+	{ std::clog << "Using asymmetric stereo frustum." << std::endl; }
+	else
+	{ std::clog << "NOT Using asymmetric stereo frustum." << std::endl; }
+
+	_camera.getFrustum().setWall(config.projection.wall);
+	_camera.getFrustum().setFov(Ogre::Degree(config.projection.fov));
+	if(config.projection.perspective_type == vl::config::Projection::FOV)
+	{
+		std::clog << "Setting channel " << getName() << " to use FOV frustum." << std::endl;
+		_camera.getFrustum().setType(Frustum::FOV);
+	}
+	else if(config.projection.perspective_type == vl::config::Projection::USER)
+	{
+		std::clog << "Setting channel " << getName() << " to use USER frustum." << std::endl;
+		_camera.getFrustum().setType(Frustum::USER);
+	}
+	else
+	{
+		std::clog << "Setting channel " << getName() << " to use Wall frustum." << std::endl;
+		_camera.getFrustum().setType(Frustum::WALL);
+	}
+
+	// set custom projections
 	Ogre::Matrix4 const &left = config.user_projection_left;
 	Ogre::Matrix4 const &right = config.user_projection_right;
 	_camera.getFrustum().setUserProjection(left, right);
+
+	/// Select draw buffer
+	//
+	// Switching draw buffer only works with HydraGL not Ogre RenderingSystem_GL
+	// because Ogre does not correctly unbind framebuffers after using them.
+	//
+	// Switching backbuffers has no negative effects if quad buffering 
+	// is not available they fallback to GL_BACK 
+	// (and probably to GL_FRONT if ever we had no back buffer).
+	if(_stereo_eye_cfg == HS_LEFT)
+	{
+		_draw_buffer = GL_BACK_LEFT;
+	}
+	else if(_stereo_eye_cfg == HS_RIGHT)
+	{
+		_draw_buffer = GL_BACK_RIGHT;
+	}
+	else
+	{
+		// This needs to be set because we want to be able to switch
+		// stereo mode on/off
+		// Draw both back buffers
+		_draw_buffer = GL_BACK;
+	}
 }
 
 void
@@ -273,31 +329,7 @@ vl::Channel::draw(void)
 {
 	// Clearing a viewport here fucks up the FBO rendering (no kidding)
 	
-	// @todo this should be replaced with single inline function call 
-	// that hides the implementation (OpenGL) details
-	// Actually we should implement this as an member variable to remove the branching.
-	//
-	// Switching back buffers only works with HydraGL not Ogre RenderingSystem_GL
-	// because Ogre does not correctly unbind framebuffers after using them.
-	//
-	// Switching backbuffers has no negative effects if quad buffering 
-	// is not available they fallback to GL_BACK 
-	// (and probably to GL_FRONT if ever we had no back buffer).
-	if(_stereo_eye_cfg == HS_LEFT)
-	{
-		glDrawBuffer(GL_BACK_LEFT);
-	}
-	else if(_stereo_eye_cfg == HS_RIGHT)
-	{
-		glDrawBuffer(GL_BACK_RIGHT);
-	}
-	else
-	{
-		// This needs to be set because we want to be able to switch
-		// stereo mode on/off
-		// Draw both back buffers
-		glDrawBuffer(GL_BACK);
-	}
+	glDrawBuffer(_draw_buffer);
 
 	// Camera only needs to be updated if we are rendering directly to screen.
 	if(_render_mode == RM_WINDOW)
@@ -603,7 +635,7 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	_viewport->setCamera(_rtt_camera);
 }
 
-Ogre::SceneNode *
+void
 vl::Channel::_create_screen_quad(std::string const &name, std::string const &material_name)
 {
 	Ogre::Rectangle2D *quad = new Ogre::Rectangle2D(true);
@@ -618,8 +650,6 @@ vl::Channel::_create_screen_quad(std::string const &name, std::string const &mat
 	_quad_node->attachObject(quad);
 
 	quad->setMaterial(material_name);
-
-	return _quad_node;
 }
 
 Ogre::RenderTexture *
