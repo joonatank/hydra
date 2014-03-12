@@ -155,7 +155,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::config::Projection const &projection)
 {
 	msg << projection.type << projection.perspective_type << projection.wall << projection.fov 
-		<< projection.horizontal;
+		<< projection.horizontal << projection.hmd;
 
 	return msg;
 }
@@ -165,7 +165,7 @@ vl::cluster::ByteStream &
 vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::config::Projection &projection)
 {
 	msg >> projection.type >> projection.perspective_type >> projection.wall >> projection.fov
-		>> projection.horizontal;
+		>> projection.horizontal >> projection.hmd;
 
 	return msg;
 }

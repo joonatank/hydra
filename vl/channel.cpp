@@ -96,6 +96,9 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	Ogre::Matrix4 const &right = config.user_projection_right;
 	_camera.getFrustum().setUserProjection(left, right);
 
+	/// Need to modify the rendering to include head orientation in view matrix
+	_camera.enableHMD(config.projection.hmd);
+
 	/// Select draw buffer
 	//
 	// Switching draw buffer only works with HydraGL not Ogre RenderingSystem_GL
@@ -288,8 +291,6 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	else if(_render_mode == RM_OCULUS)
 	{
 		_set_fbo_camera(cam, "oculus_rtt");
-		/// Need to modify the rendering to include head orientation in view matrix
-		getCamera().enableHMD(true);
 	}
 	else if(_render_mode == RM_DEFERRED)
 	{

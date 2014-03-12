@@ -113,6 +113,7 @@ struct HYDRA_API Projection
 		, fov(60)
 		, horizontal(-1)
 		, use_asymmetric_stereo(false)
+		, hmd(false)
 	{}
 
 	bool empty(void) const
@@ -135,6 +136,8 @@ struct HYDRA_API Projection
 	double horizontal;
 
 	bool use_asymmetric_stereo;
+
+	bool hmd;
 
 };	// struct Projection
 

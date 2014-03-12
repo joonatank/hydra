@@ -653,6 +653,7 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 			// we can use static projections which are faster.
 			chan.projection.perspective_type = config::Projection::USER;
 			chan.projection.use_asymmetric_stereo = false;
+			chan.projection.hmd = true;
 
 			// copy the Channel config i.e. projection matrices
 			_game_manager->getOculus()->copyConfig(chan);
