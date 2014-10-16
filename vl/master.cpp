@@ -47,8 +47,6 @@
 #include "base/print.hpp"
 // Necessary for EnvSettings
 #include "base/envsettings.hpp"
-// Necessary for copying Oculus parameters
-#include "oculus.hpp"
 
 #include "pipe.hpp"
 
@@ -615,22 +613,16 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 
 		if(win.type == config::WT_OCULUS)
 		{
-			// copy parameters from GameManager
-			assert(_game_manager);
-			// @todo this is problematic if Oculus is connected
-			// to a slave instead of a Master then again it needs more modifications.
-			if(!_game_manager->getOculus())
-			{
-				BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Oculus not connected."));
-			}
-
-			vl::HMDInfo const &info = _game_manager->getOculus()->getInfo();
-
 			// Configure window
 			// copy only w and h, because we don't have a decent method for
 			// retrieving x and y from oculus so they are in the config
-			win.area.w = info.resolution.w;
-			win.area.h = info.resolution.h;
+			// @fixme Hardcoded for testing
+			// do we need to retrieve them here or should we just use the
+			// Window creation to retrieve the information
+			// then again it's gonna create the maximum size Window anyway
+			// if it's smaller than specified
+			win.area.w = 1920;
+			win.area.h = 1080;
 			
 			win.stereo_type = config::ST_OCULUS;
 
@@ -646,22 +638,10 @@ vl::Master::_createWindows(vl::config::EnvSettingsRefPtr env)
 			// overwrite first channel config
 			config::Channel &chan = win.get_channel(0);
 			chan.name = "oculus";
-			
-			// using USER for now because we have a problem with FOV
-			// Also because projection matrices do not need to be recalculated
-			// at every frame because the screens are tied to head
-			// we can use static projections which are faster.
-			chan.projection.perspective_type = config::Projection::USER;
+
 			chan.projection.use_asymmetric_stereo = false;
 			chan.projection.hmd = true;
-
-			// copy the Channel config i.e. projection matrices
-			_game_manager->getOculus()->copyConfig(chan);
-
-			std::clog << "Configured Oculus channel : " << chan << std::endl;
-
-			// set the distortion info
-			iter->first->setDistortionInfo(_game_manager->getOculus()->getDistortionInfo());
+			chan.projection.fov = 60;
 		}
 
 		iter->first->createWindow(win);

@@ -99,7 +99,11 @@ public :
 	/// or update(vl::scalar eye)
 	/// removes an unnecessary comparison from the rendering
 	/// and cleans the update function.
-	void update(STEREO_EYE eye);
+	/// eye is -1 for left and +1 for right
+	void update(vl::scalar eye);
+
+	/// Using custom view and projection matrices
+	void update(vl::Matrix4 const &view, vl::Matrix4 const &proj);
 
 	void setIPD(vl::scalar ipd)
 	{ _ipd = ipd; }

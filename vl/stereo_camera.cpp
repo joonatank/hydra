@@ -46,18 +46,8 @@ vl::StereoCamera::setCamera(vl::CameraPtr cam)
 	{ _ogre_camera = 0; }
 }
 
-/*vl::Transform
-vl::StereoCamera::getViewTransform(void) const
-{
-	Ogre::Vector3 const &pos = _ogre_camera->getDerivedPosition();
-	Ogre::Quaternion const &q = _ogre_camera->getDerivedOrientation();
-
-	return Transform(pos, q);
-}
-*/
-
 void
-vl::StereoCamera::update(STEREO_EYE eye_cfg)
+vl::StereoCamera::update(vl::scalar eye_cfg)
 {
 	assert(_camera);
 	assert(_ogre_camera);
@@ -67,13 +57,7 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 	Ogre::Vector3 cam_pos = _camera->getPosition();
 	Ogre::Quaternion cam_quat = _camera->getOrientation();
 
-	Ogre::Vector3 eye;
-	if(eye_cfg == HS_LEFT)
-	{ eye = Ogre::Vector3(-_ipd/2, 0, 0); }
-	else if(eye_cfg == HS_RIGHT)
-	{ eye = Ogre::Vector3(_ipd/2, 0, 0); }
-	else
-	{ eye = Ogre::Vector3::ZERO; }
+	Ogre::Vector3 eye = Ogre::Vector3(eye_cfg*_ipd/2, 0, 0);
 
 	Ogre::Matrix4 projMat = _frustum.getProjectionMatrix(_head, eye.x);
 	_ogre_camera->setCustomProjectionMatrix(true, projMat);
@@ -111,4 +95,17 @@ vl::StereoCamera::update(STEREO_EYE eye_cfg)
 	Ogre::Matrix4 mat = Ogre::Matrix4(_ogre_camera->getDerivedOrientation());
 	mat.setTrans(_ogre_camera->getDerivedPosition());
 	_last_view_matrix = mat;
+}
+
+/// Using custom view and projection matrices
+void
+vl::StereoCamera::update(vl::Matrix4 const &view, vl::Matrix4 const &proj)
+{
+	_ogre_camera->setCustomProjectionMatrix(true, proj);
+	
+	_last_projection_matrix = proj;
+
+	_ogre_camera->setCustomViewMatrix(true, view);
+
+	_last_view_matrix = view;
 }

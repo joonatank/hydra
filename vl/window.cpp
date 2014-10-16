@@ -45,7 +45,36 @@
 // @todo should really be in the GLWindow implemetation
 #include <GL/gl.h>
 
-//#include <stdlib.h>
+// For Oculus hacks
+#include "channel.hpp"
+#include "player.hpp"
+#include <gl/GL.h>
+
+/// @todo move
+Ogre::Quaternion convert(ovrQuatf const &q)
+{ return Ogre::Quaternion(q.w, q.x, q.y, q.z); }
+
+Ogre::Matrix4 convert(OVR::Matrix4f const &m)
+{
+	Ogre::Matrix4 mm;
+
+	for(size_t i = 0; i < 4; ++i)
+	{
+		for(size_t j = 0; j < 4; ++j)
+		{ mm[i][j] = m.M[i][j]; }
+	}
+
+	return mm;
+}
+
+vl::Transform convert(ovrPosef const &p)
+{
+	vl::Transform t;
+	t.position = Ogre::Vector3(p.Position.x, p.Position.y, p.Position.z);
+	t.quaternion = convert(p.Orientation);
+
+	return t;
+}
 
 /// ----------------------------- Window -------------------------------------
 /// ----------------------------- Public -------------------------------------
@@ -59,6 +88,7 @@ vl::Window::Window(vl::config::Window const &windowConf, vl::PipePtr parent)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _hmd(0)
 {
 	assert(_pipe);
 
@@ -90,6 +120,7 @@ vl::Window::Window(vl::RendererPtr renderer, uint64_t id)
 	, _input_manager(0)
 	, _keyboard(0)
 	, _mouse(0)
+	, _hmd(0)
 {
 	_renderer->getSession()->registerObject(this, id);
 }
@@ -97,6 +128,8 @@ vl::Window::Window(vl::RendererPtr renderer, uint64_t id)
 vl::Window::~Window( void )
 {
 	std::clog << "vl::Window::~Window" << std::endl;
+
+	_destroy_oculus();
 
 	if( _input_manager )
 	{
@@ -432,18 +465,24 @@ vl::Window::sliderMoved(OIS::JoyStickEvent const &evt, int index)
 void
 vl::Window::draw(void)
 {
+	// for now just assert since this should never happen
+	assert(_channels.size() > 0);
+
+	// Dirty hacking to get the Oculus rendering working
+	bool hmd = false;
+	if(_channels.at(0)->getRenderMode() == RM_OCULUS)
+	{ hmd = true; }
+
+	if(hmd)
+	{ _begin_frame_oculus(); }
+
 	// Updating FBOs and channel data is separated from drawing to screen
 	// because we want to keep them separate for later extensions
 	// mainly distributing FBOs, where these two needs to be separated.
 
 	// Update FBOs
 	for(size_t i = 0; i < _channels.size(); ++i)
-	{
-		/// @todo setting player shouldn't be called each frame
-		/// it should be implemented with either dirty data or callbacks
-		_channels.at(i)->setPlayer(_renderer->getPlayer());
-		_channels.at(i)->update();
-	}
+	{ _channels.at(i)->update(); }
 
 	// Draw
 	assert(_ogre_window);
@@ -451,23 +490,42 @@ vl::Window::draw(void)
 	_ogre_window->_beginUpdate();
 
 	// Draw to screen
-	for(size_t i = 0; i < _channels.size(); ++i)
+	//
+	// doesn't have any effect on the HMD weather this be disabled or not, odd
+	if(!_hmd)
 	{
-		_channels.at(i)->draw();
-
-		// GUI is not rendered as part of the FBO which might become problematic
-		// instead it is overlayed on the Window.
-		// For post screen effects and distribution of the Channels this shouldn't
-		// be a problem, but we should tread carefully anyway.
-		//
-		// @todo
-		// Do we want to overlay the GUI for all Channels
-		// Probably not, but how do we decide it?
-		// And should we bind the GUI to Channel?
-		if(_renderer->getGui())
-		{ _renderer->getGui()->update(); }
+		for(size_t i = 0; i < _channels.size(); ++i)
+		{ _channels.at(i)->draw(); }
 	}
 
+	// GUI is not rendered as part of the FBO which might become problematic
+	// instead it is overlayed on the Window.
+	// For post screen effects and distribution of the Channels this shouldn't
+	// be a problem, but we should tread carefully anyway.
+	//
+	// why isn't it part of the FBO?
+	// oh because it doesn't work with Deferred Rendering?
+	// or it might get distorted with Oculus?
+	//
+	// @todo
+	// Do we want to overlay the GUI for all Channels
+	// Probably not, but how do we decide it?
+	// And should we bind the GUI to Channel?
+	//
+	// @todo this doesn't do what I thought it would
+	// it has nothing to do with Rendering it just updates the variables
+	// for Rendering, so it probably should be first in the Rendering loop
+	// where is the GUI rendered?
+	//
+	// For Oculus Rift
+	// GUI doesn't work, it has nothing to do with this though
+	// we need to figure out where the GUI is drawn and what exactly does update do.
+	if(_renderer->getGui())
+	{ _renderer->getGui()->update(); }
+
+	// Update the performance overlay
+	// @todo should be somewhere else, like a separte function in Renderer
+	// Also problematic since we can have multiple windows.
 	if(_renderer->getGui() && _renderer->getGui()->getPerformanceOverlay())
 	{
 		Ogre::RenderTarget::FrameStats stats = getStatistics();
@@ -477,6 +535,9 @@ vl::Window::draw(void)
 		overlay->setLastBatchCount(stats.batchCount);
 		overlay->setLastTriangleCount(stats.triangleCount);
 	}
+
+	if(hmd)
+	{ _end_frame_oculus(); }
 
 	_ogre_window->_endUpdate();
 }
@@ -532,6 +593,17 @@ vl::Window::getHandle(void) const
 
 	return ogreWinId;
 }
+
+vl::Rect<int>
+vl::Window::getArea() const
+{
+	int left, top;
+	uint32_t width, height, depth;
+	_ogre_window->getMetrics(width, height, depth, left, top);
+
+	return Rect<int>(left, top, width, height);
+}
+
 
 /// ------------------------------- Protected ----------------------------------
 void
@@ -640,13 +712,27 @@ vl::Window::_create_channels(void)
 			|| _window_config.stereo_type == vl::config::ST_OCULUS)
 		{
 			std::clog << "Using side by side stereo" << std::endl;
+
+			// @todo
+			// calculate the proper channel size instead of using the config
+			// for side by side stereo it should never be anything other than half of the
+			// window anyway
+
 			channel_config.area.w /= 2;
+
 			std::string base_name = channel_config.name;
 			channel_config.name = base_name + "_left";
 			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
 			channel_config.name = base_name + "_right";
 			channel_config.area.x += channel_config.area.w;
 			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
+
+			// @todo
+			// Configure Oculus doesn't use the channels
+			// so we can ran it before and use it to store the FBO size
+			// then create the channels
+			if(rend_mode == RM_OCULUS)
+			{ _configure_oculus(); }
 		}
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
@@ -778,6 +864,9 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	//
 	// channel size is in homogenous coordinates so we need the window size
 	// to calculate the aspect ratio
+	//
+	// also uses the config size not the real window size
+	// also the aspect ratio is recalculated after all the channels have been created
 	Rect<double> size = channel->getSize();
 	vl::scalar aspect = _window_config.area.w*size.w / (_window_config.area.h*size.h);
 	channel->getCamera().getFrustum().setAspect(aspect);
@@ -861,4 +950,210 @@ vl::Window::_printInputInformation(void)
 	for( OIS::DeviceList::iterator i = list.begin(); i != list.end(); ++i )
 	{ std::cout << "\n\tDevice: " << " Vendor: " << i->second; }
 	std::cout << std::endl;
+}
+
+void
+vl::Window::_configure_oculus()
+{
+	std::clog << "vl::Window::_configure_oculus" << std::endl;
+	assert(!_hmd);
+	ovr_Initialize();
+	_hmd = ovrHmd_Create(0);
+	assert(_hmd);
+
+	// @todo config stuff
+
+	assert(_ogre_window);
+	// Dirty hack to get Native window ID and DC
+	// Window is the window handle
+	// DC is the OpenGL context
+	HWND window;
+	_ogre_window->getCustomAttribute("WINDOW", &window);
+	// cant use getCustomAttribute for the Context because it doesn't expose the HDC
+	// Not sure if we are setting the right context but it is working
+	HDC dc = wglGetCurrentDC();
+
+	ovrGLConfig cfg;
+	cfg.OGL.Header.API			= ovrRenderAPI_OpenGL;
+	cfg.OGL.Header.RTSize		= _hmd->Resolution;
+	cfg.OGL.Header.Multisample	= _ogre_window->getFSAA();
+	cfg.OGL.Window				= window;
+	cfg.OGL.DC					= dc;
+
+	// distortionCaps is distortion flags
+	// need flip because the FBO output is upside down
+	// @todo add ovrDistortionCap_SRGB for gamma correction
+	unsigned int distortionCaps = ovrDistortionCap_FlipInput;
+	
+	ovrFovPort eyeFov[2];
+	eyeFov[0] = _hmd->DefaultEyeFov[0];
+	eyeFov[1] = _hmd->DefaultEyeFov[1];
+	ovrBool result = ovrHmd_ConfigureRendering(_hmd, &cfg.Config, 
+		distortionCaps, eyeFov, _eye_render_desc);
+	assert(result);
+
+	// Render texture size, needs to be stored and used for creating the FBO channel
+
+	// Configure Stereo settings.
+	OVR::Sizei recommenedTex0Size = ovrHmd_GetFovTextureSize(_hmd, ovrEye_Left, 
+		_hmd->DefaultEyeFov[0], 1.0f);
+	OVR::Sizei recommenedTex1Size = ovrHmd_GetFovTextureSize(_hmd, ovrEye_Right, 
+		_hmd->DefaultEyeFov[1], 1.0f);
+
+	OVR::Sizei renderTargetSize;
+	renderTargetSize.w = recommenedTex0Size.w + recommenedTex1Size.w;
+	renderTargetSize.h = max ( recommenedTex0Size.h, recommenedTex1Size.h );
+
+	/// Seems like the target is much larger than the window/physical device (2364, 1461)
+	/// would need to update the Channel info with that
+	/// but it should just cause distortions in the texture not completely corrupt it
+	/// and there is no guarantie that the Ogre viewport would end up large enough anyway
+	std::cout << "Recommended FBO size : left = "
+		<< "(" << recommenedTex0Size.w << ", " << recommenedTex0Size.h << ")"
+		<< " right = "
+		<< "(" << recommenedTex1Size.w << ", " << recommenedTex1Size.h << ")" << "\n"
+		<< " target size = "
+		<< "(" << renderTargetSize.w << ", " << renderTargetSize.h << ")"
+		<< std::endl;
+
+	/// Create the texture, well we use different method but just for reference
+	//pRendertargetTexture = pRender->CreateTexture(
+	//		Texture_RGBA | Texture_RenderTarget | eyeRenderMultisample,
+	//		renderTargetSize.w, renderTargetSize.h, NULL);
+
+	// The actual RT size may be different due to HW limits.
+	//renderTargetSize.w = pRendertargetTexture->GetWidth();
+	//renderTargetSize.h = pRendertargetTexture->GetHeight();
+}
+
+void
+vl::Window::_destroy_oculus()
+{
+	if(!_hmd)
+	{ return; }
+
+	std::clog << "vl::Window::_destroy_oculus" << std::endl;
+
+	// Remove OVR devices
+	ovrHmd_Destroy(_hmd);
+
+	ovr_Shutdown();
+}
+
+void
+vl::Window::_begin_frame_oculus()
+{
+	assert(_hmd);
+	// @todo move camera based on the head orientation 
+	// (since we are not using the normal tracking)
+
+	// we should use Eye render order for better performance
+	// but our channel system does not like it
+
+	ovrFrameTiming hmdFrameTiming = ovrHmd_BeginFrame(_hmd, 0);
+
+	// Just to check since we shouldn't have other channels than Left and Right
+	// for this window
+	assert(_channels.size() == 2);
+
+	// Health and Safety Warning display state.
+	ovrHSWDisplayState hswDisplayState;
+	ovrHmd_GetHSWDisplayState(_hmd, &hswDisplayState);
+	
+	// Dismiss the Health and Safety Warning
+	if (hswDisplayState.Displayed)
+	{
+		ovrHmd_DismissHSWDisplay(_hmd);
+	}
+
+	// Needed as a member variable for end frame
+	// needed for view matrix calculation here
+	_eye_pose[0] = ovrHmd_GetEyePose(_hmd, ovrEye_Left);
+	_eye_pose[1] = ovrHmd_GetEyePose(_hmd, ovrEye_Right);
+
+	// We can't use the "_renderer" member variable since it's actaully a slave session 
+	// not the renderer... we should rename it
+	// it does not exist on the master
+	assert(getPipe() && getPipe()->getRenderer());
+	Player *player = getPipe()->getRenderer()->getPlayer();
+	assert(player);
+
+	// We want the position info from head tracker.
+	// We also want the camera transformation.
+	Transform head_t = player->getHeadTransform();
+	Vector3 camera_pos = player->getCamera()->getWorldPosition();
+	Quaternion camera_q = player->getCamera()->getWorldOrientation();
+
+	// Calculate the view and projection matrices for 
+	for(size_t eye = 0; eye < 2; ++eye)
+	{
+		// hard coded eye order (left, right)
+		// coordinate system is correct, the otherone (left handed) gives no image
+		OVR::Matrix4f ovr_proj = ovrMatrix4f_Projection(_eye_render_desc[eye].Fov, 0.01f, 10000.0f, true);
+
+		Ogre::Matrix4 proj = convert(ovr_proj);
+
+		// view matrix
+		OVR::Vector3f v(_eye_pose[eye].Position);
+		Ogre::Vector3 eye_lp(v.x, v.y, v.z);
+		Ogre::Vector3 eye_p = camera_q*(head_t.quaternion*eye_lp + head_t.position) + camera_pos;
+		// @todo head_t is wrong here we need the Oculus head rotation
+		//Ogre::Quaternion eye_q = head_t.quaternion*camera_q;
+		Ogre::Quaternion eye_q = camera_q;
+
+		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix(eye_p, eye_q);
+
+		_channels.at(eye)->setCustomViewMatrix(true, view);
+		_channels.at(eye)->setCustomProjMatrix(true, proj);
+	}
+}
+
+void
+vl::Window::_end_frame_oculus()
+{
+	assert(_hmd);
+	// @todo
+	// renderTargetSize (calculated in initialisation (see PDF doc)
+	// textureId OpenGL identifier (retrieve from Channel)
+	//
+	// update render target size
+	// @todo all of these calculations should be in initialisation since they are
+	// never changed
+	OVR::Sizei render_target_size;
+	Rect<uint32_t> size = _channels.at(0)->getTextureSize();
+	// Just making sure since we assume this for the rest of this code
+	assert(size == _channels.at(1)->getTextureSize());
+	render_target_size.w = size.w;
+	render_target_size.h = size.h;
+
+	// Umm this calculation is for split viewport and not separate views
+	// this however seems to work, the distortion looks right
+	//
+	// @todo useless calculation in the rendering loop when they could be member variables.
+	_eye_render_viewport[0].Pos  = OVR::Vector2i(0,0);
+	_eye_render_viewport[0].Size = OVR::Sizei(render_target_size.w / 2, render_target_size.h);
+	//_eye_render_viewport[0].Size = render_target_size;
+	_eye_render_viewport[1].Pos  = OVR::Vector2i((render_target_size.w + 1) / 2, 0);
+	//_eye_render_viewport[1].Pos  = OVR::Vector2i(0, 0);
+	_eye_render_viewport[1].Size = _eye_render_viewport[0].Size;
+
+	// array of two for both eyes
+	ovrGLTexture eyeTextures[2];
+	eyeTextures[0].OGL.Header.API = ovrRenderAPI_OpenGL;
+	// TextureSize is the actual size of the texture
+	// RenderViewport is the portion of the texture
+	eyeTextures[0].OGL.Header.TextureSize = render_target_size;
+	eyeTextures[0].OGL.Header.RenderViewport = _eye_render_viewport[0];
+	eyeTextures[0].OGL.TexId = _channels.at(0)->getTextureID();
+		
+	eyeTextures[1].OGL.Header.API = eyeTextures[0].OGL.Header.API;
+	eyeTextures[1].OGL.Header.TextureSize = render_target_size;
+	eyeTextures[1].OGL.Header.RenderViewport = _eye_render_viewport[1];
+	eyeTextures[1].OGL.TexId = _channels.at(1)->getTextureID();
+
+	ovrTexture gl_tex[2];
+	gl_tex[0] = eyeTextures[0].Texture;
+	gl_tex[1] = eyeTextures[1].Texture;
+
+	ovrHmd_EndFrame(_hmd, _eye_pose, gl_tex);
 }

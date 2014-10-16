@@ -19,8 +19,9 @@
 #include "camera.hpp"
 // Parent
 #include "window.hpp"
-// Necessary for Distortion Info
-#include "oculus.hpp"
+
+/// necessary for retreiving Player when rendering
+#include "renderer.hpp"
 #include "pipe.hpp"
 
 /// Necessary for rendering to FBO
@@ -34,6 +35,8 @@
 // Necessary for glDrawBuffer
 #include <GL/gl.h>
 
+#include <HydraGL/src/OgreGLFrameBufferObject.h>
+
 /// ---------------------------------- Public --------------------------------
 vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view, 
 		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent)
@@ -42,11 +45,16 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	, _viewport(view)
 	, _fbo(0)
 	, _fsaa(fsaa)
-	, _stereo_eye_cfg(stereo_cfg)
+	, _stereo_eye(0.0)
 	, _render_mode(rm)
+	//, _player(0)
 	, _mrt(0)
 	, _quad_node(0)
 	, _draw_buffer(GL_BACK)
+	, _use_custom_view(false)
+	, _use_custom_proj(false)
+	, _custom_view()
+	, _custom_proj()
 	, _parent(parent)
 {
 	if(_name.empty())
@@ -107,13 +115,15 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	// Switching backbuffers has no negative effects if quad buffering 
 	// is not available they fallback to GL_BACK 
 	// (and probably to GL_FRONT if ever we had no back buffer).
-	if(_stereo_eye_cfg == HS_LEFT)
+	if(stereo_cfg == HS_LEFT)
 	{
 		_draw_buffer = GL_BACK_LEFT;
+		_stereo_eye = -1.0;
 	}
-	else if(_stereo_eye_cfg == HS_RIGHT)
+	else if(stereo_cfg == HS_RIGHT)
 	{
 		_draw_buffer = GL_BACK_RIGHT;
+		_stereo_eye = 1.0;
 	}
 	else
 	{
@@ -284,13 +294,9 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	{
 		_viewport->setCamera(og_cam);
 	}
-	else if(_render_mode == RM_FBO)
+	else if(_render_mode == RM_FBO || _render_mode == RM_OCULUS)
 	{
 		_set_fbo_camera(cam, "rtt");
-	}
-	else if(_render_mode == RM_OCULUS)
-	{
-		_set_fbo_camera(cam, "oculus_rtt");
 	}
 	else if(_render_mode == RM_DEFERRED)
 	{
@@ -301,18 +307,17 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 void
 vl::Channel::update(void)
 {
-	// It's possible that update is called without Player beign set
-	// just return then, we are assuming that the engine will set
-	// valid player when one is available.
-	if(!_player)
-	{ return; }
+	// @todo retrieve Player from Renderer
+	assert(_parent && _parent->getPipe() && _parent->getPipe()->getRenderer());
+	Player *player = _parent->getPipe()->getRenderer()->getPlayer();
+	assert(player);
 
-	_camera.setHead(_player->getHeadTransform());
+	_camera.setHead(player->getHeadTransform());
 
 	/// @todo these shouldn't be copied at every frame use the distribution
 	/// system to distribute the stereo camera.
 	/// This would actually need the StereoCamera to replace our Camera.
-	_camera.setIPD(_player->getIPD());
+	_camera.setIPD(player->getIPD());
 
 	if(_quad_node)
 	{ _quad_node->setVisible(true); }
@@ -334,16 +339,12 @@ vl::Channel::draw(void)
 
 	// Camera only needs to be updated if we are rendering directly to screen.
 	if(_render_mode == RM_WINDOW)
-	{ _camera.update(_stereo_eye_cfg); }
+	{ _update_camera(); }
 	else if(_render_mode == RM_DEFERRED)
 	{
 		// actually this isn't light pass per ce it only updates the shader uniforms
 		// the actual light pass is automatically called by Viewport::update
 		_deferred_light_pass();
-	}
-	else if(_render_mode == RM_OCULUS)
-	{
-		_oculus_post_processing(_stereo_eye_cfg);
 	}
 
 	// Must be using this stupid syntax for
@@ -354,13 +355,13 @@ vl::Channel::draw(void)
 	{ _quad_node->setVisible(false); }
 }
 
-
 vl::scalar
 vl::Channel::getLastFPS(void) const
 {
 	if(_fbo)
 	{ return _fbo->getLastFPS(); }
 	else if(_mrt)
+
 	{ return _mrt->getLastFPS(); }
 	else
 	{
@@ -425,7 +426,70 @@ vl::Channel::resetStatistics(void)
 	}
 }
 
+void
+vl::Channel::setCustomProjMatrix(bool use, vl::Matrix4 const proj)
+{
+	_use_custom_proj = use;
+	_custom_proj = proj;
+}
+
+void
+vl::Channel::setCustomViewMatrix(bool use, vl::Matrix4 const view)
+{
+	_use_custom_view = use;
+	_custom_view = view;
+}
+
+uint32_t
+vl::Channel::getTextureID(void) const
+{
+	// @fixme this is bad, should work for FBO targets, but not Deferred
+	assert(_fbo_textures.size() == 1);
+
+	Ogre::GLTexture *tex = dynamic_cast<Ogre::GLTexture *>(_fbo_textures.at(0).get());
+	GLuint id;
+	tex->getCustomAttribute("GLID", &id);
+	return id;
+}
+
+uint32_t
+vl::Channel::getFBOID(void) const
+{
+	assert(_fbo);
+
+	GLuint fbo = 0;
+	_fbo->getCustomAttribute("GL_FBOID", &fbo);
+	
+	return fbo;
+}
+
+vl::Rect<uint32_t>
+vl::Channel::getTextureSize(void) const
+{
+	assert(_fbo);
+	Rect<uint32_t> size;
+	uint32_t depth;
+	_fbo->getMetrics(size.w, size.h, depth);
+	return size;
+}
+
 /// ---------------------------------- Private -------------------------------
+void
+vl::Channel::_update_camera()
+{
+	// dirty branching to handle Oculus
+	if(_use_custom_proj && _use_custom_view)
+	{
+		_camera.update(_custom_view, _custom_proj);
+	}
+	else
+	{
+		// checking since we can't allow one of them to be overriden
+		assert(!_use_custom_proj && !_use_custom_view);
+		_camera.update(_stereo_eye);
+	}
+}
+
 void
 vl::Channel::_render_to_fbo(void)
 {
@@ -436,111 +500,8 @@ vl::Channel::_render_to_fbo(void)
 	// without them though FBO bleeds to second channel
 	//_fbo->_beginUpdate();
 	_viewport->clear();
-	_camera.update(_stereo_eye_cfg);
+	_update_camera();
 	_fbo->update();
-}
-
-void
-vl::Channel::_oculus_post_processing(STEREO_EYE eye_cfg)
-{
-	assert(_fbo_materials.size() > 0);
-	Ogre::Technique *tech = _fbo_materials.at(0)->getBestTechnique();
-	Ogre::Pass *pass = tech->getPass(0);
-	Ogre::GpuProgramParametersSharedPtr params = pass->getFragmentProgramParameters();
-
-	// select the eye to render
-	assert(eye_cfg == HS_LEFT || eye_cfg == HS_RIGHT);
-
-	vl::DistortionInfo dist_info = _parent->getPipe()->getDistortionInfo();
-	if(!dist_info.enabled)
-	{
-		// reset distortion values
-		dist_info.K = Ogre::Vector4(1, 0, 0, 0);
-		dist_info.scale = 1;
-	}
-
-	// Correct values (calculated by Rift utilities) re [1.0 0.22 0.24 0]
-	// The second and third parameter modify the curvature
-	// what does the first parameter do? 
-	// zero gives us a full screen of blue (sky colour)
-	// 0.5 gives us the original image (little bit blurred though)
-	//
-	// Three latter parameters control the curvature
-	// well all of them since it's function y = a + b*x^2 + c*x^4 + d*x^6
-
-	vl::scalar offset;
-	if(eye_cfg == HS_RIGHT)
-	{
-		offset = -dist_info.x_center_offset;
-	}
-	else
-	{
-		offset = dist_info.x_center_offset;
-	}
-
-	/*
-	w = viewport width / FBO width
-	h = viewport height / FBO height
-	x = viewport x / FBO width
-	y = viewport y / FBO height
-	*/
-	// Because we use one FBO per viewport i.e. the post processing shaders
-	// are run on the individual viewports we need to use full size here.
-	// Also the shaders needs to be changed for the single FBO.
-	float w = 1.0;
-	float h = 1.0;
-	float x = 0.0;
-	float y = 0.0;
-
-	// as = viewport width / viewport height;
-	// This is 640/800 because it's half screen and the Oculus Rift has 
-	// resolution of 1280x800.
-	// It's half screen since we are rendering only half screen.
-	float as = (1280.0/2.0)/800.0;
-
-	// Using vec3 since we can't upload vec2 to the shaders,
-	// could use one vec4 instead.
-	Ogre::Vector3 LensCenter(x + (w + offset*0.5)*0.5f, y + h*0.5f, 0);
-	Ogre::Vector3 ScreenCenter(x + w*0.5f, y + h*0.5f, 0);
-
-	// This scales the image larger so it fills the whole window.
-	// Problem with this is that it's directly taken from Oculus samples
-	// and it outscales the image (horizontally).
-	// We should have a run time configurable parameter for changing this.
-	float scaleFactor = 1.0f / (dist_info.scale);// - 0.1);
-
-	// @todo what purpose does both scales serve
-	// they seem to scale texture coordinates (those of the FBO)
-	// before we apply the lens distortion filter.
-	//
-	// ScaleIn is input scale and Scale is output scale
-	// "Scale" = [(w/2) * scaleFactor, (h/2) * scaleFactor * as]
-	// "ScaleIn" = [(2/w), (2/h) / as]
-	// actually this is Scale = scaleFactor * scale_v
-	// and ScaleIn = 1/scale_v
-	Ogre::Vector4 scale;
-	scale.x = (w/2) * scaleFactor;
-	scale.y = (h/2) * scaleFactor * as;
-	scale.z = 2/w;
-	scale.w = (2/h) / as;
-
-	// Update the parameters
-	params->setNamedConstant("LensCenter", LensCenter);
-	params->setNamedConstant("ScreenCenter", ScreenCenter);
-	params->setNamedConstant("g_scale", scale);
-	params->setNamedConstant("HmdWarpParam", dist_info.K);
-
-	// We don't have ChromAb, what does it do and do we need one
-	// if (PostProcessShaderRequested == PostProcessShader_DistortionAndChromAb)
-	// copy the ChromAb parameters
-
-	/* @todo What is tex matrix? and do we need one.
-	Matrix4f texm(w, 0, 0, x,
-					0, h, 0, y,
-					0, 0, 0, 0,
-					0, 0, 0, 1);
-	pPostProcessShader->SetUniform4x4f("Texm", texm);
-	*/
 }
 
 void
@@ -548,7 +509,7 @@ vl::Channel::_deferred_geometry_pass(void)
 {
 	assert(_mrt);
 
-	_camera.update(_stereo_eye_cfg);
+	_update_camera();
 
 	_mrt->update();
 }

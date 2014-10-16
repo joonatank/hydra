@@ -163,6 +163,9 @@ include_directories( SYSTEM
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	${BULLET_INCLUDE_DIRS}
 	${OVR_INCLUDE_DIR}
+	# Necessary for some Ogre OpenGL hacks
+	${CMAKE_SOURCE_DIR}/extern/glew
+	${CMAKE_SOURCE_DIR}/rendering_system
 	)
 
 # Libraries that Hydra library depends on
@@ -181,6 +184,8 @@ set( HYDRA_DEP_LIBS
 	${SkyX_LIBRARIES}
 	${BULLET_LIBRARIES}
 	${OVR_LIBRARIES}
+	# For OpenGL hacks needed for Oculus
+	HydraGL
 	)
 
 # Find the Eye tracking package which is not required

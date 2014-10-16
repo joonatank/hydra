@@ -69,7 +69,7 @@ vl::Pipe::draw(void)
 	for( size_t i = 0; i < getWindows().size(); ++i )
 	{ getWindows().at(i)->draw(); }
 }
-	
+
 void
 vl::Pipe::swap(void)
 {
@@ -96,13 +96,6 @@ vl::Pipe::enableGUI(bool enable)
 		setDirty(DIRTY_PARAMS);
 		_gui_enabled = enable;
 	}
-}
-
-void
-vl::Pipe::setDistortionInfo(vl::DistortionInfo const &info)
-{
-	setDirty(DIRTY_PARAMS);
-	_hmd_distortion_info = info;
 }
 
 void
@@ -190,7 +183,7 @@ vl::Pipe::serialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits ) con
 
 	if( DIRTY_PARAMS & dirtyBits )
 	{
-		msg << _gui_enabled << _debug_overlay_enabled << _hmd_distortion_info;
+		msg << _gui_enabled << _debug_overlay_enabled;
 	}
 
 	if( DIRTY_RESOURCES & dirtyBits )
@@ -239,7 +232,7 @@ vl::Pipe::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits )
 
 	if( DIRTY_PARAMS & dirtyBits )
 	{
-		msg >> _gui_enabled >> _debug_overlay_enabled >> _hmd_distortion_info;
+		msg >> _gui_enabled >> _debug_overlay_enabled;
 	}
 
 	if( DIRTY_RESOURCES & dirtyBits )

@@ -61,7 +61,6 @@ set(SRC
 	profiler_report.cpp
 	eye_tracker.cpp
 	cad_importer.cpp
-	oculus.cpp
 	)
 
 set(MATH_HEADERS
@@ -269,7 +268,6 @@ set( HEADERS
 	flags.hpp
 	eye_tracker.hpp
 	cad_importer.hpp
-	oculus.hpp
 	)
 
 source_group(HydraMain FILES ${HEADERS} ${SRC})

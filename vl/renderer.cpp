@@ -38,8 +38,6 @@
 // Necessary for checking materials after deserialize
 #include "material.hpp"
 #include "mesh_manager.hpp"
-// Necessary for DistortionInfo
-//#include "oculus.hpp"
 
 #include "pipe.hpp"
 
@@ -266,30 +264,6 @@ vl::Renderer::clearProject(void)
 		}
 	}
 }
-
-void
-vl::Renderer::enableHMDdistortion(bool enable)
-{
-	DistortionInfo info = _pipe->getDistortionInfo();
-	info.enabled = enable;
-	_pipe->setDistortionInfo(info);
-}
-
-bool
-vl::Renderer::isHMDdistortion(void) const
-{ return _pipe->getDistortionInfo().enabled; }
-
-void
-vl::Renderer::setHMDdistortionScale(vl::scalar val)
-{
-	DistortionInfo info = _pipe->getDistortionInfo();
-	info.scale = val;
-	_pipe->setDistortionInfo(info);
-}
-
-vl::scalar
-vl::Renderer::getHMDdistortionScale(void) const
-{ return _pipe->getDistortionInfo().scale; }
 
 /// --------------------------------------------------------------------------
 void

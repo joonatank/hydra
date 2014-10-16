@@ -58,8 +58,6 @@
 // Necessary for reading parameters from EnvSettings
 #include "base/envsettings.hpp"
 
-#include "oculus.hpp"
-
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt)
 	: _session(session)
 	, _python(0)
@@ -70,7 +68,6 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 	, _logger(logger)
 	, _auto_start(true)
 	, _options(opt)
-	, _oculus_tracker(0)
 	, _fsm(new GameManagerFSM)
 {
 	if(!_session || !_logger)
@@ -93,27 +90,6 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 	{ cad_exe.clear(); }
 
 	_cad_importer.reset(new CadImporter(cad_exe));
-
-	// Try to initialise Oculus, this fails if it's not connected.
-	// This way because it's easier and if we later add device selection.
-	//
-	// @todo add a check here if Oculus is used
-	// we should of course not enable Oculus if it's not enabled in env config
-	// For now we use env config for this, because we can't gracefully
-	// switch between rendering devices.
-	// Later we might implement ingame switching so we should find all
-	// available devices.
-
-	// Initialise Oculus will try to initialise if Oculus is not connected
-	// it will write an error to console
-	//
-	// @todo this is good except we should write to log if Oculus is connected
-	// and we should fail (exit the program) if Oculus is defined in the config
-	// but the initialisation fails.
-	if(opt.oculus_rift)
-	{
-		_initialiseOculus();
-	}
 
 	_fsm->setGameManager(this);
 	_fsm->start();
@@ -154,12 +130,6 @@ vl::GameManager::step(void)
 
 	if(_eye_tracker)
 	{ _eye_tracker->progress(); }
-
-	if(_oculus_tracker && _hmd)
-	{
-		// @todo position does nothing for the moment
-		_oculus_tracker->update(Transform(_hmd->getPositon(), _hmd->getOrientation()));
-	}
 
 	if(isPlaying())
 	{	
@@ -787,14 +757,6 @@ vl::GameManager::_loadEnvironment(vl::config::EnvSettings const &env)
 
 	assert(_player);
 	_player->setIPD(env.getIPD());
-
-	// copy from Oculus to player
-	// @todo this is kinda stupid the Oculus config is spread around everywhere
-	if(_hmd)
-	{
-		std::clog << "Oculus IPD : " << _hmd->getInfo().ipd << std::endl;
-		_player->setIPD(_hmd->getInfo().ipd);
-	}
 }
 
 void
@@ -985,37 +947,6 @@ vl::GameManager::_addPythonScripts(vl::config::ProjSettings const &proj)
 	}
 }
 
-void
-vl::GameManager::_initialiseOculus(void)
-{
-	// Create and initialise Oculus
-	// if no occulus device is found destroy it
-	// else
-	// copy screen values from Oculus to env config
-	// we might need a HMD config for it to be efficient
-	// because we also need to copy distortion params etc.
-
-	try
-	{
-		_hmd.reset(new Oculus());
-
-		HMDInfo const &info = _hmd->getInfo();
-		std::clog << info << std::endl;
-
-		// Create Tracker Trigger
-		_oculus_tracker = new TrackerTrigger;
-		// Check that we don't already have a trigger
-		if(_input_manager->hasTrackerTrigger("headTrigger"))
-		{ BOOST_THROW_EXCEPTION(vl::exception()); }
-		_oculus_tracker = _input_manager->createTrackerTrigger("headTrigger");
-	}
-	// Ignore exceptions
-	catch(vl::exception const &e)
-	{
-		std::clog << boost::diagnostic_information(e) << std::endl;
-		assert(!_hmd);
-	}
-}
 
 vl::SceneManagerPtr
 vl::GameManager::_createSceneManager(void)

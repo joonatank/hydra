@@ -37,6 +37,13 @@
 #include <OIS/OISMouse.h>
 #include <OIS/OISJoyStick.h>
 
+// Necessary for Oculus
+// @tood figure out a good place for these
+#include <OVR.h>
+#include <OVR_CAPI.h>
+#include <OVR_CAPI_GL.h>
+#include <Kernel/OVR_Math.h>
+
 // Implementation
 #include <OGRE/OgreRenderWindow.h>
 
@@ -75,6 +82,9 @@ public:
 	// conveniance function because Pipe differs for slaves and masters
 	vl::Pipe *getPipe(void);
 
+	vl::RendererPtr getRenderer(void) const
+	{ return _renderer; }
+
 	void takeScreenshot( std::string const &prefix, std::string const &suffix );
 
 	/// @brief return the system handle for the window
@@ -102,6 +112,8 @@ public:
 	Ogre::RenderTarget::FrameStats getStatistics(void) const;
 
 	void resetStatistics(void);
+
+	Rect<int> getArea() const;
 
 	/// OIS callback overrides
 	bool keyPressed(const OIS::KeyEvent &key);
@@ -190,6 +202,19 @@ private :
 	OIS::Keyboard *_keyboard;
 	OIS::Mouse *_mouse;
 	std::vector<OIS::JoyStick *> _joysticks;
+
+	/// Oculus specific
+	// @todo move to separate file after they are working
+	void _configure_oculus();
+	void _destroy_oculus();
+	void _begin_frame_oculus();
+	void _end_frame_oculus();
+
+	ovrHmd _hmd;
+	ovrEyeRenderDesc _eye_render_desc[2];
+	ovrPosef _eye_pose[2];
+	// needs to be stored otherwise we get CTD
+	ovrRecti _eye_render_viewport[2];
 
 };	// class Window
 

@@ -17,6 +17,9 @@
 // Necessary for Window config and Wall
 #include "base/config.hpp"
 
+// need to be included before including any other stuff otherwise we get errors for GLEW
+#include <HydraGL/src/OgreGLPrerequisites.h>
+
 #include <OGRE/OgreViewport.h>
 #include <OGRE/OgreTexture.h>
 #include <OGRE/OgreRectangle2D.h>
@@ -67,6 +70,10 @@ inline std::string getRenderModeName(RENDER_MODE rm)
 class Channel
 {
 public:
+	/// Constructor
+	/// @todo add FBO size as a parameter
+	/// we can add it to channel config, no need to distribute it for now though
+	/// @todo also move fsaa and rm to Channel config, they are annoying
 	Channel(vl::config::Channel config, Ogre::Viewport *view, 
 		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent);
 
@@ -84,16 +91,17 @@ public:
 	Rect<double> getSize(void) const
 	{ return _size; }
 
-	STEREO_EYE getStereoEyeCfg(void) const
-	{ return _stereo_eye_cfg; }
+	/// @brief get the Texture size
+	/// only valid for FBO render targets
+	Rect<uint32_t> getTextureSize(void) const;
 
 	/// Necessary to provide getter/setter because player does not exists
 	/// when the Channel is created.
-	Player *getPlayer(void) const
-	{ return _player; }
+	//Player *getPlayer(void) const
+	//{ return _player; }
 
-	void setPlayer(Player *player)
-	{ _player = player; }
+	//void setPlayer(Player *player)
+	//{ _player = player; }
 
 	/// Per frame statistics
 	vl::scalar getLastFPS(void) const;
@@ -116,14 +124,28 @@ public:
 	Ogre::Viewport *getNative(void)
 	{ return _viewport; }
 
+	RENDER_MODE getRenderMode(void) const
+	{ return _render_mode; }
+
+	/// For Oculus
+	void setCustomProjMatrix(bool use, vl::Matrix4 const proj);
+	void setCustomViewMatrix(bool use, vl::Matrix4 const view);
+
+	// Dirty hack to retrieve the texture ID for the RenderTarget
+	// DO NOT use either of these on non-fbo targets or Deferred targets
+	//
+	// we are going to remove non FBO targets so these will just assert
+	// fail for old Windowed rendering
+	uint32_t getTextureID(void) const;
+
+	uint32_t getFBOID(void) const;
+
 	/// Methods
 private :
 
-	void _render_to_fbo(void);
+	void _update_camera();
 
-	// passing stereo eye even though it's member variable because
-	// the member variable looks iffy.
-	void _oculus_post_processing(STEREO_EYE eye_cfg);
+	void _render_to_fbo(void);
 
 	/// nop if null parameter is passed here
 	void _set_fbo_camera(vl::CameraPtr cam, std::string const &base_material);
@@ -173,8 +195,9 @@ private:
 	RENDER_MODE _render_mode;
 	uint32_t _fsaa;
 
-	STEREO_EYE _stereo_eye_cfg;
-	vl::Player *_player;
+	// -1 for left, +1 for right
+	vl::scalar _stereo_eye;
+	//vl::Player *_player;
 
 	// Special Rendering surface
 	// MRT is only available for Deferred shading
@@ -189,6 +212,12 @@ private:
 	Ogre::SceneNode* _quad_node;
 
 	int _draw_buffer;
+
+	/// Oculus hacks
+	bool _use_custom_view;
+	bool _use_custom_proj;
+	Matrix4 _custom_view;
+	Matrix4 _custom_proj;
 
 	vl::Window *_parent;
 
