@@ -47,6 +47,16 @@ const scalar EPSILON = scalar(1e-6);
 
 const scalar PHI = (1 + std::sqrt(5.0))/2;
 
+// place holder struct for 2d integer vector
+struct vec2i
+{
+	int x;
+	int y;
+	
+	vec2i() {}
+	vec2i(int x_, int y_) : x(x_), y(y_) {}
+};
+
 }	// namespace vl
 
 #endif	// HYDRA_MATH_TYPES_HPP

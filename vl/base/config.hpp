@@ -156,6 +156,7 @@ struct HYDRA_API Channel
 	Channel(std::string const &nam)
 		: name(nam)
 		, area(1, 1, 0, 0)
+		, texture_size(0, 0)
 		, background_colour(0, 0, 0)
 	{}
 
@@ -170,7 +171,11 @@ struct HYDRA_API Channel
 
 	Projection projection;
 
+	// Size of the Channel a percentage from the Window
 	Rect<double> area;
+
+	// Size of the texture if using FBO rendering, defaults to real size of the Channel
+	vl::vec2i texture_size;
 
 	vl::Colour background_colour;
 

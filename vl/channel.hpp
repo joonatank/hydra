@@ -188,6 +188,8 @@ private :
 private:
 	std::string _name;
 	Rect<double> _size;
+	// saved variable for FBO creation, might not be actual texture size
+	vl::vec2i _texture_size;
 
 	StereoCamera _camera;
 	Ogre::Viewport *_viewport;
@@ -197,7 +199,6 @@ private:
 
 	// -1 for left, +1 for right
 	vl::scalar _stereo_eye;
-	//vl::Player *_player;
 
 	// Special Rendering surface
 	// MRT is only available for Deferred shading

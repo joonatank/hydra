@@ -42,12 +42,12 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent)
 	: _name(config.name)
 	, _camera()
+	, _texture_size(config.texture_size)
 	, _viewport(view)
 	, _fbo(0)
 	, _fsaa(fsaa)
 	, _stereo_eye(0.0)
 	, _render_mode(rm)
-	//, _player(0)
 	, _mrt(0)
 	, _quad_node(0)
 	, _draw_buffer(GL_BACK)
@@ -614,10 +614,16 @@ vl::Channel::_create_fbo(std::string const &name, Ogre::PixelFormat pf)
 
 	// Texture size will be complete garbage till it's used
 	// so do not check the texture size here. Use an OpenGL debugger instead.
+	//
+	// Use viewport size if no size was set
+	int w = _viewport->getActualWidth();
+	int h = _viewport->getActualHeight();
+	if(_texture_size.x > 0 && _texture_size.y > 0)
+	{ w = _texture_size.x; h = _texture_size.y; }
+
 	Ogre::TexturePtr fbo_texture = Ogre::TextureManager::getSingleton()
 		.createManual(fbo_tex_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, 
-				Ogre::TEX_TYPE_2D, _viewport->getActualWidth(), _viewport->getActualHeight(), 
-				0, pf, Ogre::TU_RENDERTARGET, 0, false, _fsaa);
+				Ogre::TEX_TYPE_2D, w, h, 0, pf, Ogre::TU_RENDERTARGET, 0, false, _fsaa);
 	_fbo_textures.push_back(fbo_texture);
 
 	Ogre::RenderTexture *fbo = fbo_texture->getBuffer()->getRenderTarget();

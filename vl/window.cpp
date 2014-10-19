@@ -718,21 +718,27 @@ vl::Window::_create_channels(void)
 			// for side by side stereo it should never be anything other than half of the
 			// window anyway
 
+			// Pass channel config to get texture size
+			if(rend_mode == RM_OCULUS)
+			{ _configure_oculus(channel_config); }
+
+			std::clog << "Oculus channel texture size = (" 
+				<< channel_config.texture_size.x << ", "
+				<< channel_config.texture_size.y << ")"
+				<< std::endl;
+
 			channel_config.area.w /= 2;
 
+			// left channel
 			std::string base_name = channel_config.name;
 			channel_config.name = base_name + "_left";
 			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			
+			// right channel
 			channel_config.name = base_name + "_right";
 			channel_config.area.x += channel_config.area.w;
 			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
 
-			// @todo
-			// Configure Oculus doesn't use the channels
-			// so we can ran it before and use it to store the FBO size
-			// then create the channels
-			if(rend_mode == RM_OCULUS)
-			{ _configure_oculus(); }
 		}
 		// We already have a window so it should be safe to check for stereo
 		// quad buffer stereo
@@ -953,7 +959,7 @@ vl::Window::_printInputInformation(void)
 }
 
 void
-vl::Window::_configure_oculus()
+vl::Window::_configure_oculus(config::Channel &channel_cfg)
 {
 	std::clog << "vl::Window::_configure_oculus" << std::endl;
 	assert(!_hmd);
@@ -1015,6 +1021,9 @@ vl::Window::_configure_oculus()
 		<< " target size = "
 		<< "(" << renderTargetSize.w << ", " << renderTargetSize.h << ")"
 		<< std::endl;
+
+	// @fixme this assumes the left and right eye textures are the same size
+	channel_cfg.texture_size = vl::vec2i(renderTargetSize.w/2, renderTargetSize.h);
 
 	/// Create the texture, well we use different method but just for reference
 	//pRendertargetTexture = pRender->CreateTexture(
@@ -1100,11 +1109,14 @@ vl::Window::_begin_frame_oculus()
 	// Get the orientation from Oculus
 	// Query the HMD for the current tracking state.
 	ovrTrackingState ts = ovrHmd_GetTrackingState(_hmd, ovr_GetTimeInSeconds());
-	assert(ts.StatusFlags & (ovrStatus_OrientationTracked));
-	// we only need the current pose
-	ovrPosef ovr_head_pose = ts.HeadPose.ThePose;
-	// override head orientation with Oculus information
-	head_t.quaternion = convert(ovr_head_pose.Orientation);
+	// have to check here because it can be not available for some reason
+	if(ts.StatusFlags & (ovrStatus_OrientationTracked));
+	{
+		// we only need the current pose
+		ovrPosef ovr_head_pose = ts.HeadPose.ThePose;
+		// override head orientation with Oculus information
+		head_t.quaternion = convert(ovr_head_pose.Orientation);
+	}
 
 	// Calculate the view and projection matrices for 
 	for(size_t eye = 0; eye < 2; ++eye)

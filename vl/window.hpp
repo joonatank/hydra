@@ -205,7 +205,8 @@ private :
 
 	/// Oculus specific
 	// @todo move to separate file after they are working
-	void _configure_oculus();
+	// pass the Channel config so we can set a correct texture size
+	void _configure_oculus(config::Channel &channel_cfg);
 	void _destroy_oculus();
 	void _begin_frame_oculus();
 	void _end_frame_oculus();
