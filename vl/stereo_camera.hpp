@@ -111,14 +111,6 @@ public :
 	vl::scalar getIPD(void) const
 	{ return _ipd; }
 
-	/// @brief Is the frustum for HMD or not.
-	/// Used for testing what rendering function to use.
-	void enableHMD(bool enable)
-	{ _is_hmd = enable; }
-
-	bool isHMD(void) const
-	{ return _is_hmd; }
-
 	vl::Frustum &getFrustum(void)
 	{ return _frustum; }
 

@@ -56,9 +56,7 @@ vl::operator<<(std::ostream &os, vl::Frustum const &f)
 		<< " far clipping = " << f.getFarClipping()
 		<< " fov = " << f.getFov()
 		<< " asymmetric frustum = " << vl::to_string(f.isAsymmetricStereoFrustum())
-		<< " aspect = " << f.getAspect() << std::endl
-		<< " user left projection = " << f.getUserProjectionLeft() << std::endl
-		<< " user right projection = " << f.getUserProjectionRight() << std::endl;
+		<< " aspect = " << f.getAspect() << std::endl;
 
 	return os;
 }
@@ -72,12 +70,7 @@ vl::Frustum::Frustum(Type type)
 	, _fov(Ogre::Degree(60))
 	, _use_asymmetric_stereo(true)
 	, _aspect(4.0/3)
-{
-	// @todo initialise user projection matrices
-	// initialise them to identity so we can do debug assertions on them
-	_user_projection_right = Ogre::Matrix4::IDENTITY;
-	_user_projection_left = Ogre::Matrix4::IDENTITY;
-}
+{}
 
 Ogre::Matrix4
 vl::Frustum::getProjectionMatrix(void) const
@@ -103,13 +96,7 @@ vl::Frustum::getProjectionMatrix(vl::Transform const &head, vl::scalar eye_offse
 	case FOV:
 		return _calculate_fov_projection(eye_offset);
 	case USER:
-		// User matrix is assumed to be complete so we return here
-		assert(_user_projection_right != Ogre::Matrix4::IDENTITY);
-		assert(_user_projection_left != Ogre::Matrix4::IDENTITY);
-		if(eye_offset < 0)
-		{ return _user_projection_left; }
-		else
-		{ return _user_projection_right; }
+		// old and not used keep it here till completely removed
 	default:
 		// this should never happen
 		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Unknown projection type."));

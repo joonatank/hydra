@@ -140,24 +140,6 @@ public :
 	Ogre::Radian const &getFov(void) const
 	{ return _fov; }
 
-	void setUserProjection(Ogre::Matrix4 const &left, Ogre::Matrix4 const &right)
-	{ _user_projection_left = left; _user_projection_right = right; }
-
-	void setUserProjection(Ogre::Matrix4 const &p)
-	{ _user_projection_left = p; _user_projection_right = p; }
-	
-	void setUserProjectionLeft(Ogre::Matrix4 const &p)
-	{ _user_projection_left = p; }
-
-	Ogre::Matrix4 const &getUserProjectionLeft(void) const
-	{ return _user_projection_left; }
-
-	void setUserProjectionRight(Ogre::Matrix4 const &p)
-	{ _user_projection_right = p; }
-
-	Ogre::Matrix4 const &getUserProjectionRight(void) const
-	{ return _user_projection_right; }
-
 	Ogre::Matrix4 _calculate_wall_projection(vl::Transform const &head, vl::scalar eye_offset) const;
 
 	Ogre::Matrix4 _calculate_fov_projection(vl::scalar eye_offset) const;
@@ -176,9 +158,6 @@ private :
 	bool _use_asymmetric_stereo;
 
 	vl::scalar _aspect;
-
-	Ogre::Matrix4 _user_projection_left;
-	Ogre::Matrix4 _user_projection_right;
 
 };	// class Frustum
 

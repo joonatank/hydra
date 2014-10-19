@@ -1024,6 +1024,19 @@ vl::Window::_configure_oculus()
 	// The actual RT size may be different due to HW limits.
 	//renderTargetSize.w = pRendertargetTexture->GetWidth();
 	//renderTargetSize.h = pRendertargetTexture->GetHeight();
+
+	/// Oculus head tracker (cyro)
+	// Start the sensor which provides the Rift’s pose and motion.
+	// ovrTrackingCap_Position, not using the position tracking for now
+	// @todo how do we check that this is successful?
+	bool res = ovrHmd_ConfigureTracking(_hmd, ovrTrackingCap_Orientation | 
+		ovrTrackingCap_MagYawCorrection, 0);
+	if(!res)
+	{
+		const char *last_err = ovrHmd_GetLastError(_hmd);
+		std::clog << "Oculus ERROR : " << last_err << std::endl;
+		assert(false);
+	}
 }
 
 void
@@ -1084,6 +1097,15 @@ vl::Window::_begin_frame_oculus()
 	Vector3 camera_pos = player->getCamera()->getWorldPosition();
 	Quaternion camera_q = player->getCamera()->getWorldOrientation();
 
+	// Get the orientation from Oculus
+	// Query the HMD for the current tracking state.
+	ovrTrackingState ts = ovrHmd_GetTrackingState(_hmd, ovr_GetTimeInSeconds());
+	assert(ts.StatusFlags & (ovrStatus_OrientationTracked));
+	// we only need the current pose
+	ovrPosef ovr_head_pose = ts.HeadPose.ThePose;
+	// override head orientation with Oculus information
+	head_t.quaternion = convert(ovr_head_pose.Orientation);
+
 	// Calculate the view and projection matrices for 
 	for(size_t eye = 0; eye < 2; ++eye)
 	{
@@ -1094,12 +1116,11 @@ vl::Window::_begin_frame_oculus()
 		Ogre::Matrix4 proj = convert(ovr_proj);
 
 		// view matrix
+		
 		OVR::Vector3f v(_eye_pose[eye].Position);
 		Ogre::Vector3 eye_lp(v.x, v.y, v.z);
 		Ogre::Vector3 eye_p = camera_q*(head_t.quaternion*eye_lp + head_t.position) + camera_pos;
-		// @todo head_t is wrong here we need the Oculus head rotation
-		//Ogre::Quaternion eye_q = head_t.quaternion*camera_q;
-		Ogre::Quaternion eye_q = camera_q;
+		Ogre::Quaternion eye_q = head_t.quaternion*camera_q;
 
 		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix(eye_p, eye_q);
 

@@ -83,15 +83,13 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 
 	_camera.getFrustum().setWall(config.projection.wall);
 	_camera.getFrustum().setFov(Ogre::Degree(config.projection.fov));
+
+	// Old stuff for Oculus, to be removed
+	assert(config.projection.perspective_type != vl::config::Projection::USER);
 	if(config.projection.perspective_type == vl::config::Projection::FOV)
 	{
 		std::clog << "Setting channel " << getName() << " to use FOV frustum." << std::endl;
 		_camera.getFrustum().setType(Frustum::FOV);
-	}
-	else if(config.projection.perspective_type == vl::config::Projection::USER)
-	{
-		std::clog << "Setting channel " << getName() << " to use USER frustum." << std::endl;
-		_camera.getFrustum().setType(Frustum::USER);
 	}
 	else
 	{
@@ -99,13 +97,7 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 		_camera.getFrustum().setType(Frustum::WALL);
 	}
 
-	// set custom projections
-	Ogre::Matrix4 const &left = config.user_projection_left;
-	Ogre::Matrix4 const &right = config.user_projection_right;
-	_camera.getFrustum().setUserProjection(left, right);
-
 	/// Need to modify the rendering to include head orientation in view matrix
-	_camera.enableHMD(config.projection.hmd);
 
 	/// Select draw buffer
 	//
