@@ -54,6 +54,9 @@
 Ogre::Quaternion convert(ovrQuatf const &q)
 { return Ogre::Quaternion(q.w, q.x, q.y, q.z); }
 
+Ogre::Vector3 convert(OVR::Vector3f const &v)
+{ return Ogre::Vector3(v.x, v.y, v.z); }
+
 Ogre::Matrix4 convert(OVR::Matrix4f const &m)
 {
 	Ogre::Matrix4 mm;
@@ -1119,8 +1122,9 @@ vl::Window::_begin_frame_oculus()
 	}
 
 	// Calculate the view and projection matrices for 
-	for(size_t eye = 0; eye < 2; ++eye)
+	for(size_t eyeIndex = 0; eyeIndex < 2; ++eyeIndex)
 	{
+		ovrEyeType eye = _hmd->EyeRenderOrder[eyeIndex];
 		// hard coded eye order (left, right)
 		// coordinate system is correct, the otherone (left handed) gives no image
 		OVR::Matrix4f ovr_proj = ovrMatrix4f_Projection(_eye_render_desc[eye].Fov, 0.01f, 10000.0f, true);
@@ -1128,16 +1132,20 @@ vl::Window::_begin_frame_oculus()
 		Ogre::Matrix4 proj = convert(ovr_proj);
 
 		// view matrix
-		
+
 		OVR::Vector3f v(_eye_pose[eye].Position);
 		Ogre::Vector3 eye_lp(v.x, v.y, v.z);
 		Ogre::Vector3 eye_p = camera_q*(head_t.quaternion*eye_lp + head_t.position) + camera_pos;
-		Ogre::Quaternion eye_q = head_t.quaternion*camera_q;
+		Ogre::Quaternion eye_q = camera_q*head_t.quaternion;
 
 		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix(eye_p, eye_q);
 
-		_channels.at(eye)->setCustomViewMatrix(true, view);
-		_channels.at(eye)->setCustomProjMatrix(true, proj);
+		Ogre::Vector3 adjust = convert(_eye_render_desc[eye].ViewAdjust);
+		Ogre::Matrix4 view_adjust = Ogre::Matrix4::IDENTITY;
+		view_adjust.setTrans(adjust);
+		
+		_channels.at(eyeIndex)->setCustomViewMatrix(true, view_adjust * view);
+		_channels.at(eyeIndex)->setCustomProjMatrix(true, proj);
 	}
 }
 
@@ -1145,7 +1153,7 @@ void
 vl::Window::_end_frame_oculus()
 {
 	assert(_hmd);
-	// @todo
+
 	// renderTargetSize (calculated in initialisation (see PDF doc)
 	// textureId OpenGL identifier (retrieve from Channel)
 	//
@@ -1159,16 +1167,11 @@ vl::Window::_end_frame_oculus()
 	render_target_size.w = size.w;
 	render_target_size.h = size.h;
 
-	// Umm this calculation is for split viewport and not separate views
-	// this however seems to work, the distortion looks right
-	//
-	// @todo useless calculation in the rendering loop when they could be member variables.
+	// We are using separate render textures
 	_eye_render_viewport[0].Pos  = OVR::Vector2i(0,0);
-	_eye_render_viewport[0].Size = OVR::Sizei(render_target_size.w / 2, render_target_size.h);
-	//_eye_render_viewport[0].Size = render_target_size;
-	_eye_render_viewport[1].Pos  = OVR::Vector2i((render_target_size.w + 1) / 2, 0);
-	//_eye_render_viewport[1].Pos  = OVR::Vector2i(0, 0);
-	_eye_render_viewport[1].Size = _eye_render_viewport[0].Size;
+	_eye_render_viewport[0].Size = render_target_size;
+	_eye_render_viewport[1].Pos  = OVR::Vector2i(0, 0);
+	_eye_render_viewport[1].Size = render_target_size;
 
 	// array of two for both eyes
 	ovrGLTexture eyeTextures[2];
