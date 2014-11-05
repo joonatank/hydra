@@ -84,7 +84,6 @@ if(WIN32)
 		input/input.hpp
 		input/ois_converters.hpp
 		input/pcan.hpp
-		input/mouse.hpp
 		input/mouse_event.hpp
 		input/joystick_event.hpp
 		input/tracker.hpp
@@ -95,7 +94,6 @@ if(WIN32)
 		)
 	set(INPUT_SRC
 		input/pcan.cpp
-		input/mouse.cpp
 		input/tracker.cpp
 		input/vrpn_tracker.cpp
 		input/vrpn_analog_client.cpp
@@ -164,7 +162,6 @@ set(PHYSICS_HEADERS
 	physics/physics_constraints.hpp
 	physics/physics_world.hpp
 	physics/tube.hpp
-	physics/ray_picking.hpp
 	physics/physics_world_bullet.hpp
 	physics/rigid_body_bullet.hpp
 	physics/shapes_bullet.hpp
@@ -178,7 +175,6 @@ set(PHYSICS_SRC
 	physics/shapes.cpp
 	physics/rigid_body.cpp
 	physics/tube.cpp
-	physics/ray_picking.cpp
 	physics/physics_world_bullet.cpp
 	physics/physics_constraints_bullet.cpp
 	physics/mesh_bullet.cpp
