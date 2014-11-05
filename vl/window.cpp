@@ -549,6 +549,9 @@ vl::Window::draw(void)
 void
 vl::Window::swap( void )
 {
+	// Swapping buffers here doesn't make a difference with Oculus
+	// we shouldn't call it but if it makes no difference no reason to waste time
+	// with branching.
 	assert(_ogre_window);
 	_ogre_window->swapBuffers(false);
 }
@@ -721,10 +724,6 @@ vl::Window::_create_channels(void)
 			// for side by side stereo it should never be anything other than half of the
 			// window anyway
 
-			// Pass channel config to get texture size
-			if(rend_mode == RM_OCULUS)
-			{ _configure_oculus(channel_config); }
-
 			std::clog << "Oculus channel texture size = (" 
 				<< channel_config.texture_size.x << ", "
 				<< channel_config.texture_size.y << ")"
@@ -766,7 +765,29 @@ vl::Window::_createNative(void)
 {
 	std::clog << "vl::Window::_createNative" << std::endl;
 
-	_ogre_window = _createOgreWindow(_window_config);
+	if(_window_config.type == config::WT_OCULUS)
+	{
+		int w, h;
+		_initialise_oculus();
+		w = _hmd->Resolution.w;
+		h = _hmd->Resolution.h;
+
+		_ogre_window = _createOgreWindow(_window_config);
+		HWND window;
+		_ogre_window->getCustomAttribute("WINDOW", &window);
+
+		_configure_oculus(_window_config);
+		
+		// for Oculus direct rendering
+		bool res = ovrHmd_AttachToWindow(_hmd, window, NULL, NULL);
+		assert(res);
+	}
+	else
+	{
+		_ogre_window = _createOgreWindow(_window_config);
+	}
+
+	assert(_ogre_window);
 
 	_createInputHandling();
 
@@ -962,21 +983,34 @@ vl::Window::_printInputInformation(void)
 }
 
 void
-vl::Window::_configure_oculus(config::Channel &channel_cfg)
+vl::Window::_initialise_oculus(void)
 {
-	std::clog << "vl::Window::_configure_oculus" << std::endl;
+	std::clog << "vl::Window::_initialise_oculus" << std::endl;
 	assert(!_hmd);
 	ovr_Initialize();
 	_hmd = ovrHmd_Create(0);
+	// when Oculus is not connected for debugging
+	if(!_hmd)
+	{
+		_hmd = ovrHmd_CreateDebug(ovrHmd_DK2);
+	}
+
+	assert(_hmd);
+}
+
+void
+vl::Window::_configure_oculus(config::Window &window_cfg)
+{
+	std::clog << "vl::Window::_configure_oculus" << std::endl;
 	assert(_hmd);
 
 	// @todo config stuff
 
-	assert(_ogre_window);
 	// Dirty hack to get Native window ID and DC
 	// Window is the window handle
 	// DC is the OpenGL context
 	HWND window;
+	assert(_ogre_window);
 	_ogre_window->getCustomAttribute("WINDOW", &window);
 	// cant use getCustomAttribute for the Context because it doesn't expose the HDC
 	// Not sure if we are setting the right context but it is working
@@ -984,9 +1018,17 @@ vl::Window::_configure_oculus(config::Channel &channel_cfg)
 
 	ovrGLConfig cfg;
 	cfg.OGL.Header.API			= ovrRenderAPI_OpenGL;
+	// RT size? render texture size is it
+	// then we should have halved resolution since we are using double RTs
+	// interesting if we halve it it halves the output
 	cfg.OGL.Header.RTSize		= _hmd->Resolution;
+	// for now zero
 	cfg.OGL.Header.Multisample	= _ogre_window->getFSAA();
+	// Don't need to set window it uses current one automatically
 	cfg.OGL.Window				= window;
+	// don't need to set context it uses new one automatically
+	// actually we get no picture if we don't set it
+	// yea no picture at all, not even the Warning overlay on either Oculus or Monitor
 	cfg.OGL.DC					= dc;
 
 	// distortionCaps is distortion flags
@@ -1005,9 +1047,9 @@ vl::Window::_configure_oculus(config::Channel &channel_cfg)
 
 	// Configure Stereo settings.
 	OVR::Sizei recommenedTex0Size = ovrHmd_GetFovTextureSize(_hmd, ovrEye_Left, 
-		_hmd->DefaultEyeFov[0], 1.0f);
+		eyeFov[0], 1.0f);
 	OVR::Sizei recommenedTex1Size = ovrHmd_GetFovTextureSize(_hmd, ovrEye_Right, 
-		_hmd->DefaultEyeFov[1], 1.0f);
+		eyeFov[1], 1.0f);
 
 	OVR::Sizei renderTargetSize;
 	renderTargetSize.w = recommenedTex0Size.w + recommenedTex1Size.w;
@@ -1026,7 +1068,9 @@ vl::Window::_configure_oculus(config::Channel &channel_cfg)
 		<< std::endl;
 
 	// @fixme this assumes the left and right eye textures are the same size
-	channel_cfg.texture_size = vl::vec2i(renderTargetSize.w/2, renderTargetSize.h);
+	// we have only tested single channel, I'd assume multiple wouldn't work properly
+	assert(window_cfg.get_n_channels() == 1);
+	window_cfg.get_channel(0).texture_size = vl::vec2i(renderTargetSize.w/2, renderTargetSize.h);
 
 	/// Create the texture, well we use different method but just for reference
 	//pRendertargetTexture = pRender->CreateTexture(

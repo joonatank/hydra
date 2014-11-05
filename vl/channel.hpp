@@ -95,14 +95,6 @@ public:
 	/// only valid for FBO render targets
 	Rect<uint32_t> getTextureSize(void) const;
 
-	/// Necessary to provide getter/setter because player does not exists
-	/// when the Channel is created.
-	//Player *getPlayer(void) const
-	//{ return _player; }
-
-	//void setPlayer(Player *player)
-	//{ _player = player; }
-
 	/// Per frame statistics
 	vl::scalar getLastFPS(void) const;
 
