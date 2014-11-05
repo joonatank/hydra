@@ -1,5 +1,5 @@
 /**
- *	Copyright (c) 2011 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-11

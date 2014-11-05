@@ -1,3 +1,17 @@
+/**
+ *	Copyright (c) 2013 - 2014 Savant Simulators
+ *
+ *	@author Ville Lepokorpi <ville.lepokorpi@savantsimulators.com>
+ *	@date 2013
+ *	@file input/mouse_event.hpp
+ *
+ *	This file is part of Hydra VR game engine.
+ *	Version 0.5
+ *
+ *	Licensed under commercial license.
+ *
+ */
+
 #ifndef HYDRA_INPUT_MOUSE_EVENT_HPP
 #define HYDRA_INPUT_MOUSE_EVENT_HPP
 

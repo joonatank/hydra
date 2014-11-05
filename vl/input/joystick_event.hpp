@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011 - 2013 Savant Simulators
+ *	Copyright (c) 2011 - 2014 Savant Simulators
  *
  *	@author Ville Lepokorpi <ville.lepokorpi@savantsimulators.com>
  *	@date 2011-07
  *	@file input/serial_joystick_event.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *

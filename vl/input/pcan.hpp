@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2013 Savant Simulators
+ *	Copyright (c) 2013 - 2014 Savant Simulators
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2013-05
  *	@file input/pcan.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *

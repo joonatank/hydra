@@ -1,13 +1,13 @@
 /**
  *	Copyright (c) 2011 Tampere University of Technology
- *	Copyright (c) 2011 - 2012 Savant Simulators Oy
+ *	Copyright (c) 2011 - 2014 Savant Simulators Oy
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@tut.fi>
  *	@date 2011-01
  *	@file cluster/session.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *

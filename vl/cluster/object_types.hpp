@@ -1,12 +1,12 @@
 /**
- *	Copyright (c) 2011 - 2012 Savant Simulators Oy
+ *	Copyright (c) 2011 - 2014 Savant Simulators Oy
  *
  *	@author Joonatan Kuosa <joonatan.kuosa@savantsimulators.com>
  *	@date 2011-11
  *	@file cluster/object_types.hpp
  *
  *	This file is part of Hydra VR game engine.
- *	Version 0.4
+ *	Version 0.5
  *
  *	Licensed under commercial license.
  *
