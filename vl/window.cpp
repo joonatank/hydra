@@ -1091,11 +1091,6 @@ vl::Window::_begin_frame_oculus()
 		ovrHmd_DismissHSWDisplay(_hmd);
 	}
 
-	// Needed as a member variable for end frame
-	// needed for view matrix calculation here
-	_eye_pose[0] = ovrHmd_GetEyePose(_hmd, ovrEye_Left);
-	_eye_pose[1] = ovrHmd_GetEyePose(_hmd, ovrEye_Right);
-
 	// We can't use the "_renderer" member variable since it's actaully a slave session 
 	// not the renderer... we should rename it
 	// it does not exist on the master
@@ -1131,6 +1126,9 @@ vl::Window::_begin_frame_oculus()
 
 		Ogre::Matrix4 proj = convert(ovr_proj);
 
+		// Needed as a member variable for end frame
+		_eye_pose[eye] = ovrHmd_GetHmdPosePerEye(_hmd, eye);
+
 		// view matrix
 
 		OVR::Vector3f v(_eye_pose[eye].Position);
@@ -1140,7 +1138,7 @@ vl::Window::_begin_frame_oculus()
 
 		Ogre::Matrix4 view = Ogre::Math::makeViewMatrix(eye_p, eye_q);
 
-		Ogre::Vector3 adjust = convert(_eye_render_desc[eye].ViewAdjust);
+		Ogre::Vector3 adjust = convert(_eye_render_desc[eye].HmdToEyeViewOffset);
 		Ogre::Matrix4 view_adjust = Ogre::Matrix4::IDENTITY;
 		view_adjust.setTrans(adjust);
 		
