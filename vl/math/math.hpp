@@ -152,6 +152,17 @@ inline T const &min(T const &a, T const &b)
 	return (a < b ? a : b);
 }
 
+/// @brief round a number
+/// N is the number of decimals to which round the val
+template<typename T, int N>
+inline T round(T const &val)
+{
+	// @todo for the template to be useful we need to define pow and floor
+	// as templates also.
+	T h = std::pow(10, N);
+	return( std::floor(val * h + 0.5) / h );
+}
+
 /// @brief Get the distance (angle between) two quaternions
 /// @return angle between the quaternions in radians, always positive
 inline vl::scalar

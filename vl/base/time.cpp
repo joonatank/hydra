@@ -205,6 +205,21 @@ vl::time::operator/=(size_t n)
 	return *this;
 }
 
+vl::time &
+vl::time::operator/=(int n)
+{
+	assert(n > 0);
+	return *this /= (size_t)n;
+}
+
+vl::time &
+vl::time::operator*=(int n)
+{
+	assert(n >= 0);
+	return *this *= (size_t)n;
+}
+
+
 void
 vl::time::_check_usecs(void)
 {

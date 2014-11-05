@@ -45,6 +45,11 @@ struct time
 {
 	time(uint32_t s = 0, uint32_t us = 0);
 	
+	// @brief constructor
+	// @param s seconds
+	// int constructor defined because there is no implicit conversion 
+	// from uint to int
+	// does not do any checking that the value passed is valid (non negative)
 	time(int s);
 
 	time(double s);
@@ -67,6 +72,12 @@ struct time
 	time &operator/=(size_t n);
 
 	time &operator*=(size_t n);
+
+	// Overload int versions to convert to uint
+	// no release version checking that the number is valid (non negative and not zero)
+	time &operator/=(int n);
+
+	time &operator*=(int n);
 
 private :
 	void _check_usecs(void);
