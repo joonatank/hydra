@@ -170,13 +170,6 @@ vl::Renderer::draw(void)
 		//_last_proj_matrix = chan->getCamera().getLastProjectionMatrix();
 	}
 
-	// Hack to update Sky
-	if(_pipe->getWindows().size() > 0 && _player->getCamera()
-		&& _scene_manager && _scene_manager->getSkySimulator())
-	{
-		_scene_manager->getSkySimulator()->notifyCameraRender(_player->getCamera());
-	}
-
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameEnd(); }
 

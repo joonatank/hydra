@@ -75,7 +75,6 @@ set(ENV{OIS_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OIS/")
 set(BOOST_ROOT ${HYDRA_DEPENDENCIES_LIB_DIR})
 set(BULLET_ROOT "${HYDRA_DEPENDENCIES_LIB_DIR}/Bullet/")
 set(ENV{OgreProcedural_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OgreProcedural/")
-set(ENV{SkyX_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/SkyX/")
 set(ENV{OPENCOLLADA_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/OpenCollada/")
 set(ENV{TURTLE_DIR} "${HYDRA_DEPENDENCIES_LIB_DIR}/")
 
@@ -139,9 +138,6 @@ find_package(Bullet REQUIRED)
 find_package(OgreProcedural REQUIRED)
 find_package(OpenCollada REQUIRED)
 
-# TODO Sky plugisn should be optional and only one of them should be used
-find_package(SkyX REQUIRED)
-
 # Oculus SDK should not be required but for the moment
 find_package(OVR REQUIRED)
 
@@ -156,7 +152,6 @@ include_directories( SYSTEM
 	${PYTHON_INCLUDE_DIR}
 	${Boost_INCLUDE_DIRS}
 	${OgreProcedural_INCLUDE_DIR}
-	${SkyX_INCLUDE_DIR}
 	${OPENCOLLADA_INCLUDE_DIR}
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADASaxFrameworkLoader
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADAFramework
@@ -181,7 +176,6 @@ set( HYDRA_DEP_LIBS
 	${Boost_PROGRAM_OPTIONS_LIBRARIES}
 	${OgreProcedural_LIBRARIES}
 	${OPENCOLLADA_LIBRARIES}
-	${SkyX_LIBRARIES}
 	${BULLET_LIBRARIES}
 	${OVR_LIBRARIES}
 	# For OpenGL hacks needed for Oculus

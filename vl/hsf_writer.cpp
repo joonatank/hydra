@@ -521,27 +521,14 @@ void
 vl::HSFWriter::writeSky(rapidxml::xml_node<> *xml_node, vl::SceneManagerPtr scene)
 {
 	std::clog << "vl::HSFWriter::writeSky" << std::endl;
-	SkyInfo const &info = scene->getSkyInfo();
 	SkyDomeInfo const &dome = scene->getSkyDome();
 
 	std::string type("static");
-	if(info.getPreset() != "none")
-	{
-		type = "dynamic";
-	}
 
 	char *str = _doc.allocate_string(type.c_str());
 	xml_node->append_attribute(_doc.allocate_attribute("type", str));
 
 	xml_node->append_attribute(_doc.allocate_attribute("fallback", "true"));
-
-
-	/// Write dynamic parameters
-	rapidxml::xml_node<> *dyn = _doc.allocate_node(rapidxml::node_element, "dynamic");
-	xml_node->append_node(dyn);
-
-	char *preset = _doc.allocate_string(info.getPreset().c_str());
-	dyn->append_attribute(_doc.allocate_attribute("preset", preset));
 
 	/// Write static parameters
 	rapidxml::xml_node<> *stat = _doc.allocate_node(rapidxml::node_element, "static");

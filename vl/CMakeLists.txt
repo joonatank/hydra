@@ -52,7 +52,6 @@ set(SRC
 	material_manager.cpp
 	ray_object.cpp
 	ray_cast_ogre.cpp
-	sky_skyx.cpp
 	ogre_axes.cpp
 	remote_launcher_helper.cpp
 	game_object.cpp
@@ -253,8 +252,6 @@ set( HEADERS
 	ogre_root.hpp
 	ray_object.hpp
 	ray_cast_ogre.hpp
-	sky_interface.hpp
-	sky_skyx.hpp
 	game_object.hpp
 	hsf_loader.hpp
 	hsf_writer.hpp

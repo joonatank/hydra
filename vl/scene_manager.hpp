@@ -30,9 +30,6 @@
 
 #include "math/transform.hpp"
 
-// Necessary for sky simulation
-#include "sky_interface.hpp"
-
 namespace vl
 {
 
@@ -106,52 +103,6 @@ operator==(SkyDomeInfo const &a, SkyDomeInfo const &b)
 inline bool
 operator!=(SkyDomeInfo const &a, SkyDomeInfo const &b)
 { return !(a == b); }
-
-/** @class SkyInfo
- *	For more realistic and complex Sky rendering.
- *	
- *	For now only supports presets
- */
-class SkyInfo
-{
-public :
-	SkyInfo(std::string const &preset_name = "none");
-
-	// Valid presets "none", "clear", "desert", "thunderstorm", "sunset", and "night"
-	// case insensitive
-	// none is a special case that will disable the Sky and switch to regular SkyDome
-	// passing an incorrect preset or an empty string will switch to "none"
-	void setPreset(std::string const &preset_name);
-
-	std::string const &getPreset(void) const
-	{ return _preset; }
-
-	bool isDirty(void) const
-	{ return _dirty; }
-
-	void clearDirty(void)
-	{ _dirty = false; }
-
-private :
-	void _setDirty(void)
-	{ _dirty = true; }
-
-	std::string _preset;
-
-	bool _dirty;
-};
-
-// Not implemented
-inline bool
-operator==(SkyInfo const &a, SkyInfo const &b)
-{
-	return false;
-}
-
-inline bool
-operator!=(SkyInfo const &a, SkyInfo const &b)
-{ return !(a == b); }
-
 
 struct FogInfo
 {
@@ -558,12 +509,6 @@ public :
 	SkyDomeInfo const &getSkyDome(void) const
 	{ return _sky_dome; }
 
-	/// @brief set and get Sky value for Sky simulator
-	/// Setting a valid SkyInfo (not none) will override any SkyDome settings
-	void setSkyInfo(SkyInfo const &sky);
-	SkyInfo &getSkyInfo(void)
-	{ return _sky; }
-
 	void setFog(FogInfo const &fog);
 
 	FogInfo const &getFog(void) const
@@ -653,9 +598,6 @@ public :
 	Ogre::SceneManager *getNative( void )
 	{ return _ogre_sm; }
 
-	vl::Sky *getSkySimulator(void)
-	{ return _sky_sim; }
-
 	/// @internal
 	/// @brief step the SceneManager does things like progression of automatic mappings
 	void _step(vl::time const &t);
@@ -682,12 +624,6 @@ private :
 	// @todo rename to avoid confusion
 	SceneNodePtr _createSceneNode(std::string const &name, uint64_t id, bool dynamic = false);
 
-	// @brief helper functions for creating a Sky and changing presets
-	// only working on Rendering copies
-	void _initialiseSky(SkySettings const &preset);
-	void _changeSkyPreset(SkySettings const &preset);
-	bool _isSkyEnabled(void) const;
-
 	SceneNodePtr _root;
 	SceneNodeList _scene_nodes;
 	MovableObjectList _objects;
@@ -710,7 +646,6 @@ private :
 	SceneNodePtr _active_object;
 
 	SkyDomeInfo _sky_dome;
-	SkyInfo _sky;
 	FogInfo _fog;
 
 	// Reload the scene
@@ -730,10 +665,6 @@ private :
 	// Ogre::SceneNode
 	// Only valid on slaves and only needed when the SceneNode is mapped
 	Ogre::SceneManager *_ogre_sm;
-
-	// skies
-	vl::Sky *_sky_sim;
-	std::map<std::string, vl::SkySettings> _sky_presets;
 
 };	// class SceneManager
 
@@ -765,12 +696,6 @@ ByteStream &operator<<(ByteStream &msg, vl::ShadowInfo const &shadows);
 
 template<>
 ByteStream &operator>>(ByteStream &msg, vl::ShadowInfo &shadows);
-
-template<>
-ByteStream &operator<<(ByteStream &msg, vl::SkyInfo const &sky);
-
-template<>
-ByteStream &operator>>(ByteStream &msg, vl::SkyInfo &sky);
 
 }	// namespace cluster
 }	// namespace vl

@@ -32,9 +32,6 @@
 
 #include "logger.hpp"
 
-// Necessary for Different sky plugins
-#include "sky_skyx.hpp"
-
 #include "math/math.hpp"
 
 const char *vl::EDITOR_CAMERA = "editor/perspective";
@@ -162,26 +159,6 @@ vl::ShadowInfo::setDirLightExtrusionDistance(vl::scalar const dist)
 	}
 }
 
-/// ------------------------------ SkyInfo -----------------------------------
-vl::SkyInfo::SkyInfo(std::string const &preset_name)
-	: _preset(preset_name)
-	, _dirty(true)
-{
-	vl::to_lower(_preset);
-}
-
-void
-vl::SkyInfo::setPreset(std::string const &preset_name)
-{
-	if(preset_name != _preset)
-	{
-		_preset = preset_name;
-		vl::to_lower(_preset);
-		_setDirty();
-	}
-}
-
-
 /// ------------------------------ SceneManager ------------------------------
 /// Public
 /// Master constructor
@@ -192,7 +169,6 @@ vl::SceneManager::SceneManager(vl::Session *session, vl::MeshManagerRefPtr mesh_
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(0)
-	, _sky_sim(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -218,7 +194,6 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	, _session(session)
 	, _mesh_manager(mesh_man)
 	, _ogre_sm(native)
-	, _sky_sim(0)
 {
 	std::cout << vl::TRACE << "vl::SceneManager::SceneManager" << std::endl;
 
@@ -227,14 +202,6 @@ vl::SceneManager::SceneManager(vl::Session *session, uint64_t id, Ogre::SceneMan
 	assert(_ogre_sm);
 
 	_session->registerObject( this, OBJ_SCENE_MANAGER, id );
-
-	// SkyX::AtmosphereManager::Options(9.77501f, 10.2963f, 0.01f, 0.0022f, 0.000675f, 30, Ogre::Vector3(0.57f, 0.52f, 0.44f), -0.991f, 3, 4);
-	/// Add skyX presets hard coded for now
-	_sky_presets["sunset"] = vl::SkySettings(Ogre::Vector3(8.85f, 7.5f, 20.5f),  -0.08f, 0, false, true, 300, false, Ogre::Vector3::NEGATIVE_UNIT_X, Ogre::ColourValue(0.63f,0.63f,0.7f), Ogre::ColourValue(0.35, 0.2, 0.92, 0.1), Ogre::ColourValue(0.4, 0.7, 0, 0), Ogre::Vector2(0.8,1));
-	_sky_presets["clear"] = vl::SkySettings(Ogre::Vector3(17.16f, 7.5f, 20.5f), 0, 0, false, false);
-	_sky_presets["thunderstorm"] = vl::SkySettings(Ogre::Vector3(12.23, 7.5f, 20.5f),  0, 0, false, true, 300, false, Ogre::Vector3::UNIT_Z, Ogre::ColourValue(0.63f,0.63f,0.7f), Ogre::ColourValue(0.25, 0.4, 0.5, 0.1), Ogre::ColourValue(0.45, 0.3, 0.6, 0.1), Ogre::Vector2(1,1));
-	_sky_presets["desert"] = vl::SkySettings(Ogre::Vector3(7.59f, 7.5f, 20.5f), 0, -0.8f, true, false);
-	_sky_presets["night"] = vl::SkySettings(Ogre::Vector3(21.5f, 7.5, 20.5), 0.03, -0.25, true, false);
 }
 
 vl::SceneManager::~SceneManager( void )
@@ -264,10 +231,6 @@ vl::SceneManager::~SceneManager( void )
 		delete *iter;
 	}
 	*/
-
-	// @fixme this crashes
-	//delete _sky_sim;
-	//_sky_sim = 0;
 
 	// Can't destroy Ogre::SceneManager because it's owned by ogre::Root
 	// not sure if it's the best decission but for now.
@@ -309,10 +272,7 @@ vl::SceneManager::destroyScene(bool destroyEditorCamera)
 	for(MovableObjectList::iterator iter = objects.begin(); 
 		iter != objects.end(); ++iter)
 	{ destroyMovableObject(*iter); }
-	
 
-	delete _sky_sim;
-	_sky_sim = 0;
 	// Reset skydome also
 	_sky_dome = SkyDomeInfo("");
 
@@ -850,12 +810,6 @@ vl::SceneManager::setSkyDome(SkyDomeInfo const &dome)
 	update_variable(_sky_dome, dome, DIRTY_SKY);
 }
 
-void 
-vl::SceneManager::setSkyInfo(vl::SkyInfo const &sky)
-{
-	update_variable(_sky, sky, DIRTY_SKY);
-}
-
 void
 vl::SceneManager::setFog(FogInfo const &fog)
 {
@@ -1103,12 +1057,6 @@ vl::SceneManager::recaluclateDirties(void)
 		setDirty(DIRTY_SHADOW_INFO);
 		_shadows.clearDirty();
 	}
-
-	if(_sky.isDirty())
-	{
-		setDirty(DIRTY_SKY);
-		_sky.clearDirty();
-	}
 }
 
 void
@@ -1121,7 +1069,7 @@ vl::SceneManager::serialize( vl::cluster::ByteStream &msg, const uint64_t dirtyB
 
 	if( dirtyBits & DIRTY_SKY )
 	{
-		msg << _sky << _sky_dome;
+		msg << _sky_dome;
 	}
 
 	if( dirtyBits & DIRTY_FOG )
@@ -1157,37 +1105,19 @@ vl::SceneManager::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirt
 
 	if( dirtyBits & DIRTY_SKY )
 	{
-		msg >> _sky >> _sky_dome;
+		msg >> _sky_dome;
 
 		assert( _ogre_sm );
 
-		// @todo handle updated sky and switch of sky dome
-		std::map<std::string, vl::SkySettings>::iterator iter 
-				= _sky_presets.find(_sky.getPreset());
-		if( iter != _sky_presets.end() )
-		{
-			std::clog << "Should enable SkyX with " << _sky.getPreset() << " preset." << std::endl;
-			if(_isSkyEnabled())
-			{
-				_changeSkyPreset(iter->second);
-			}
-			else
-			{
-				_initialiseSky(iter->second);
-			}
-		}
+		if( _sky_dome.empty() )
+		{ _ogre_sm->setSkyDome(false, ""); }
 		else
 		{
-			if( _sky_dome.empty() )
-			{ _ogre_sm->setSkyDome(false, ""); }
-			else
-			{
-				_ogre_sm->setSkyDome( true, _sky_dome.material_name,
-					_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
-					_sky_dome.draw_first, _sky_dome.orientation, 
-					_sky_dome.xsegments, _sky_dome.ysegments,
-					_sky_dome.ysegments_keep );
-			}
+			_ogre_sm->setSkyDome( true, _sky_dome.material_name,
+				_sky_dome.curvature, _sky_dome.tiling, _sky_dome.distance,
+				_sky_dome.draw_first, _sky_dome.orientation, 
+				_sky_dome.xsegments, _sky_dome.ysegments,
+				_sky_dome.ysegments_keep );
 		}
 	}
 
@@ -1416,52 +1346,6 @@ vl::SceneManager::_createRayObject(std::string const &name, vl::NamedParamList c
 	return new RayObject(name, this, dynamic);
 }
 
-void
-vl::SceneManager::_initialiseSky(vl::SkySettings const &preset)
-{
-	if(_sky_sim)
-	{ return; }
-
-	_sky_sim = new vl::SkySkyX(this);
-
-	_changeSkyPreset(preset);
-}
-
-void
-vl::SceneManager::_changeSkyPreset(vl::SkySettings const &preset)
-{
-	std::clog << "vl::SceneManager::_changeSkyPreset" << std::endl;
-	assert(_sky_sim);
-
-	_sky_sim->setTimeMultiplier(preset.timeMultiplier);
-	_sky_sim->setTime(preset.time.x);
-	_sky_sim->setSunriseTime(preset.time.y);
-	_sky_sim->setSunsetTime(preset.time.z);
-	_sky_sim->setMoonPhase(preset.moonPhase);
-
-	//_skyX->getAtmosphereManager()->setOptions(preset.atmosphereOpt);
-
-	_sky_sim->setWindSpeed(preset.vcWindSpeed);
-	//_skyX->getVCloudsManager()->setAutoupdate(preset.vcAutoupdate);
-
-	// @todo switch from Radians to Ogre::Vector2 or Ogre::Vector3
-	_sky_sim->setWindDirection(preset.vcWindDir);
-	_sky_sim->setAmbientColor(preset.vcAmbientColor);
-	_sky_sim->setLightResponse(preset.vcLightResponse);
-	_sky_sim->setAmbientFactors(preset.vcAmbientFactors);
-	_sky_sim->setWeather(preset.vcWheater);
-
-	_sky_sim->enableVolumetricClouds(preset.volumetricClouds);
-
-	_sky_sim->update(vl::time());
-}
-
-bool
-vl::SceneManager::_isSkyEnabled(void) const
-{
-	return _sky_sim;
-}
-
 /// --------------------------------- Global ---------------------------------
 std::ostream &
 vl::operator<<(std::ostream &os, vl::SceneManager const &scene)
@@ -1611,26 +1495,6 @@ vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::ShadowInfo &shadows)
 	shadows.setMaxDistance(dist);
 	shadows.setShelfShadowEnabled(shelf_shadow);
 	shadows.setDirLightExtrusionDistance(dir_extrusion_dist);
-
-	return msg;
-}
-
-template<>
-vl::cluster::ByteStream &
-vl::cluster::operator<<(vl::cluster::ByteStream &msg, vl::SkyInfo const &sky)
-{
-	msg << sky.getPreset();
-
-	return msg;
-}
-
-template<>
-vl::cluster::ByteStream &
-vl::cluster::operator>>(vl::cluster::ByteStream &msg, vl::SkyInfo &sky)
-{
-	std::string str;
-	msg >> str;
-	sky.setPreset(str);
 
 	return msg;
 }

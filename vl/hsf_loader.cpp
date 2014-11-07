@@ -254,12 +254,7 @@ vl::HSFLoader::processSky(rapidxml::xml_node<> *xml_node)
 	rapidxml::xml_node<> *dynamic = xml_node->first_node("dynamic");
 	if(dynamic)
 	{
-		std::string preset = vl::getAttrib<std::string>(dynamic, "preset", "none");
-		if(preset != "none")
-		{
-			SkyInfo sky(preset);
-			_game->getSceneManager()->setSkyInfo(sky);
-		}
+		std::cout << "Dynamic sky not supported." << std::endl;
 	}
 
 	// Sky dome
