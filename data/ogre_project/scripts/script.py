@@ -13,8 +13,6 @@
 # All SceneNodes in .scene file are created and can be retrieved here.
 # Tangent space lighting does not work on the ogre_ent
 
-camera = game.scene.getSceneNode("CameraNode")
-camera.position = Vector3(0, 3, 15)
 # TODO these should be configured using options and created in global script
 create_camera_controller()
 
@@ -176,4 +174,27 @@ def joystick_print(evt, i):
 
 trigger = game.event_manager.createJoystickTrigger()
 trigger.addListener(joystick_print)
+
+# TODO this shit should be in camera_controller
+if game.razer_hydra :
+	def razer_hydra_cb(evt) :
+		# move camera to the direction
+		if evt.joystick == RH_JOYSTICK.LEFT :
+			#print("Razer hydra callback : ", evt)
+			# todo this doesn't use speed, which is why it should be in
+			# the camera controller
+			# dunno if this is good with two axes, might be easier to controll
+			# with just forward axis
+			#v = Vector3(evt.axis_x, 0, -evt.axis_y)/5
+			v = Vector3(0, 0, -evt.axis_y)/5
+			camera = game.player.camera_node
+			camera.position = camera.position + evt.transform.quaternion * v
+			
+			# TODO add ray casting object
+			# should be drawn with position ofset from the camera
+			# with rotation using the quaternion
+			#evt.trigger
+			#evt.transform.position
+
+	game.razer_hydra.add_listener(razer_hydra_cb)
 

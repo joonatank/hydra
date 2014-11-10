@@ -674,6 +674,7 @@ void export_game(void)
 		.def( "enablePhysics", &vl::GameManager::enablePhysics )
 		.add_property("logger", python::make_function( &vl::GameManager::getLogger, python::return_value_policy<python::reference_existing_object>() ) )
 		.add_property("kinematic_world", &vl::GameManager::getKinematicWorld)
+		.add_property("razer_hydra", &vl::GameManager::getRazerHydra)
 		// GameObject
 		.add_property("objects", python::make_function( &vl::GameManager::getGameObjectList, python::return_value_policy<python::reference_existing_object>() ) )
 		.def("get_object", &vl::GameManager::getGameObject)

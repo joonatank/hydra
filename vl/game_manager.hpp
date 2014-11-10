@@ -213,6 +213,8 @@ public :
 	bool isPhysicsEnabled(void)
 	{ return(_physics_world != 0); }
 
+	RazerHydraRefPtr getRazerHydra(void)
+	{ return _razer_hydra; }
 
 	/// Timers
 	vl::time getProgramTime(void) const
@@ -440,6 +442,8 @@ private :
 	PlayerPtr _player;
 
 	CadImporterRefPtr _cad_importer;
+	
+	RazerHydraRefPtr _razer_hydra;
 
 	vl::gui::GUIRefPtr _gui;
 

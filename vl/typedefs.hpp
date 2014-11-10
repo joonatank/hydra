@@ -67,12 +67,14 @@ namespace vl
 	class Clients;
 	class analog_sensor;
 	class vrpn_analog_client;
+	class RazerHydra;
 
 	typedef boost::shared_ptr<TrackerSensor> SensorRefPtr;
 	typedef boost::shared_ptr<Tracker> TrackerRefPtr;
 	typedef boost::shared_ptr<Clients> ClientsRefPtr;
 	typedef boost::shared_ptr<analog_sensor> analog_sensor_ref_ptr;
 	typedef boost::shared_ptr<vrpn_analog_client> vrpn_analog_client_ref_ptr;
+	typedef boost::shared_ptr<RazerHydra> RazerHydraRefPtr;
 
 	class Player;
 	class GameManager;

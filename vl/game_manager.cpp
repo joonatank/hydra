@@ -58,6 +58,8 @@
 // Necessary for reading parameters from EnvSettings
 #include "base/envsettings.hpp"
 
+#include "input/razer_hydra.hpp"
+
 vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::ProgramOptions const &opt)
 	: _session(session)
 	, _python(0)
@@ -130,6 +132,9 @@ vl::GameManager::step(void)
 
 	if(_eye_tracker)
 	{ _eye_tracker->progress(); }
+
+	if(_razer_hydra)
+	{ _razer_hydra->update(); }
 
 	if(isPlaying())
 	{	
@@ -644,6 +649,17 @@ vl::GameManager::_do_init(init const &evt)
 
 	assert(evt.environment);
 	_loadEnvironment(*evt.environment);
+
+	// @todo need to test this without Razer Hydra connected
+	try
+	{
+		_razer_hydra.reset(new RazerHydra);
+	}
+	catch(vl::exception const &e)
+	{
+		std::cout << "Failed to create RazerHydra : " << std::endl
+			<< boost::diagnostic_information<>(e) << std::endl;
+	}
 
 	_inited_signal();
 }

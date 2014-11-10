@@ -89,6 +89,7 @@ if(WIN32)
 		input/tracker_serializer.hpp
 		input/vrpn_tracker.hpp
 		input/vrpn_analog_client.hpp
+		input/razer_hydra.hpp
 		input/keycode.hpp
 		)
 	set(INPUT_SRC
@@ -97,6 +98,7 @@ if(WIN32)
 		input/vrpn_tracker.cpp
 		input/vrpn_analog_client.cpp
 		input/tracker_serializer.cpp
+		input/razer_hydra.cpp
 		)
 	source_group(HydraMain\\input FILES ${INPUT_HEADERS} ${INPUT_SRC})
 else()

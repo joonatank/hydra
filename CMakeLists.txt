@@ -141,6 +141,9 @@ find_package(OpenCollada REQUIRED)
 # Oculus SDK should not be required but for the moment
 find_package(OVR REQUIRED)
 
+find_package(Sixsense REQUIRED)
+add_definitions(-DSIXENSE_STATIC_LIB)
+
 ######### Add include and link directories ###########
 include_directories( SYSTEM
  	${OpenGL_INCLUDE_DIR}
@@ -158,6 +161,7 @@ include_directories( SYSTEM
 	${OPENCOLLADA_INCLUDE_DIR}/COLLADABaseUtils
 	${BULLET_INCLUDE_DIRS}
 	${OVR_INCLUDE_DIR}
+	${SIXSENSE_INCLUDE_DIR}
 	# Necessary for some Ogre OpenGL hacks
 	${CMAKE_SOURCE_DIR}/extern/glew
 	${CMAKE_SOURCE_DIR}/rendering_system
@@ -178,6 +182,7 @@ set( HYDRA_DEP_LIBS
 	${OPENCOLLADA_LIBRARIES}
 	${BULLET_LIBRARIES}
 	${OVR_LIBRARIES}
+	${SIXSENSE_LIBRARIES}
 	# For OpenGL hacks needed for Oculus
 	HydraGL
 	)

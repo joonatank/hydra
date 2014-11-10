@@ -31,9 +31,8 @@
 
 // Input
 #include "input/pcan.hpp"
-//#include "input/mouse_event.hpp"
-
 #include "input/vrpn_analog_client.hpp"
+#include "input/razer_hydra.hpp"
 
 // Necessary for exposing vectors
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -175,9 +174,8 @@ void export_managers(void)
 		.add_property("device_id", &vl::JoystickInfo::dev_id)
 		.add_property("owner_id", &vl::JoystickInfo::input_manager_id)
 		.add_property("vendor_id", &vl::JoystickInfo::vendor_id)
-		;
+	;
 
-	
 	python::class_<vl::JoystickState>("JoystickState", python::init<>())
 		// can't expose buttons without exposing std::bitset
 		//.def_readonly("buttons", &vl::JoystickState::buttons)
@@ -218,10 +216,28 @@ void export_managers(void)
 		.value("MB_7", vl::MouseEvent::MB_7)
 	;
 
+	python::enum_<vl::RH_JOYSTICK>("RH_JOYSTICK")
+		.value("LEFT", vl::RH_LEFT)
+		.value("RIGHT", vl::RH_RIGHT)
+	;
+
+	python::class_<vl::RazerHydraEvent>("RazerHydraEvent", python::init<>())
+		.def_readwrite("joystick", &vl::RazerHydraEvent::joystick)
+		.def_readwrite("trigger", &vl::RazerHydraEvent::trigger)
+		.def_readwrite("axis_x", &vl::RazerHydraEvent::axis_x)
+		.def_readwrite("axis_y", &vl::RazerHydraEvent::axis_y)
+		.def_readwrite("transform", &vl::RazerHydraEvent::transform)
+		.def(python::self_ns::str(python::self_ns::self))
+	;
+
 	python::class_<vl::InputDevice, vl::InputDeviceRefPtr, boost::noncopyable>("InputDevice", python::no_init)
 	;
 
-	python::class_<vl::PCAN, vl::PCANRefPtr, boost::noncopyable,  python::bases<vl::InputDevice> >("PCAN", python::no_init)
+	python::class_<vl::RazerHydra, vl::RazerHydraRefPtr, boost::noncopyable, python::bases<vl::InputDevice> >("RazerHydra", python::no_init)
+		.def("add_listener", toast::python::signal_connect<void (RazerHydraEvent const &)>(&vl::RazerHydra::addListener))
+	;
+
+	python::class_<vl::PCAN, vl::PCANRefPtr, boost::noncopyable, python::bases<vl::InputDevice> >("PCAN", python::no_init)
 		.def("add_listener", toast::python::signal_connect<void (CANMsg const &)>(&vl::PCAN::addListener))
 	;
 
