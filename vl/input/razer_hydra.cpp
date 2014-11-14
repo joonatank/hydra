@@ -43,34 +43,18 @@ vl::RazerHydra::RazerHydra(void)
 
 	/// Find if base and controller is connected
 	/// we should have one base and two controllers
-	int max_bases = sixenseGetMaxBases();
-	std::cout << max_bases << " bases." << std::endl;
-	// this is wrong, I'm assuming it's SIXSENSE_SUCCESS instead
-	// but need to test
-	bool connected = (sixenseIsBaseConnected(0) == 1);
-	/*
-	if(!connected)
-	{
-		std::string err("Base is not connected.");
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
-	}
-	//sixenseSetActiveBase( int i );
-	
-	int max_controllers = sixenseGetMaxControllers();
-	if(!sixenseIsControllerEnabled(0))
-	{
-		std::string err("Controller 0 not connected.");
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
-	}
-	if(!sixenseIsControllerEnabled(1))
-	{
-		std::string err("Controller 1 not connected.");
-		BOOST_THROW_EXCEPTION(vl::exception() << vl::desc(err));
-	}
-	*/
-	//sixenseGetNumActiveControllers();
+	//
+	// For some reason is base connected always returs 0
+	//
+	// setActiveBase and other functions so far tested
+	// always return 0
+	// so no way to tell if the Razer Hydra device is connected or not
 
-	std::cout << "vl::RazerHydra::RazerHydra : DONE" << std::endl;
+	// these always returns success so checking them pointless
+	// res = sixenseIsBaseConnected(0);
+	// res = sixenseSetActiveBase(0);
+
+	assert(sixenseIsControllerEnabled(0) == SIXENSE_SUCCESS);
 }
 	
 vl::RazerHydra::~RazerHydra(void)
@@ -88,9 +72,11 @@ vl::RazerHydra::addListener(Tripped::slot_type const &slot)
 void
 vl::RazerHydra::update(void)
 {
-	sixenseSetActiveBase(0);
+	int res = sixenseSetActiveBase(0);
+	assert(res == SIXENSE_SUCCESS);
 	sixenseAllControllerData acd;
-	sixenseGetAllNewestData( &acd );
+	res = sixenseGetAllNewestData( &acd );
+	assert(res == SIXENSE_SUCCESS);
 
 /*	
 typedef struct _sixenseControllerData {
@@ -113,36 +99,45 @@ typedef struct _sixenseControllerData {
   unsigned char hemi_tracking_enabled;
 } sixenseControllerData;
 */
-	// @todo we are assuming first one is left which might not be the case
-	// @todo missing buttons
-	RazerHydraEvent evt;
-	evt.joystick = RH_LEFT;
-	evt.transform.position = Ogre::Vector3(acd.controllers[0].pos);
-	evt.transform.quaternion.w = acd.controllers[0].rot_quat[3];
-	evt.transform.quaternion.x = acd.controllers[0].rot_quat[0];
-	evt.transform.quaternion.y = acd.controllers[0].rot_quat[1];
-	evt.transform.quaternion.z = acd.controllers[0].rot_quat[2];
-	evt.axis_x = acd.controllers[0].joystick_x;
-	evt.axis_y = acd.controllers[0].joystick_y;
-	evt.trigger = acd.controllers[0].trigger;
+	// for now we support only two controllers
+	// this is the case for Razer Hydra
+	// it's not the case for the Sixsense general purpose tracker
+	// that is released for developers soon
+
+	for(size_t i = 0; i < 2; ++i)
+	{
+		// the only way to check if the controller/base is connected to the
+		// computer is by checking the actual update message
+		// so we'll just ignore any messages here if controllers are not connected
+		if(acd.controllers[i].enabled == 0)
+		{ continue; }
+
+		// @todo we are assuming first one is left which might not be the case
+		// @todo missing buttons
+		RazerHydraEvent evt;
+		// @todo figure out a nicer way to select joystick, 
+		// how do we know if it's the left or right one?
+		evt.joystick = (RH_JOYSTICK)i;
+		// the values are in millimeters
+		evt.transform.position = Ogre::Vector3(acd.controllers[i].pos)/1000.0;
+		evt.transform.quaternion.w = acd.controllers[i].rot_quat[3];
+		evt.transform.quaternion.x = acd.controllers[i].rot_quat[0];
+		evt.transform.quaternion.y = acd.controllers[i].rot_quat[1];
+		evt.transform.quaternion.z = acd.controllers[i].rot_quat[2];
+		evt.axis_x = acd.controllers[i].joystick_x;
+		evt.axis_y = acd.controllers[i].joystick_y;
+		evt.trigger = acd.controllers[i].trigger;
 	
-	_signal(evt);
+		_signal(evt);
+	}
 
-	evt.joystick = RH_RIGHT;
-	evt.transform.position = Ogre::Vector3(acd.controllers[1].pos);
-	evt.transform.quaternion.w = acd.controllers[0].rot_quat[3];
-	evt.transform.quaternion.x = acd.controllers[0].rot_quat[0];
-	evt.transform.quaternion.y = acd.controllers[0].rot_quat[1];
-	evt.transform.quaternion.z = acd.controllers[0].rot_quat[2];
-	evt.axis_x = acd.controllers[1].joystick_x;
-	evt.axis_y = acd.controllers[1].joystick_y;
-	evt.trigger = acd.controllers[1].trigger;
-
-	_signal(evt);
-
-	// acd.controllers[1].which_hand
-	// acd.controllers[1].hemi_tracking_enabled
-	// are empty unless we use the utilities
-
-	_signal(RazerHydraEvent());
+	// parameter documentation
+	// sequence_number : no idea seems like a random character
+	// firmware_revision : zero
+	// hardware_revision : zero when not connected 174 when connected
+	// packet_type : 52428 when not connected, 1 when connected
+	// magnetic_frequency : zero
+	// which_hand : empty
+	// hemi_tracking_enabled : empty
+	// is_docked : random char
 }

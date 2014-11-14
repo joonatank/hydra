@@ -42,6 +42,8 @@ enum RH_JOYSTICK
 /// RH_LEFT, RH_RIGHT for the joystick they correspond?
 struct RazerHydraEvent
 {
+	// @todo add Constructor
+
 	// joystick id
 	RH_JOYSTICK joystick;
 	// tracker data
@@ -67,14 +69,25 @@ class RazerHydra : public InputDevice
 	typedef boost::signal<void (RazerHydraEvent const &)> Tripped;
 
 public :
+	// Constructor
+	// Can't fail, normally I'd like this to throw if the device is not connected
+	// but the Sixsense SDK doesn't support any kind of checking for compatible 
+	// devices. So I'd need to do more involved solution using Windows SDK,
+	// not worth the effort.
+	// So this object is created even if no device or even driver is installed.
 	RazerHydra(void);
 	
 	~RazerHydra(void);
 	
 	// @todo do we need to check the state outside of listeners?
 
+	// Listener that is called when a new event is received from the device
+	// Will not be called if no device is connected.
+	// Called every frame since the device uses analog sensors so it's gonna
+	// change every time a measurement is taken.
 	int addListener(Tripped::slot_type const &slot);
 
+	// Update the device, only for internal use.
 	void update(void);
 
 private :

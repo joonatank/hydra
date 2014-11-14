@@ -175,26 +175,9 @@ def joystick_print(evt, i):
 trigger = game.event_manager.createJoystickTrigger()
 trigger.addListener(joystick_print)
 
-# TODO this shit should be in camera_controller
-if game.razer_hydra :
-	def razer_hydra_cb(evt) :
-		# move camera to the direction
-		if evt.joystick == RH_JOYSTICK.LEFT :
-			#print("Razer hydra callback : ", evt)
-			# todo this doesn't use speed, which is why it should be in
-			# the camera controller
-			# dunno if this is good with two axes, might be easier to controll
-			# with just forward axis
-			#v = Vector3(evt.axis_x, 0, -evt.axis_y)/5
-			v = Vector3(0, 0, -evt.axis_y)/5
-			camera = game.player.camera_node
-			camera.position = camera.position + evt.transform.quaternion * v
-			
-			# TODO add ray casting object
-			# should be drawn with position ofset from the camera
-			# with rotation using the quaternion
-			#evt.trigger
-			#evt.transform.position
+# For testing the Razer Hydra
+def razer_hydra_cb(evt) :
+	print(evt)
 
-	game.razer_hydra.add_listener(razer_hydra_cb)
+#game.razer_hydra.add_listener(razer_hydra_cb)
 

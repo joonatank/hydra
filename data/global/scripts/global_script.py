@@ -12,9 +12,16 @@ AXIS_Y = 1
 AXIS_Z = 2
 AXIS_W = 3
 
-# TODO separate the interface and the progress implementation
-# so we can have controllers for a group of objects and selections
-# as well as single objects.
+# globals 
+JOYSTICK_TOLERANCE = 0.025
+
+# Dividing into Base controller which has the speed implementation
+# and Keyboard controller which has the keyboard implementation
+# Keyboard controller is the one that should be inherited by all the old
+# Controller implementations
+#
+# Proper way would be divide the Controller implementation and the
+# driver (keyboard, joystick etc.) but that takes too much redesign atm.
 class Controller:
 	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None,
 			rotation = Quaternion(1, 0, 0, 0), high_speed = 10):
@@ -31,17 +38,13 @@ class Controller:
 		#Initial rotation eg. misalignment:
 		self.rotation = rotation
 		self.disabled = False
-		# Default to disabled joystick because they are same for all objects
-		# Enable them for camera only when creating camera controller
-		self.joystick_disabled = True
 		#Reference frame (transform) used for scene node translations?
 		self.frame = TS.LOCAL
 		#Reference used for scene node rotations?
 		self.rotation_frame = TS.LOCAL
 
-		# Error tolerance for joystick zero
-		self.joystick_tolerance = 0.025
-
+	# @param nodes is a list of objects to be moved
+	# @param t is the time since last frame
 	def transform(self, nodes, t):
 		if self.disabled:
 			return
@@ -49,6 +52,9 @@ class Controller:
 		v = self.mov_dir
 		mov_len = v.length()
 		
+		# TODO this is really bad in so many ways
+		# we should check for zero sure then we should clamp
+		# the speed without dividing by extremely small number
 		if mov_len != 0:
 			v /= mov_len
 			#Now the signal is being clamped to 1.0.
@@ -81,6 +87,39 @@ class Controller:
 		for i in range(len(nodes)):
 			nodes[i].rotate(q, self.rotation_frame)
 		
+
+
+	def reset_rotation(self):
+		self.rot_axis = Vector3.zero
+
+	def reset_translation(self):
+		self.mov_dir = Vector3.zero
+
+	def toggle_high_speed(self):
+		if self.speed < self.high_speed:
+			self.speed = self.high_speed
+		else:
+			self.speed = self.low_speed
+
+	def disable(self):
+		self.disabled = True
+		self.reset_rotation()
+		self.reset_translation()
+
+	def enable(self):
+		self.disabled = False
+
+	def toggle_disable(self) :
+		if not self.disabled:
+			self.disable()
+		else :
+			self.enable()
+
+class KeyboardController(Controller):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None,
+			rotation = Quaternion(1, 0, 0, 0), high_speed = 10):
+		Controller.__init__(self, speed, angular_speed,
+				reference=reference, high_speed=high_speed)
 
 	def up(self, val):
 		self.mov_dir.y += val
@@ -118,18 +157,223 @@ class Controller:
 	def roll_left(self, val):
 		self.rot_axis.z += val
 		
-	# TODO need to add a boolean to enable/disable the joystick
-	# now it will enable it for all objects not just camera
-	# Actually it needs to be enabled when it's created
-	# only camera controller will enable it
-	def update_joystick(self, evt, i) :
-		if self.joystick_disabled:
-			return
 
-		# Override the move dir
-		# dunno if this is the best way to do it
-		# might need to add and clamp to avoid issues with using both
-		# joystick and keyboard
+# Keyboard Object Controller
+class ObjectController(KeyboardController):
+	def __init__(self, node, speed = 5, angular_speed = Degree(90),
+			reference=None, high_speed=10):
+		KeyboardController.__init__(self, speed, angular_speed,
+				reference=reference, high_speed=high_speed)
+		self.node = node
+
+	def progress(self, t):
+		nodes = [self.node]
+		self.transform(nodes, t)
+
+# Keyboard Selection Controller
+class SelectionController(KeyboardController):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, rotation = Quaternion(1, 0, 0, 0)):
+		KeyboardController.__init__(self, speed, angular_speed, reference, rotation)
+
+	def progress(self, t):
+		self.transform(game.scene.selection, t)
+
+class RigidBodyController(KeyboardController):
+	def __init__(self, body):
+		KeyboardController.__init__(self)
+		self.body = body
+
+	def progress(self, t):
+		bodies = [self.body]
+		self.transform(bodies, t)
+
+# Separate controllers for Keyboard, Razer, Joystick
+# Clumping them into one is messy, bad design and error prone,
+# rather have some weird speeds with all three controllers enabled and used
+# at the same time.
+#
+# Keyboard Camera Controller
+#
+# TODO add a FPS camera version that uses both mouse and keyboard
+class CameraController(KeyboardController):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10, head_direction = False):
+		KeyboardController.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
+		self.head_direction = head_direction
+
+	def progress(self, t):
+		# TODO this is Oculus specific need to use oculus cb for it
+		# not a boolean switch
+		#
+		# need to figure out the priority if we have tracked controller
+		# and Oculus which one will we use?
+		if self.head_direction:
+			self.rotation = game.player.head_transformation.quaternion
+		nodes = [game.player.camera_node]
+		self.transform(nodes, t)
+
+
+# Razer Controller
+# for camera now
+# showing the razer controllers (both of them) as ray objects
+#
+# Controls
+# Left joystick axis controls camera to the direction you point
+# TODO add rotation
+# high speed movement
+# object picking
+class RazerCameraController(Controller) :
+	def __init__(self, speed = 5, angular_speed = Degree(30), reference=None, high_speed=10):
+		Controller.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
+		self.head_direction = False
+
+		# Should never be called without razer hydra
+		assert(game.razer_hydra)
+
+		game.razer_hydra.add_listener(self.razer_hydra_cb)
+
+		# Create a ray object to show where the controller is
+		# FIXME the ray objects have a huge performance hit.
+		# It halves the FPS on both release and debug versions
+		# we need to improve the performance of the ray object
+		# and we might need to add switches here so they aren't created if not
+		# needed.
+		mat_name = "finger_sphere/red"
+		ray = game.scene.createRayObject("razer_ray_left", mat_name)
+		ray.direction = Vector3(0, 0, -1)
+		ray.sphere_radius = 0.2
+		#ray.length = 20
+		# Doesn't affect performance that much if the spheres are on or off
+		ray.draw_collision_sphere = True
+		ray.collision_detection = True
+		self.left_ray = game.scene.createSceneNode("razer_hydra_left")
+		self.left_ray.attachObject(ray)
+		self.left_ray.hide()
+
+		mat_name = "finger_sphere/green"
+		ray = game.scene.createRayObject("razer_ray_right", mat_name)
+		ray.direction = Vector3(0, 0, -1)
+		ray.sphere_radius = 0.2
+		#ray.position = Vector3(0, 0, 10)
+		#ray.length = 20
+		# Doesn't affect performance that much if the spheres are on or off
+		ray.draw_collision_sphere = True
+		ray.collision_detection = True
+		self.right_ray = game.scene.createSceneNode("razer_hydra_right")
+		self.right_ray.attachObject(ray)
+		self.right_ray.hide()
+
+		self.controller_t_left = Transform()
+		self.controller_t_right = Transform()
+
+
+	def razer_hydra_cb(self, evt):
+		if evt.joystick == RH_JOYSTICK.LEFT :
+			# dunno if this is good with two axes, might be easier to controll
+			# with just forward axis
+			v = Vector3(evt.axis_x, 0, -evt.axis_y)
+			self.mov_dir = evt.transform.quaternion * v
+			# TODO add ray casting object
+			# should be drawn with position ofset from the camera
+			# with rotation using the quaternion
+			#
+			# save the joystick event for 
+			# for some reason this is really messy
+			self.controller_t_left = Transform(evt.transform)
+			self.left_ray.show()
+		elif evt.joystick == RH_JOYSTICK.RIGHT :
+			self.controller_t_right = Transform(evt.transform)
+			self.right_ray.show()
+
+
+	def progress(self, t):
+		# TODO this is Oculus specific need to use oculus cb for it
+		# not a boolean switch
+		#
+		# need to figure out the priority if we have tracked controller
+		# and Oculus which one will we use?
+		#if self.head_direction:
+		#	self.rotation = game.player.head_transformation.quaternion
+		nodes = [game.player.camera_node]
+		self.transform(nodes, t)
+
+		# copy the camera position to ray object position
+		# also add the controller position to it
+		# set the orientation from controller
+		# 
+		# There is a problem with accessing transform since it seems to
+		# copy the reference and not make a copy of it when it's changed
+		# like it should
+		# 
+		# TODO what is the difference between head and the magnetic tracking
+		# system?
+		# it is not head height (0, 1.5, 0)
+		# I think we need to have offset from ground in the RazerHydra object
+		# then it's head_position - tracker_base_position
+		# this is good, just need to replace them with variables
+		# and add options for setting those variables in config file
+		head_offset = Vector3(0, 1.5, 0) - Vector3(0.45, 0.5, 0)
+		p = Vector3(game.player.camera_node.position) + head_offset
+		q = Quaternion(game.player.camera_node.orientation)
+
+		self.left_ray.position = p + self.controller_t_left.position
+		self.left_ray.orientation = q * self.controller_t_left.quaternion
+
+		# right joystick
+		self.right_ray.position = p + self.controller_t_right.position
+		self.right_ray.orientation = q * self.controller_t_right.quaternion
+
+# TODO this needs to be divided into multiple different controllers
+#
+# One handed for Aimon (and similar controllers)
+#
+# PSController (for playstation controllers and similar e.g. RumblePad)
+#
+# Base class for all joysticks
+# needs a more sophisticated event system for joystick messages
+# to be really used.
+class JoystickCameraController(Controller):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None,
+			rotation = Quaternion(1, 0, 0, 0), high_speed = 10):
+		Controller.__init__(self, speed, angular_speed,
+				reference=reference, high_speed=high_speed)
+
+		# Add a listener for events
+		trigger = game.event_manager.createJoystickTrigger()
+		trigger.addListener(self.update_joystick)
+
+		self.head_direction = False
+
+	# Inherit and define to use the base class
+	#def update_joystick(self, evt, i) :
+
+	def progress(self, t):
+		# TODO this is Oculus specific need to use oculus cb for it
+		# not a boolean switch
+		#
+		# need to figure out the priority if we have tracked controller
+		# and Oculus which one will we use?
+		if self.head_direction:
+			self.rotation = game.player.head_transformation.quaternion
+		nodes = [game.player.camera_node]
+		self.transform(nodes, t)
+
+# WandCameraController
+# one handed joystick, uses tracking if possible?
+# The basic version is working for Aimon controllers
+# Also works for RumblePad (the wired model at least)
+# TODO not tested with Splitfish
+# 
+# TODO add tracking support
+# TODO add rotation
+# TODO add Oculus support
+class WandCameraController(JoystickCameraController):
+	def __init__(self, speed = 5, angular_speed = Degree(90), reference=None,
+			rotation = Quaternion(1, 0, 0, 0), high_speed = 10):
+		JoystickCameraController.__init__(self, speed, angular_speed,
+				reference=reference, high_speed=high_speed)
+
+
+	def update_joystick(self, evt, i) :
 		if evt.type == JOYSTICK_EVENT_TYPE.AXIS:
 			# TODO this causes problems if we release axis first
 			if evt.state.no_buttons_down :
@@ -138,75 +382,15 @@ class Controller:
 				# for ps2 one handed joystick
 				# TODO we need to clamp the result to zero if it's small enough
 				# fix for splitfish (has a static error in z axis)
-				x = evt.state.axes[AXIS_Z]
-				z = evt.state.axes[AXIS_Y]
-				if(abs(z) < self.joystick_tolerance) : z = 0
+				x = evt.state.axes[AXIS_W]
+				z = evt.state.axes[AXIS_Z]
+
+				if(abs(z) < JOYSTICK_TOLERANCE) : z = 0
 
 				self.mov_dir = Vector3(x, 0, z)
+
+			# TODO add rotation to a button + axis
 	
-	def reset_rotation(self):
-		self.rot_axis = Vector3.zero
-
-	def reset_translation(self):
-		self.mov_dir = Vector3.zero
-
-	def toggle_high_speed(self):
-		if self.speed < self.high_speed:
-			self.speed = self.high_speed
-		else:
-			self.speed = self.low_speed
-
-	def disable(self):
-		self.disabled = True
-		# TODO shouldn't these reset rotations and translations
-
-	def enable(self):
-		self.disabled = False
-
-	def toggle_disable(self) :
-		if not self.disabled:
-			self.disable()
-		else :
-			self.enable()
-
-
-class ObjectController(Controller):
-	def __init__(self, node, speed = 5, angular_speed = Degree(90),
-			reference=None, high_speed=10):
-		Controller.__init__(self, speed, angular_speed,
-				reference=reference, high_speed=high_speed)
-		self.node = node
-
-	def progress(self, t):
-		nodes = [self.node]
-		self.transform(nodes, t)
-
-class SelectionController(Controller):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, rotation = Quaternion(1, 0, 0, 0)):
-		Controller.__init__(self, speed, angular_speed, reference, rotation)
-
-	def progress(self, t):
-		self.transform(game.scene.selection, t)
-
-class RigidBodyController(Controller):
-	def __init__(self, body):
-		Controller.__init__(self)
-		self.body = body
-
-	def progress(self, t):
-		bodies = [self.body]
-		self.transform(bodies, t)
-
-class ActiveCameraController(Controller):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10, head_direction = False):
-		Controller.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
-		self.head_direction = head_direction
-
-	def progress(self, t):
-		if self.head_direction:
-			self.rotation = game.player.head_transformation.quaternion
-		nodes = [game.player.camera_node]
-		self.transform(nodes, t)
 
 from functools import partial
 
@@ -218,7 +402,7 @@ def create_camera_controller() :
 	opt = game.options.camera
 	print(opt)
 
-	controller = ActiveCameraController(opt.speed, opt.angular_speed,
+	controller = CameraController(opt.speed, opt.angular_speed,
 			high_speed=opt.high_speed)
 
 	# Configure
@@ -266,11 +450,32 @@ def create_camera_controller() :
 			t.addKeyUpListener(controller.toggle_high_speed)
 
 	# Joystick
-	# TODO need to change the controller itself to enable configuring the joystick
-	controller.joystick_disabled = not opt.joystick_enabled
-	if not controller.joystick_disabled :
-		trigger = game.event_manager.createJoystickTrigger()
-		trigger.addListener(controller.update_joystick)
+	if opt.joystick_enabled:
+		print("JOYSTICK camera controller enabled")
+		# TODO we need to select the controller based on the connected device
+		# this of course removes any kind of hotplug but has to be done
+		# so we don't get one handed and two handed joysticks mixed up
+		# not to mention proper joysticks not gamepads
+		#
+		# We can add multiple controller support with DeviceID/VendorID
+		# dunno if it's worth though
+		# since a cleaner inplementation would be to separate them in the c++
+		# interface instead and map devices to callbacks and not a generic
+		# joystick event.
+		#
+		# Selecting here which joystick controller we use
+		# would require us to first get the event message which tells us
+		# what joystick is connected.
+		# For now I'd say leave it but for later it might be something
+		# worthy to consider.
+		joy_controller = WandCameraController()
+		game.event_manager.frame_trigger.addListener(joy_controller.progress)
+
+	# TODO should have an option for this also
+	if game.razer_hydra :
+		print("Creating Razer Camera Controller")
+		rzr_hydra = RazerCameraController()
+		game.event_manager.frame_trigger.addListener(rzr_hydra.progress)
 
 	game.event_manager.frame_trigger.addListener(controller.progress)
 
