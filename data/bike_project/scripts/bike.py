@@ -57,9 +57,9 @@ camera_changer.add_view(Transform(Vector3(0, -0.28, 0.8), Quaternion.identity))
 
 # TODO add switching of camera view
 trigger = game.event_manager.createKeyTrigger(KC.Z)
-trigger.addListener(camera_changer.next_view)
+trigger.add_listener(camera_changer.next_view)
 trigger = game.event_manager.createKeyTrigger(KC.X)
-trigger.addListener(camera_changer.prev_view)
+trigger.add_listener(camera_changer.prev_view)
 
 
 game.player.camera = "Camera"
@@ -73,7 +73,7 @@ camera_controller = create_camera_controller()
 #camera_controller.disable()
 
 trigger = game.event_manager.createKeyTrigger(KC.F4)
-trigger.addListener(camera_controller.toggle_disable)
+trigger.add_listener(camera_controller.toggle_disable)
 
 # TODO we need to use selection based if we are using Oculus or not
 #camera_controller.head_direction = True
@@ -511,13 +511,13 @@ selection = PartSelection(parts)
 # the other option would be to have two lists of them
 # which I rather not implement now
 trigger = game.event_manager.createKeyTrigger(KC.TAB)
-trigger.addListener(selection.prev_selection)
+trigger.add_listener(selection.prev_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
-trigger.addListener(selection.next_selection)
+trigger.add_listener(selection.next_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.C)
-trigger.addListener(game.scene.clearSelection)
+trigger.add_listener(game.scene.clearSelection)
 
 # For the startup we need to show all the models
 class PartInspector :
@@ -556,10 +556,10 @@ class PartInspector :
 inspector = PartInspector(parts)
 
 trigger = game.event_manager.createKeyTrigger(KC.B)
-trigger.addListener(inspector.show_next_part)
+trigger.add_listener(inspector.show_next_part)
 
 trigger = game.event_manager.createKeyTrigger(KC.H)
-trigger.addListener(inspector.clear)
+trigger.add_listener(inspector.clear)
 
 
 # TODO selection should have only moving and rotation 90 deg around y
@@ -633,21 +633,21 @@ joy_selection_controller = JoystickSelectionMover(camera)
 
 trigger = game.event_manager.createJoystickTrigger()
 # Disabled it's only for testing
-#trigger.addListener(joystick_print)
+#trigger.add_listener(joystick_print)
 # Disabled selecting with the joystick because we are using wand for it
 # enable if you need it for testing
-#trigger.addListener(joystick_select)
+#trigger.add_listener(joystick_select)
 # Change model of selected part with the directional pad
-trigger.addListener(joystick_change_model)
-#trigger.addListener(joy_selection_controller.joystick_updated)
+trigger.add_listener(joystick_change_model)
+#trigger.add_listener(joy_selection_controller.joystick_updated)
 
-game.event_manager.frame_trigger.addListener(joy_selection_controller.progress)
+game.event_manager.frame_trigger.add_listener(joy_selection_controller.progress)
 # Add switching between selected sub parts (model)
 trigger = game.event_manager.createKeyTrigger(KC.N)
-trigger.addListener(selection.prev_model)
+trigger.add_listener(selection.prev_model)
 
 trigger = game.event_manager.createKeyTrigger(KC.M)
-trigger.addListener(selection.next_model)
+trigger.add_listener(selection.next_model)
 
 #Of these two functions enable only either not both.
 #This will create the ray dragger and "wand":

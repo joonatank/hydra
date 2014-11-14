@@ -207,7 +207,7 @@ void export_animation(void)
 		.add_property("assume_in_world", &vl::KinematicBody::isAssumeInWorld, &vl::KinematicBody::setAssumeInWorld)
 		.add_property("collisions_enabled", &vl::KinematicBody::isCollisionsEnabled, &vl::KinematicBody::enableCollisions)
 
-		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::KinematicBody::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -577,7 +577,7 @@ void export_scene_graph(void)
 		.def("set_visible", setVisible_ov1)
 		.def("isHidden", &vl::SceneNode::isHidden)
 		.def("isShown", &vl::SceneNode::isShown)
-		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::SceneNode::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 		/// @todo add repr with a debug string presentation
 		/// This is used for debuging purposes (which we use __str__ or operator<< at the moment)
@@ -643,7 +643,7 @@ void export_game(void)
 		.def("set_world_transformation", &vl::GameObject::setWorldTransform)
 		// @todo create rigid body should be changed, but needs redesign in the GameObject class itself
 		.def("create_rigid_body", &vl::GameObject::createRigidBody)
-		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::GameObject::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::GameObject::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 

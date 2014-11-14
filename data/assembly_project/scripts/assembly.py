@@ -252,9 +252,9 @@ def joystick_print(evt, i):
 controller = AssemblyController(assembly, camera)
 
 trigger = game.event_manager.createJoystickTrigger()
-trigger.addListener(controller.update_joystick)
-game.event_manager.frame_trigger.addListener(controller.progress)
+trigger.add_listener(controller.update_joystick)
+game.event_manager.frame_trigger.add_listener(controller.progress)
 
 # For testing and documenting buttons
-#trigger.addListener(joystick_print)
+#trigger.add_listener(joystick_print)
 

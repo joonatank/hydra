@@ -268,7 +268,7 @@ tube.create()
 def setBodyTransform(t):
 	end_body.world_transform = t
 
-vaantomoottori.addListener(setBodyTransform)
+vaantomoottori.add_listener(setBodyTransform)
 """
 
 # Add some primitives and possibility to move them for testing the collision

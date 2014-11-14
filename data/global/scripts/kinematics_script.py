@@ -122,10 +122,10 @@ class Cylinder:
 		q = self.piston.world_transformation.quaternion.inverse()
 		self.piston_position_diff = q*(piston_fixing_pos - piston_pos)
 		
-		rod_fixing.addListener(self.moved)
+		rod_fixing.add_listener(self.moved)
 		# TODO should we add the listener to also piston_fixing
 		# this would avoid rather akward problem with the excavator model
-		piston_fixing.addListener(self.moved)
+		piston_fixing.add_listener(self.moved)
 	
 	# Callback from the object we should follow
 	# rod fixing point moved
@@ -200,8 +200,8 @@ class Cylinder2 :
 		
 		self.current_dir = self._get_direction_vec()
 
-		self.barrel_fixing.addListener(self.moved)
-		self.rod_fixing.addListener(self.moved)
+		self.barrel_fixing.add_listener(self.moved)
+		self.rod_fixing.add_listener(self.moved)
 	
 	def __str__(self):
 		avg_time = time()

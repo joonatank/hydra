@@ -73,7 +73,7 @@ class KBandJoystickController:
         self.trigger_negative.addKeyUpListener(self.zero_signal)
         
         self.joystick = game.event_manager.getJoystick()
-        self.joystick.addListener(self.joystick_listener)
+        self.joystick.add_listener(self.joystick_listener)
         
     def positive_signal(self):
         self._kbsignal = 1.0
@@ -513,7 +513,7 @@ if True :
         motR.max_motor_force += Vec3(0,0,100.0) 
         motL.max_motor_force += Vec3(0,0,100.0)
     trigu = game.event_manager.createKeyTrigger(KC.M)
-    trigu.addListener(more_power)
+    trigu.add_listener(more_power)
     
     def adjust_power(dt):
         motHull = constraints["jt_base_to_hull_rot"][1]
@@ -532,4 +532,4 @@ if True :
         motCArm.max_motor_force = forceArm
         motCBucket.max_motor_force = forceBucket
     frame_trigu = game.event_manager.getFrameTrigger()
-    frame_trigu.addListener(adjust_power)
+    frame_trigu.add_listener(adjust_power)

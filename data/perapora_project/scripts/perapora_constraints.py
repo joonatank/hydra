@@ -189,7 +189,7 @@ def joystick_control(evt, i):
 		
 
 trigger = game.event_manager.createJoystickTrigger()
-trigger.addListener(joystick_control)
+trigger.add_listener(joystick_control)
 
 
 def boom_up():
@@ -245,7 +245,7 @@ tube.create()
 def setBodyTransform(t):
 	end_body.world_transform = t
 
-vaantomoottori.addListener(setBodyTransform)
+vaantomoottori.add_listener(setBodyTransform)
 """
 
 # Add some primitives and possibility to move them for testing the collision

@@ -115,13 +115,13 @@ def toggle_eye_tracker() :
 		game.eye_tracker.start()
 
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
-trigger.addListener(toggle_eye_tracker)
+trigger.add_listener(toggle_eye_tracker)
 
 trigger = game.event_manager.createKeyTrigger(KC.U)
-trigger.addListener(toggle_eye_debug)
+trigger.add_listener(toggle_eye_debug)
 
 trigger = game.event_manager.createKeyTrigger(KC.I)
-trigger.addListener(toggle_eye_head)
+trigger.add_listener(toggle_eye_head)
 
 # Add key event to show/hide previous recording
 

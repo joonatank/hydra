@@ -110,8 +110,8 @@ def nosto_less_force():
 	syl_nosto_putki.applyForce(Vector3(0, -2000, 0), Vector3(0, 0, 0))
 
 trigger = game.event_manager.createKeyTrigger( KC.F )
-trigger.addListener(nosto_more_force)
+trigger.add_listener(nosto_more_force)
 
 trigger = game.event_manager.createKeyTrigger( KC.G )
-trigger.addListener(nosto_less_force)
+trigger.add_listener(nosto_less_force)
 

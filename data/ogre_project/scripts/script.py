@@ -24,7 +24,7 @@ def hide_ogre():
 
 ogre = game.scene.getSceneNode("ogre")
 trigger = game.event_manager.createKeyTrigger(KC.H)
-trigger.addListener(hide_ogre)
+trigger.add_listener(hide_ogre)
 
 ogre.position = Vector3(0, 2.5, 0)
 
@@ -107,7 +107,7 @@ def rotateSpotti(t):
 	angle = Radian(speed*Degree(float(t)))
 	spotti_n.rotate(Quaternion(angle, Vector3(0, 1, 0)))
 
-game.event_manager.frame_trigger.addListener(rotateSpotti)
+game.event_manager.frame_trigger.add_listener(rotateSpotti)
 
 def printAnalog(val):
 	text.caption = "analog value = " + str(int(val))
@@ -115,7 +115,7 @@ def printAnalog(val):
 # Test vrpn analog client
 analog = game.event_manager.create_analog_client("meh@localhost")
 analog.n_sensors = 1
-analog.get_sensor(0).addListener(printAnalog)
+analog.get_sensor(0).add_listener(printAnalog)
 
 # Start with paused and toggle state with space
 # TODO this is pretty useless because all events except for physics
@@ -126,7 +126,7 @@ analog.get_sensor(0).addListener(printAnalog)
 # Sky is changing
 game.auto_start = False
 trigger = game.event_manager.createKeyTrigger(KC.SPACE)
-trigger.addListener(toggle_pause)
+trigger.add_listener(toggle_pause)
 
 def show_debug():
 	#ogre.show_debug_display = True
@@ -144,18 +144,18 @@ def single_timer_callback():
 # TODO Counting the timers start before the scene has completely loaded
 trigger = game.event_manager.createTimeTrigger()
 trigger.interval = time(2, 0)
-trigger.addListener(timer_callback)
+trigger.add_listener(timer_callback)
 
 
 trigger = game.event_manager.createTimeTrigger()
 trigger.interval = time(10, 0)
 trigger.continuous = False
-trigger.addListener(single_timer_callback)
+trigger.add_listener(single_timer_callback)
 """
 
 ogre.translate(0, 1, 0)
 trigger = game.event_manager.createKeyTrigger(KC.Y)
-trigger.addListener(show_debug)
+trigger.add_listener(show_debug)
 
 # Testing joystick trigger
 # evt is the event
@@ -173,7 +173,7 @@ def joystick_print(evt, i):
 	# can't access the buttons because exposing them is bit iffy
 
 trigger = game.event_manager.createJoystickTrigger()
-trigger.addListener(joystick_print)
+trigger.add_listener(joystick_print)
 
 # For testing the Razer Hydra
 def razer_hydra_cb(evt) :

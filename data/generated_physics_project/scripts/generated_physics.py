@@ -94,15 +94,15 @@ def set_sphere_velocity():
 
 print('Adding Force action to KC_F')
 trigger = game.event_manager.createKeyTrigger( KC.F )
-trigger.addListener(force_to_sphere)
+trigger.add_listener(force_to_sphere)
 
 print('Adding Torque action to KC_G')
 trigger = game.event_manager.createKeyTrigger( KC.G )
-trigger.addListener(torque_to_sphere)
+trigger.add_listener(torque_to_sphere)
 
 print('Adding set Liner velocity action to KC_T')
 trigger = game.event_manager.createKeyTrigger(KC.T)
-trigger.addListener(set_sphere_velocity)
+trigger.add_listener(set_sphere_velocity)
 
 addRigidBodyController(user_sphere)
 

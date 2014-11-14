@@ -163,5 +163,5 @@ class JoystickEventHandler(InputEventHandler):
 def create_splitfish_handler(name):
 	handler = JoystickEventHandler(name, "", "SplitFish Game Controller", "")
 	trigger = game.event_manager.createJoystickTrigger()
-	trigger.addListener(handler)
+	trigger.add_listener(handler)
 	return handler

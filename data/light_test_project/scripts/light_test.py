@@ -196,17 +196,17 @@ class Lights :
 lights = Lights()
 
 trigger = game.event_manager.createKeyTrigger(KC.U)
-trigger.addListener(lights.toggleSpots)
+trigger.add_listener(lights.toggleSpots)
 
 trigger = game.event_manager.createKeyTrigger(KC.I)
-trigger.addListener(lights.toggleHemis)
+trigger.add_listener(lights.toggleHemis)
 
 trigger = game.event_manager.createKeyTrigger(KC.P)
-trigger.addListener(lights.toggleSun)
+trigger.add_listener(lights.toggleSun)
 
 def toggleShadows():
 	game.scene.shadows.enabled = not game.scene.shadows.enabled
 
 trigger = game.event_manager.createKeyTrigger(KC.Z)
-trigger.addListener(toggleShadows)
+trigger.add_listener(toggleShadows)
 

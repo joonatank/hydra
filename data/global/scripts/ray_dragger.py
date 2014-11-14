@@ -346,11 +346,11 @@ def createWandRayController(name="wand", tracker_name="wand", debug=False):
 	RayDragger part will be merely a decorator for Ray or something similar. """
 	visual_ray = VisualRay(name, indicator_size=0.01)
 	dragger = RayDragger(visual_ray, speed=1.0)
-	game.event_manager.frame_trigger.addListener(dragger.frame_callback)
+	game.event_manager.frame_trigger.add_listener(dragger.frame_callback)
 	if not debug:
 		if game.event_manager.hasTrackerTrigger(tracker_name):
 			ttrigger = game.event_manager.getTrackerTrigger(tracker_name)
-			ttrigger.addListener(dragger.tracker_callback)
+			ttrigger.add_listener(dragger.tracker_callback)
 		else:
 			raise ValueError("Tracker trigger with a name: ", tracker_name, " does not exist!")
 		""" Joystick related:
@@ -371,7 +371,7 @@ def createWandRayController(name="wand", tracker_name="wand", debug=False):
 		""" This is for debugging part. If you want more dofs or change mapping feel free to edit. """
 		debug_movements = WorldTransformGenerator(Transform(), game.player.camera_node.world_transformation,
 				speed=1)
-		game.event_manager.frame_trigger.addListener(debug_movements.frame_callback)
+		game.event_manager.frame_trigger.add_listener(debug_movements.frame_callback)
 		#Connecting the generator to dragger's callback:
 		debug_movements.connect(dragger.tracker_callback)
 		

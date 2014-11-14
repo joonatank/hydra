@@ -24,12 +24,12 @@ def reset_camera():
 reset_camera()
 
 trigger = game.event_manager.createKeyTrigger(KC.X)
-trigger.addListener(reset_camera)
+trigger.add_listener(reset_camera)
 
 camera_controller = create_camera_controller()
 
 trigger = game.event_manager.createKeyTrigger(KC.F4)
-trigger.addListener(camera_controller.toggle_disable)
+trigger.add_listener(camera_controller.toggle_disable)
 
 game.scene.ambient_light = ColourValue(0.3, 0.3, 0.3)
 game.scene.shadows.enable()
@@ -345,10 +345,10 @@ for i, model in enumerate(models):
 # the other option would be to have two lists of them
 # which I rather not implement now
 trigger = game.event_manager.createKeyTrigger(KC.TAB)
-trigger.addListener(texts.prev_selection)
+trigger.add_listener(texts.prev_selection)
 
 trigger = game.event_manager.createKeyTrigger(KC.TAB, KEY_MOD.SHIFT)
-trigger.addListener(texts.next_selection)
+trigger.add_listener(texts.next_selection)
 
 # Toggle for hiding and showing the selected
 def hide_selected():
@@ -361,19 +361,19 @@ def hide_selected():
 		texts.toggle_visible(node.name)
 
 trigger = game.event_manager.createKeyTrigger(KC.C)
-trigger.addListener(texts.toggle_gui)
+trigger.add_listener(texts.toggle_gui)
 
 trigger = game.event_manager.createKeyTrigger(KC.H)
-trigger.addListener(hide_selected)
+trigger.add_listener(hide_selected)
 
 trigger = game.event_manager.createKeyTrigger(KC.H, KEY_MOD.META)
-trigger.addListener(texts.unhide_all)
+trigger.add_listener(texts.unhide_all)
 
 #trigger = game.event_manager.createKeyTrigger(KC.U)
-#trigger.addListener(move_selection_up)
+#trigger.add_listener(move_selection_up)
 
 #trigger = game.event_manager.createKeyTrigger(KC.J)
-#trigger.addListener(move_selection_down)
+#trigger.add_listener(move_selection_down)
 
 # TODO add selection controller using input objects
 # gotten from the current selection name
@@ -445,13 +445,13 @@ def joystick_print(evt, i):
 
 #trigger = game.event_manager.createJoystickTrigger()
 # Disabled it's only for testing
-#trigger.addListener(joystick_print)
+#trigger.add_listener(joystick_print)
 # Disabled selecting with the joystick because we are using wand for it
 # enable if you need it for testing
-#trigger.addListener(joystick_select)
+#trigger.add_listener(joystick_select)
 # Change model of selected part with the directional pad
-#trigger.addListener(joystick_change_model)
-#trigger.addListener(joy_selection_controller.joystick_updated)
+#trigger.add_kistener(joystick_change_model)
+#trigger.add_listener(joy_selection_controller.joystick_updated)
 
-#game.event_manager.frame_trigger.addListener(joy_selection_controller.progress)
+#game.event_manager.frame_trigger.add_listener(joy_selection_controller.progress)
 

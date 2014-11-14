@@ -100,9 +100,9 @@ class Sormi:
         self.rb = rb
         self.force_vector = Vector3(0.0, 0.0, 0.0)
         self.force_magnitude = magnitude
-        #game.event_manager.frame_trigger.addListener(progress)
+        #game.event_manager.frame_trigger.add_listener(progress)
         #self.ftrigger = game.event_manager.frame_trigger
-        #self.ftrigger.addListener(self.progress)
+        #self.ftrigger.add_listener(self.progress)
 
         self.ktrigger = game.event_manager.createKeyTrigger( key )
         self.ktrigger.addKeyUpListener(self.forceup)

@@ -118,7 +118,7 @@ void export_managers(void)
 	;
 
 	python::class_<vl::analog_sensor, vl::analog_sensor_ref_ptr, boost::noncopyable>("analog_sensor", python::no_init)
-		.def("addListener", toast::python::signal_connect<void (vl::scalar)>(&vl::analog_sensor::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::scalar)>(&vl::analog_sensor::addListener))
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 
@@ -281,12 +281,12 @@ void export_triggers(void)
 
 	python::class_<BasicActionTrigger, boost::noncopyable, python::bases<Trigger> >("BasicActionTrigger", python::no_init )
 		// @todo fix this to use toast for callbacks
-		.def("addListener", toast::python::signal_connect<void (void)>(&vl::BasicActionTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void (void)>(&vl::BasicActionTrigger::addListener))
 	;
 
 	python::class_<TransformActionTrigger, boost::noncopyable, python::bases<Trigger> >("TransformActionTrigger", python::no_init )
 		// @todo fix this to use toast for callbacks
-		.def("addListener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::TransformActionTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::Transform const &)>(&vl::TransformActionTrigger::addListener))
 	;
 	
 	python::class_<vl::TrackerTrigger, python::bases<vl::TransformActionTrigger>, boost::noncopyable>("TrackerTrigger", python::no_init)
@@ -294,11 +294,11 @@ void export_triggers(void)
 	;
 	
 	python::class_<FrameTrigger, boost::noncopyable, python::bases<Trigger> >("FrameTrigger", python::no_init )
-		.def("addListener", toast::python::signal_connect<void (vl::time const &)>(&vl::FrameTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void (vl::time const &)>(&vl::FrameTrigger::addListener))
 	;
 
 	python::class_<TimeTrigger, boost::noncopyable, python::bases<Trigger> >("TimeTrigger", python::no_init )
-		.def("addListener", toast::python::signal_connect<void (void)>(&vl::TimeTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void (void)>(&vl::TimeTrigger::addListener))
 		.def("reset", &vl::TimeTrigger::reset)
 		.add_property("expired", &vl::TimeTrigger::isExpired)
 		.add_property("interval", python::make_function(&vl::TimeTrigger::getInterval, python::return_value_policy<python::copy_const_reference>()), &vl::TimeTrigger::setInterval)
@@ -310,7 +310,7 @@ void export_triggers(void)
 		.add_property("modifiers", &vl::KeyTrigger::getModifiers, &vl::KeyTrigger::setModifiers )
 		.def("addKeyUpListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyUpListener))
 		.def("addKeyDownListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addKeyDownListener))
-		.def("addListener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void (void)>(&vl::KeyTrigger::addListener))
 	;
 
 	
@@ -321,7 +321,7 @@ void export_triggers(void)
 	;
 
 	python::class_<vl::JoystickTrigger, boost::noncopyable, python::bases<Trigger> >("JoystickTrigger", python::no_init )
-		.def("addListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addListener))
+		.def("add_listener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addListener))
 		.def("addButtonPressedListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addButtonPressedListener))
 		.def("addButtonReleasedListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addButtonReleasedListener))
 		.def("addAxisListener", toast::python::signal_connect<void(vl::JoystickEvent const &, int)>(&vl::JoystickTrigger::addAxisListener))

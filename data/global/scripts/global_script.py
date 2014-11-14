@@ -339,7 +339,7 @@ class JoystickCameraController(Controller):
 
 		# Add a listener for events
 		trigger = game.event_manager.createJoystickTrigger()
-		trigger.addListener(self.update_joystick)
+		trigger.add_listener(self.update_joystick)
 
 		self.head_direction = False
 
@@ -469,15 +469,15 @@ def create_camera_controller() :
 		# For now I'd say leave it but for later it might be something
 		# worthy to consider.
 		joy_controller = WandCameraController()
-		game.event_manager.frame_trigger.addListener(joy_controller.progress)
+		game.event_manager.frame_trigger.add_listener(joy_controller.progress)
 
 	# TODO should have an option for this also
 	if game.razer_hydra :
 		print("Creating Razer Camera Controller")
 		rzr_hydra = RazerCameraController()
-		game.event_manager.frame_trigger.addListener(rzr_hydra.progress)
+		game.event_manager.frame_trigger.add_listener(rzr_hydra.progress)
 
-	game.event_manager.frame_trigger.addListener(controller.progress)
+	game.event_manager.frame_trigger.add_listener(controller.progress)
 
 	return controller 
 
@@ -522,7 +522,7 @@ def create_selection_controller(reference=None, rotation = Quaternion(1, 0, 0, 0
 		trigger.addKeyDownListener(f1)
 		trigger.addKeyUpListener(f2)
 
-	game.event_manager.frame_trigger.addListener(controller.progress)
+	game.event_manager.frame_trigger.add_listener(controller.progress)
 
 	return controller;
 
@@ -546,8 +546,8 @@ def addTrackerMoveSelection(tracker_trigger_name, trigger) :
 	if game.event_manager.hasTrackerTrigger(tracker_trigger_name):
 		tracker_trigger = game.event_manager.getTrackerTrigger(tracker_trigger_name)
 		tms = TrackerMoveSelection()
-		tracker_trigger.addListener(tms.move)
-		trigger.addListener(tms.switch_state)
+		tracker_trigger.add_listener(tms.move)
+		trigger.add_listener(tms.switch_state)
 	else:
 		print("ERROR : No such trigger. Not adding tracker move selection.")
 
@@ -571,7 +571,7 @@ def addRigidBodyController(body):
 		trigger.addKeyDownListener(f1)
 		trigger.addKeyUpListener(f2)
 
-	game.event_manager.frame_trigger.addListener(controller.progress)
+	game.event_manager.frame_trigger.add_listener(controller.progress)
 
 	# TODO this should probably be relative to camera for most use cases
 	# using PARENT because otherwise rotation of the body would cause problems
@@ -592,7 +592,7 @@ def addToggleStereo(kc) :
 
 	stereo = StereoToggle() 
 	trigger = game.event_manager.createKeyTrigger(kc)
-	trigger.addListener(stereo.toggle)
+	trigger.add_listener(stereo.toggle)
 
 def addToggleConsole(kc) :
 	print( 'Creating Toggle GUI Console Event to ' + getPythonKeyName(kc) )
@@ -693,7 +693,7 @@ def create_fake_tracker(name):
 
 def map_head_tracker(name) :
 	trigger = game.event_manager.getTrackerTrigger(name)
-	trigger.addListener(setHeadTransform)
+	trigger.add_listener(setHeadTransform)
 
 
 # Starts a head tracker and maps it to head
