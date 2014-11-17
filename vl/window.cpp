@@ -1189,6 +1189,13 @@ vl::Window::_begin_frame_oculus()
 		_channels.at(eyeIndex)->setCustomViewMatrix(true, view_adjust * view);
 		_channels.at(eyeIndex)->setCustomProjMatrix(true, proj);
 	}
+
+	/// Send the tracking result back to the main thread
+	vl::cluster::EventData data(vl::cluster::EVT_HEAD_TRANSFORM);
+	vl::cluster::ByteDataStream stream = data.getStream();
+	// @todo how to format the message
+	stream << head_t;
+	_sendEvent( data );
 }
 
 void
