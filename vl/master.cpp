@@ -932,6 +932,14 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 		}
 		break;
 
+		case vl::cluster::EVT_HEAD_TRANSFORM :
+		{
+			vl::Transform head_t;
+			stream >> head_t;
+			_game_manager->getPlayer()->setHeadTransform(head_t);
+		}
+		break;
+
 		default :
 			std::cout << vl::CRITICAL << "vl::Master::_receiveEventMessages : "
 				<< "Unhandleded message type." << std::endl;

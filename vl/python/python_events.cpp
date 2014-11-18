@@ -74,8 +74,7 @@ void export_managers(void)
 		.def("hasKeyTrigger", &vl::EventManager::hasKeyTrigger, hasKeyTrigger_ov() )
 		.def("getFrameTrigger", &vl::EventManager::getFrameTrigger, 
 			python::return_value_policy<python::reference_existing_object>() )
-		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
-			python::return_value_policy<python::reference_existing_object>()) )
+		// old version for pcan, use pcan attribute instead, left only for backwards compatibility
 		.def("get_pcan", &vl::EventManager::getPCAN)
 		.def("createTimeTrigger", &vl::EventManager::createTimeTrigger,
 			python::return_value_policy<python::reference_existing_object>())
@@ -83,8 +82,13 @@ void export_managers(void)
 			python::return_value_policy<python::reference_existing_object>())
 		.def("createJoystickTrigger", &vl::EventManager::createJoystickTrigger,
 			python::return_value_policy<python::reference_existing_object>())
-		.add_property("tracker_clients", &vl::EventManager::getTrackerClients)
 		.def("create_analog_client", &vl::EventManager::createAnalogClient)
+
+		.add_property("frame_trigger", python::make_function(&vl::EventManager::getFrameTrigger, 
+			python::return_value_policy<python::reference_existing_object>()) )
+		.add_property("pcan", python::make_function(&vl::EventManager::getPCAN))
+		.add_property("tracker_clients", &vl::EventManager::getTrackerClients)
+
 		.def(python::self_ns::str(python::self_ns::self))
 	;
 	

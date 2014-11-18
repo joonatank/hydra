@@ -682,6 +682,7 @@ def create_fake_tracker(name):
 	assert(not game.event_manager.hasTrackerTrigger(name))
 
 	print("Creating a fake tracker trigger")
+	assert(not game.event_manager.hasTrackerTrigger("FakeHeadTracker"))
 	tracker = Tracker.create("FakeHeadTracker")
 	tracker.n_sensors = 1
 	t = Transform(Vector3(0, 1.5, 0))
@@ -689,7 +690,7 @@ def create_fake_tracker(name):
 	# Create trigger
 	trigger = game.event_manager.createTrackerTrigger(name)
 	tracker.getSensor(0).trigger = trigger
-	game.tracker_clients.addTracker(tracker)
+	game.event_manager.tracker_clients.addTracker(tracker)
 
 def map_head_tracker(name) :
 	trigger = game.event_manager.getTrackerTrigger(name)
@@ -703,11 +704,8 @@ def map_head_tracker(name) :
 #
 # TODO this does not allow us to change trackers at run time
 def initialise_head_tracker():
-	oculus_name = "headTrigger"
 	t_name = "glassesTrigger"
-	if game.event_manager.hasTrackerTrigger(oculus_name) :
-		map_head_tracker(oculus_name)
-	elif game.event_manager.hasTrackerTrigger(t_name) :
+	if game.event_manager.hasTrackerTrigger(t_name) :
 		map_head_tracker(t_name)
 	else :
 		create_fake_tracker(t_name)
