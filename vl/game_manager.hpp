@@ -342,6 +342,12 @@ public :
 	vl::config::ProjSettings const &getGlobalSettings(void) const
 	{ return _global_project; }
 
+	void setOculusEnabled(bool enabled)
+	{ _oculus_enabled = enabled; }
+
+	bool isOculusEnabled(void) const
+	{ return _oculus_enabled; }
+
 	template<typename T>
 	void process_event(T const &evt);
 
@@ -470,6 +476,8 @@ private :
 	vl::config::ProjSettings _global_project;
 
 	bool _auto_start;
+
+	bool _oculus_enabled;
 
 	vl::ProgramOptions _options;
 

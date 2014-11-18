@@ -936,6 +936,7 @@ vl::Master::_handleEvent(vl::cluster::EventData &event)
 		{
 			vl::Transform head_t;
 			stream >> head_t;
+			_game_manager->setOculusEnabled(true);
 			_game_manager->getPlayer()->setHeadTransform(head_t);
 		}
 		break;

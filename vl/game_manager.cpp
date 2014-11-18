@@ -69,6 +69,7 @@ vl::GameManager::GameManager(vl::Session *session, vl::Logger *logger, vl::Progr
 	, _player(0)
 	, _logger(logger)
 	, _auto_start(true)
+	, _oculus_enabled(false)
 	, _options(opt)
 	, _fsm(new GameManagerFSM)
 {

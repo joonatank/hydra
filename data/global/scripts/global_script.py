@@ -196,9 +196,8 @@ class RigidBodyController(KeyboardController):
 #
 # TODO add a FPS camera version that uses both mouse and keyboard
 class CameraController(KeyboardController):
-	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10, head_direction = False):
+	def __init__(self, speed = 0.5, angular_speed = Degree(30), reference=None, high_speed=10) :
 		KeyboardController.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
-		self.head_direction = head_direction
 
 	def progress(self, t):
 		# TODO this is Oculus specific need to use oculus cb for it
@@ -206,7 +205,7 @@ class CameraController(KeyboardController):
 		#
 		# need to figure out the priority if we have tracked controller
 		# and Oculus which one will we use?
-		if self.head_direction:
+		if game.oculus_enabled :
 			self.rotation = game.player.head_transformation.quaternion
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
@@ -219,13 +218,14 @@ class CameraController(KeyboardController):
 # Controls
 # Left joystick axis controls camera to the direction you point
 # TODO add rotation
+#	upper trigger button + axis
+# TODO change the joystick, left one should be the one used for moving
+# and right one the one used for object picking
 # high speed movement
 # object picking
 class RazerCameraController(Controller) :
 	def __init__(self, speed = 5, angular_speed = Degree(30), reference=None, high_speed=10):
 		Controller.__init__(self, speed, angular_speed, reference, high_speed=high_speed)
-		self.head_direction = False
-
 		# Should never be called without razer hydra
 		assert(game.razer_hydra)
 
@@ -286,13 +286,11 @@ class RazerCameraController(Controller) :
 
 
 	def progress(self, t):
-		# TODO this is Oculus specific need to use oculus cb for it
-		# not a boolean switch
-		#
-		# need to figure out the priority if we have tracked controller
-		# and Oculus which one will we use?
-		#if self.head_direction:
-		#	self.rotation = game.player.head_transformation.quaternion
+		# Unlike other controllers we don't use the Oculus head direction
+		# because we have tracking that provides the direction already,
+		# and if the camera doesn't move to the direction pointed by the
+		# joystick it's confusing as heck.
+
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
 
@@ -341,8 +339,6 @@ class JoystickCameraController(Controller):
 		trigger = game.event_manager.createJoystickTrigger()
 		trigger.add_listener(self.update_joystick)
 
-		self.head_direction = False
-
 	# Inherit and define to use the base class
 	#def update_joystick(self, evt, i) :
 
@@ -352,7 +348,7 @@ class JoystickCameraController(Controller):
 		#
 		# need to figure out the priority if we have tracked controller
 		# and Oculus which one will we use?
-		if self.head_direction:
+		if game.oculus_enabled :
 			self.rotation = game.player.head_transformation.quaternion
 		nodes = [game.player.camera_node]
 		self.transform(nodes, t)
@@ -405,8 +401,6 @@ def create_camera_controller() :
 	controller = CameraController(opt.speed, opt.angular_speed,
 			high_speed=opt.high_speed)
 
-	# Configure
-	controller.head_direction = opt.head_direction
 	controller.disabled = opt.controller_disabled
 
 	# Use partial from functools to make this repetive task a little less daunting

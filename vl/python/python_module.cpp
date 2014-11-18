@@ -697,7 +697,8 @@ void export_game(void)
 		.add_property("playing", &vl::GameManager::isPlaying)
 		.add_property("quited", &vl::GameManager::isQuited)
 		.add_property("auto_start", &vl::GameManager::auto_start, &vl::GameManager::set_auto_start)
-		
+		.add_property("oculus_enabled", &vl::GameManager::isOculusEnabled)
+
 		/// test functions
 		.def("destroy_dynamic_objects", &vl::GameManager::_destroyDynamicObjects)
 		.def("rerun_python", &vl::GameManager::_rerunPythonScripts)

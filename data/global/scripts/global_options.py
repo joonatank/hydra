@@ -26,8 +26,6 @@ class Options :
 			self.rotate_right = KC.E
 			self.joystick_enabled = True
 			# For HMD
-			# TODO should be automatically configured by c++ if HMD is used
-			self.head_direction = False
 			# Misc configurations
 			self.speed = 5
 			self.high_speed = 10
