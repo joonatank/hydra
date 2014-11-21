@@ -67,6 +67,16 @@ inline std::string getRenderModeName(RENDER_MODE rm)
 	
 }
 
+/**	@brief Channel
+ *	@todo remove direct Window rendering
+ *	cleans up the the code a lot, both Deferred and Oculus use FBOs anyway
+ *	FBO rendering is just slightly slower than direct window while
+ *	it has the possibilities to use post processing effects etc.
+ *
+ *	@todo break into multiple versions, FBO and Deferred at least
+ *
+ *	@todo Deferred with Oculus?
+ */
 class Channel
 {
 public:
@@ -113,8 +123,10 @@ public:
 	StereoCamera &getCamera(void)
 	{ return _camera; }
 
-	Ogre::Viewport *getNative(void)
-	{ return _viewport; }
+	Ogre::Viewport *getWindowViewport(void)
+	{ return _win_viewport; }
+
+	Ogre::Viewport *getRenderViewport(void);
 
 	RENDER_MODE getRenderMode(void) const
 	{ return _render_mode; }
@@ -163,7 +175,7 @@ private :
 	{
 		// minimum 1<<2 because 1<<0 is the scene mask
 		// and 1<<1 is the light mask
-		return 1 << (_viewport->getZOrder()+2); 
+		return 1 << (_win_viewport->getZOrder()+2); 
 	}
 
 	uint32_t _get_scene_mask(void)
@@ -184,7 +196,11 @@ private:
 	vl::vec2i _texture_size;
 
 	StereoCamera _camera;
-	Ogre::Viewport *_viewport;
+	/// Window viewport, for FBOs this is the non render viewport
+	/// For windows this is the render viewport
+	Ogre::Viewport *_win_viewport;
+	/// For FBO targets this is the render viewport, for others it's null
+	Ogre::Viewport *_fbo_viewport;
 
 	RENDER_MODE _render_mode;
 	uint32_t _fsaa;

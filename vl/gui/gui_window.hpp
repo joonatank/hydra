@@ -107,6 +107,8 @@ private :
 
 	virtual void _window_resetted(void) {}
 	
+	/// @brief template method, called when window data has been updated
+	/// overload in inherited if you need to update every frame
 	/// @todo these various update methods need to be renamed properly
 	virtual void _update(void) {}
 

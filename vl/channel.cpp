@@ -43,7 +43,8 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	: _name(config.name)
 	, _camera()
 	, _texture_size(config.texture_size)
-	, _viewport(view)
+	, _win_viewport(view)
+	, _fbo_viewport(0)
 	, _fbo(0)
 	, _fsaa(fsaa)
 	, _stereo_eye(0.0)
@@ -60,13 +61,13 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 	if(_name.empty())
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Channel has no name")); }
 
-	assert(_viewport);
+	assert(_win_viewport);
 	assert(_parent);
 
 	Ogre::ColourValue col(config.background_colour.r, config.background_colour.g,
 		config.background_colour.b, config.background_colour.a);
-	_viewport->setBackgroundColour(col);
-	_viewport->setAutoUpdated(false);
+	_win_viewport->setBackgroundColour(col);
+	_win_viewport->setAutoUpdated(false);
 	_size = config.area;
 
 	std::clog << "Channel::Channel : name " << _name 
@@ -123,6 +124,25 @@ vl::Channel::Channel(vl::config::Channel config, Ogre::Viewport *view,
 		// stereo mode on/off
 		// Draw both back buffers
 		_draw_buffer = GL_BACK;
+	}
+}
+
+Ogre::Viewport *
+vl::Channel::getRenderViewport(void)
+{
+	switch(_render_mode)
+	{
+		case RM_WINDOW:
+			assert(_win_viewport);
+			return _win_viewport;
+		case RM_OCULUS:
+		case RM_FBO:
+			assert(_fbo_viewport);
+			return _fbo_viewport;
+		case RM_DEFERRED :
+			return _win_viewport;
+		default :
+			assert(false && "Not implemented.");
 	}
 }
 
@@ -211,19 +231,19 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	// With lights till we have custom shadow mapping that is rendered
 	// before the geometric pass.
 	view->setVisibilityMask(_get_scene_mask() | _get_light_mask());
-	view->setBackgroundColour(_viewport->getBackgroundColour());
+	view->setBackgroundColour(_win_viewport->getBackgroundColour());
 	view->setMaterialScheme("Deferred");
 
 	// Set screen viewport attributes
 	// Needs both screen and light mask because we are doing lighting
 	// in this pass.
-	_viewport->setVisibilityMask(_get_window_mask() | _get_light_mask());
+	_win_viewport->setVisibilityMask(_get_window_mask() | _get_light_mask());
 	// Overlays and Sky need to be rendered using forward renderer
 	// Overlays are working nicely
 	// @todo skies are not working
-	_viewport->setShadowsEnabled(false);
-	_viewport->setSkiesEnabled(true);
-	_viewport->setOverlaysEnabled(true);
+	_win_viewport->setShadowsEnabled(false);
+	_win_viewport->setSkiesEnabled(true);
+	_win_viewport->setOverlaysEnabled(true);
 
 	// Create camera that is not movable for rendering 2D screens
 	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
@@ -232,7 +252,7 @@ vl::Channel::_initialise_mrt(vl::CameraPtr camera)
 	_rtt_camera = sm->createCamera(camera_name);
 	_rtt_camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
 
-	_viewport->setCamera(_rtt_camera);
+	_win_viewport->setCamera(_rtt_camera);
 }
 
 void
@@ -284,7 +304,7 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 	// instead it is using view masking.
 	if(_render_mode == RM_WINDOW)
 	{
-		_viewport->setCamera(og_cam);
+		_win_viewport->setCamera(og_cam);
 	}
 	else if(_render_mode == RM_FBO || _render_mode == RM_OCULUS)
 	{
@@ -299,7 +319,6 @@ vl::Channel::setCamera(vl::CameraPtr cam)
 void
 vl::Channel::update(void)
 {
-	// @todo retrieve Player from Renderer
 	assert(_parent && _parent->getPipe() && _parent->getPipe()->getRenderer());
 	Player *player = _parent->getPipe()->getRenderer()->getPlayer();
 	assert(player);
@@ -314,8 +333,7 @@ vl::Channel::update(void)
 	if(_quad_node)
 	{ _quad_node->setVisible(true); }
 
-	// doesn't make a difference (well not noticable anyway)
-	//_viewport->clear();
+	// Clearing the doesn't make a difference (well not noticable anyway)
 	if(_render_mode == RM_FBO || _render_mode == RM_OCULUS)
 	{ _render_to_fbo(); }
 	else if(_render_mode == RM_DEFERRED)
@@ -341,7 +359,7 @@ vl::Channel::draw(void)
 
 	// Must be using this stupid syntax for
 	// keeping track of the batches and triangles
-	_viewport->getTarget()->_updateViewport(_viewport, true);
+	_win_viewport->getTarget()->_updateViewport(_win_viewport, true);
 
 	if(_quad_node)
 	{ _quad_node->setVisible(false); }
@@ -357,8 +375,8 @@ vl::Channel::getLastFPS(void) const
 	{ return _mrt->getLastFPS(); }
 	else
 	{
-		assert(_viewport->getTarget());
-		return _viewport->getTarget()->getLastFPS();
+		assert(_win_viewport->getTarget());
+		return _win_viewport->getTarget()->getLastFPS();
 	}
 }
 
@@ -491,7 +509,7 @@ vl::Channel::_render_to_fbo(void)
 	// second window black in both windowed and FBO modes
 	// without them though FBO bleeds to second channel
 	//_fbo->_beginUpdate();
-	_viewport->clear();
+	_win_viewport->clear();
 	_update_camera();
 	_fbo->update();
 }
@@ -557,12 +575,14 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	}
 	
 	/// Create viewport, necessary for FBO
-	Ogre::Viewport *view = _fbo->addViewport((Ogre::Camera *)camera->getNative());
-	assert(view);
-	view->setBackgroundColour(_viewport->getBackgroundColour());
+	/// @todo we should save the viewport to member data
+	assert(!_fbo_viewport);
+	_fbo_viewport = _fbo->addViewport((Ogre::Camera *)camera->getNative());
+	assert(_fbo_viewport);
+	_fbo_viewport->setBackgroundColour(_win_viewport->getBackgroundColour());
 	// Needs the scene mask
-	view->setVisibilityMask(_get_fbo_mask());
-	view->setClearEveryFrame(true, Ogre::FBT_COLOUR|Ogre::FBT_DEPTH);
+	_fbo_viewport->setVisibilityMask(_get_fbo_mask());
+	_fbo_viewport->setClearEveryFrame(true, Ogre::FBT_COLOUR|Ogre::FBT_DEPTH);
 
 	// Implementation specifics for FBO rendering
 	_fbo->setAutoUpdated (false);
@@ -574,10 +594,10 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	// this could help us with deferred and forward rendering selection
 	// Without setVisisbilityMask the second channel in Oculus gets copied from another FBO
 	// with it only the first one gets copied from the original FBO
-	_viewport->setVisibilityMask(_get_window_mask());
-	_viewport->setShadowsEnabled(false);
-	_viewport->setSkiesEnabled(false);
-	_viewport->setOverlaysEnabled(false);
+	_win_viewport->setVisibilityMask(_get_window_mask());
+	_win_viewport->setShadowsEnabled(false);
+	_win_viewport->setSkiesEnabled(false);
+	_win_viewport->setOverlaysEnabled(false);
 
 	// Create camera that is not movable for rendering 2D screens
 	Ogre::SceneManager *sm = Ogre::Root::getSingleton().getSceneManagerIterator().current()->second;
@@ -586,7 +606,7 @@ vl::Channel::_initialise_fbo(vl::CameraPtr camera, std::string const &base_mater
 	_rtt_camera = sm->createCamera(camera_name);
 	_rtt_camera->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
 
-	_viewport->setCamera(_rtt_camera);
+	_win_viewport->setCamera(_rtt_camera);
 }
 
 void
@@ -616,8 +636,8 @@ vl::Channel::_create_fbo(std::string const &name, Ogre::PixelFormat pf)
 	// so do not check the texture size here. Use an OpenGL debugger instead.
 	//
 	// Use viewport size if no size was set
-	int w = _viewport->getActualWidth();
-	int h = _viewport->getActualHeight();
+	int w = _win_viewport->getActualWidth();
+	int h = _win_viewport->getActualHeight();
 	if(_texture_size.x > 0 && _texture_size.y > 0)
 	{ w = _texture_size.x; h = _texture_size.y; }
 

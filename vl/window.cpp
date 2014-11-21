@@ -501,28 +501,21 @@ vl::Window::draw(void)
 		{ _channels.at(i)->draw(); }
 	}
 
-	// GUI is not rendered as part of the FBO which might become problematic
-	// instead it is overlayed on the Window.
-	// For post screen effects and distribution of the Channels this shouldn't
-	// be a problem, but we should tread carefully anyway.
-	//
-	// why isn't it part of the FBO?
-	// oh because it doesn't work with Deferred Rendering?
-	// or it might get distorted with Oculus?
+	// GUI is now rendered into the FBO, this because Oculus needs it so.
+	// This might not be ideal for some cases, but for those individually
+	// change the GUI to be rendered onto some other viewport.
 	//
 	// @todo
 	// Do we want to overlay the GUI for all Channels
 	// Probably not, but how do we decide it?
 	// And should we bind the GUI to Channel?
 	//
-	// @todo this doesn't do what I thought it would
-	// it has nothing to do with Rendering it just updates the variables
+	// GUI::update has nothing to do with Rendering it just updates the variables
 	// for Rendering, so it probably should be first in the Rendering loop
-	// where is the GUI rendered?
-	//
-	// For Oculus Rift
-	// GUI doesn't work, it has nothing to do with this though
-	// we need to figure out where the GUI is drawn and what exactly does update do.
+	// Where is the GUI rendered?
+	// It is rendered in Renderer::draw where we call Ogre to finish a frame draw
+	// well that is my guess since Gorilla automatically draws using an Ogre
+	// frameDraw callback.
 	if(_renderer->getGui())
 	{ _renderer->getGui()->update(); }
 
@@ -678,17 +671,11 @@ vl::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 			&& _renderer->getPipe()->getID() != vl::ID_UNDEFINED
 			&& _pipe_id != vl::ID_UNDEFINED);
 
+		/// @todo what is the purpose of this?
 		if(_renderer->getPipe()->getID() != _pipe_id)
 		{ return; }
 
 		_createNative();
-
-		// Needs to be after Channels and Ogre::Viewports are created
-		// for the of change that window does not have Channel
-		if(_channels.size() > 0)
-		{
-			_renderer->initialiseGUI(_channels.at(0));
-		}
 	}
 }
 

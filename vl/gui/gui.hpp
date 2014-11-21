@@ -40,6 +40,13 @@ namespace gui
 
 /**	@class GUI
  *	@brief Distributed class for GUI modifications
+ *
+ *	@todo figure out where this is updated/rendered and document
+ *	add general process documentation here
+ *	add specific method documentation
+ *
+ *	@todo add global scale variable to scale all the windows
+ *	primarily for Oculus since the windows/fonts need to be scaled for it.
  */
 class HYDRA_API GUI : public vl::Distributed
 {
@@ -50,7 +57,6 @@ public :
 	/// @brief Slave or Renderer constructor
 	/// @param session the distributed session this GUI is attached to
 	/// @param id ID of this GUI, has to be valid
-	/// @param cb callback for sendCommand, ownership is passed to this
 	GUI(vl::Session *session, uint64_t id);
 	
 	~GUI(void);
@@ -69,8 +75,6 @@ public :
 	{ return _channel; }
 
 	void setChannel(vl::Channel *view);
-	
-	void initGUI(void);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -80,8 +84,7 @@ public :
 
 	bool isVisible(void) const;
 
-	void sendCommand(std::string const &cmd);
-
+	/// Called from Windows to create the actual draw object
 	Gorilla::Screen *createScreen(void);
 	
 	void createMouseCursor(Gorilla::Screen *screen);
@@ -112,6 +115,13 @@ private :
 	GUI(GUI const &);
 	GUI &operator=(GUI const &);
 
+	/// Initialisation function used by all constructors
+	void _clear(void);
+	
+	/// Initialise the GUI
+	/// @internal, called when deserialised
+	void _init(void);
+
 /// Data
 private :
 
@@ -125,12 +135,10 @@ private :
 	vl::Channel *_channel;
 		
 	Gorilla::Silverback *_gorilla;
-	Ogre::Viewport *mViewport;
+	Ogre::Viewport *_viewport;
 
 	Gorilla::Layer *_mouse_cursor_layer;
 	Gorilla::Rectangle *_mouse_cursor;
-
-	//CEGUI::Window *_root;
 
 };	// class GUI
 

@@ -154,22 +154,6 @@ vl::Renderer::draw(void)
 	if(_pipe)
 	{ _pipe->draw(); }
 
-	// Copy view and projection matrices
-	// @todo should be in the pipe or something
-	if(_pipe->getWindows().size() > 0 && _pipe->getWindows().at(0)->getChannels().size() > 0)
-	{
-		// @todo does this work for deferred shading or FBOs?
-		// what projection and view matrices exacatly are left after
-		// rendering a frame?
-		// need to test more but view matrix seemed fine for deferred.
-		//Channel *chan = _pipe->getWindows().at(0)->getChannels().at(0);
-
-		//vl::Transform t = chan->getCamera().getLastViewMatrix();
-		//_last_view_matrix = Ogre::Matrix4(t.quaternion);
-		//_last_view_matrix.setTrans(t.position);
-		//_last_proj_matrix = chan->getCamera().getLastProjectionMatrix();
-	}
-
 	// Hack to update Sky
 	if(_pipe->getWindows().size() > 0 && _player->getCamera()
 		&& _scene_manager && _scene_manager->getSkySimulator())
@@ -632,6 +616,16 @@ vl::Renderer::_updateDistribData( void )
 		
 		for( size_t i = 0; i < _pipe->getWindows().size(); ++i )
 		{ _pipe->getWindows().at(i)->setCamera(_player->getCamera()); }
+
+		// @todo create gui here if it's not already created
+		// here because we need the Channel to be initialised with camera first
+		// so we can get the correct viewport for FBOs
+		// the other option would be to fix the FBO Channel initialisation
+		if(!_gui->initialised())
+		{
+			assert(_pipe->getWindows().size() > 0);
+			initialiseGUI(_pipe->getWindows().at(0)->getChannels().at(0));
+		}
 
 		// Take a screenshot
 		if( _player->getScreenshotVersion() > _screenshot_num )

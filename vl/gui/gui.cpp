@@ -28,25 +28,17 @@
 #include "base/exceptions.hpp"
 
 vl::gui::GUI::GUI(vl::Session *session)
-	: _session(session)
-	, _channel(0)
-	, _gorilla(0)
-	, mViewport(0)
-	, _mouse_cursor_layer(0)
-	, _mouse_cursor(0)
 {
+	_clear();
+	_session = session;
 	assert(_session);
 	_session->registerObject(this, OBJ_GUI);
 }
 
 vl::gui::GUI::GUI(vl::Session *session, uint64_t id)
-	: _session(session)
-	, _channel(0)
-	, _gorilla(0)
-	, mViewport(0)
-	, _mouse_cursor_layer(0)
-	, _mouse_cursor(0)
 {
+	_clear();
+	_session = session;
 	assert(_session);
 
 	if(id == vl::ID_UNDEFINED)
@@ -120,9 +112,9 @@ vl::gui::GUI::getWindow(std::string const &name)
 Gorilla::Screen *
 vl::gui::GUI::createScreen(void)
 {
-	if(mViewport && mViewport->getCamera())
+	if(_viewport && _viewport->getCamera())
 	{	
-		return _gorilla->createScreen(mViewport, "dejavu"); 
+		return _gorilla->createScreen(_viewport, "dejavu"); 
 	}
 	
 	return 0;
@@ -162,7 +154,7 @@ vl::gui::GUI::showMouseCursor(void)
 bool
 vl::gui::GUI::initialised(void) const
 {
-	return(mViewport && mViewport->getCamera());
+	return(_viewport && _viewport->getCamera());
 }
 
 void
@@ -181,7 +173,7 @@ vl::gui::GUI::injectKeyUp(OIS::KeyEvent const &key)
 	// Only console supported for now
 	if(_console)
 	{
-		//_console->onKeyPressed(key);
+		_console->injectKeyUp(key);
 	}
 }
 
@@ -199,27 +191,17 @@ vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 void
 vl::gui::GUI::setChannel(vl::Channel *view)
 {
-	assert(view);
-	if(!view->getNative())
-	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No Ogre::Viewport")); }
 	if(_channel)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting Channel is not supported.")); }
 
+	if(!view)
+	{ BOOST_THROW_EXCEPTION(vl::null_pointer() << vl::desc("Called without Channel.")); }
+
+	if(!view->getRenderViewport())
+	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No Ogre::Viewport")); }
+
 	_channel = view;
-	mViewport = _channel->getNative();
-}
-
-void
-vl::gui::GUI::initGUI()
-{
-	std::clog << "vl::gui::GUI::_initGUI" << std::endl;
-
-	// Can not create Gorilla in Constructor because we don't have the resources yet
-	assert(!_gorilla);
-	_gorilla = new Gorilla::Silverback();
-	_gorilla->loadAtlas("dejavu");
-	
-
+	_viewport = _channel->getRenderViewport();
 }
 
 bool
@@ -232,12 +214,6 @@ vl::gui::GUI::isVisible(void) const
 	/// For example performance overlay (or anyother overlay) should not be
 	/// counted as a GUI visibility.
 	return( initialised() && _console && _console->isVisible() );
-}
-
-void 
-vl::gui::GUI::sendCommand(std::string const &cmd)
-{
-	// @todo missing a signal
 }
 
 void
@@ -262,6 +238,28 @@ vl::gui::GUI::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 	if( DIRTY_ALL & dirtyBits )
 	{
 		// Should be fine here when GUI is created
-		initGUI();
+		_init();
 	}
+}
+
+void
+vl::gui::GUI::_clear(void)
+{
+	_session = 0;
+	_channel = 0;
+	_gorilla = 0;
+	_viewport = 0;
+	_mouse_cursor_layer = 0;
+	_mouse_cursor = 0;
+}
+
+void
+vl::gui::GUI::_init()
+{
+	std::clog << "vl::gui::GUI::_init" << std::endl;
+
+	// Can not create Gorilla in Constructor because we don't have the resources yet
+	assert(!_gorilla);
+	_gorilla = new Gorilla::Silverback();
+	_gorilla->loadAtlas("dejavu");
 }
