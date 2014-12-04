@@ -159,7 +159,7 @@ private :
 	/// @todo wall is tied to projection we should not need them both
 	/// @todo this should be public so we can move channel creation to Renderer
 	vl::Channel *_create_channel(vl::config::Channel const &channel, 
-		STEREO_EYE stereo_cfg, RENDER_MODE render_mode, uint32_t fsaa);
+		STEREO_EYE stereo_cfg, RENDER_MODE render_mode);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
