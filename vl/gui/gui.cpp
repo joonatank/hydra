@@ -189,7 +189,7 @@ vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 }
 
 void
-vl::gui::GUI::setChannel(vl::Channel *view)
+vl::gui::GUI::initialise(vl::Channel *view, GUI_SCALE scale)
 {
 	if(_channel)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting Channel is not supported.")); }
@@ -202,6 +202,7 @@ vl::gui::GUI::setChannel(vl::Channel *view)
 
 	_channel = view;
 	_viewport = _channel->getRenderViewport();
+	_scale = scale;
 }
 
 bool
@@ -245,6 +246,7 @@ vl::gui::GUI::deserialize( vl::cluster::ByteStream &msg, const uint64_t dirtyBit
 void
 vl::gui::GUI::_clear(void)
 {
+	_scale = GS_NORMAL;
 	_session = 0;
 	_channel = 0;
 	_gorilla = 0;

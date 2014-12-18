@@ -94,6 +94,9 @@ public:
 	/// @return true if the window has stereo enabled
 	bool hasStereo(void) const;
 
+	bool isHMD(void) const
+	{ return _hmd != 0; }
+
 	/// Capture input events
 	virtual void capture( void );
 

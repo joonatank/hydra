@@ -93,6 +93,10 @@ private :
 
 	uint16_t _caret_position;
 
+	uint32_t _font;
+	int _line_length;
+	int _line_count;
+
 };	// class ConsoleWindow
 
 }	// namespace gui

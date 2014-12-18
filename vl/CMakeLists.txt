@@ -274,6 +274,7 @@ source_group(HydraMain FILES ${HEADERS} ${SRC})
 
 set(GUI_HEADERS
 	gui/gui.hpp
+	gui/gui_defines.hpp
 	gui/gui_window.hpp
 	gui/console.hpp
 	gui/performance_overlay.hpp

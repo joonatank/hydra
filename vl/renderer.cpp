@@ -251,19 +251,26 @@ vl::Renderer::clearProject(void)
 
 /// --------------------------------------------------------------------------
 void
-vl::Renderer::initialiseGUI(vl::ChannelPtr channel)
+vl::Renderer::initialiseGUI(vl::Window *window)
 {
 	assert(_gui);
 
 	// NOP if already initialised
+	// @todo should this be NOP or throw
 	if(_gui->initialised() || _gui->getChannel())
 	{ return; }
 
 	std::clog << "vl::Renderer::_initialiseGUI" << std::endl;
 
+	assert(window);
+
+	/// @todo need to add stereo gui, at least for single window double channel
+	ChannelPtr channel = window->getChannels().at(0);
 	assert(channel);
-	
-	_gui->setChannel(channel);
+	if(window->isHMD())
+	{ _gui->initialise(window->getChannels().at(0), vl::gui::GS_HMD); }
+	else
+	{ _gui->initialise(window->getChannels().at(0), vl::gui::GS_NORMAL); }
 }
 
 /// ----------------------- Syncing -----------------------------------------
@@ -624,7 +631,7 @@ vl::Renderer::_updateDistribData( void )
 		if(!_gui->initialised())
 		{
 			assert(_pipe->getWindows().size() > 0);
-			initialiseGUI(_pipe->getWindows().at(0)->getChannels().at(0));
+			initialiseGUI(_pipe->getWindows().at(0));
 		}
 
 		// Take a screenshot

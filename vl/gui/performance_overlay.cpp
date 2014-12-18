@@ -14,13 +14,16 @@
 
 #include "performance_overlay.hpp"
 
-#define CONSOLE_FONT_INDEX 14
+#include "gui_defines.hpp"
+
+#include "gui.hpp"
 
 vl::gui::PerformanceOverlay::PerformanceOverlay(vl::gui::GUI *creator)
 	: vl::gui::Window(creator)
 	, _init_report(0)
 	, _rendering_report(0)
 	, _show_advanced(false)
+	, _font(CONSOLE_FONT_INDEX)
 	, _fps(0)
 	, _batches(0)
 	, _tris(0)
@@ -60,19 +63,23 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 
 	assert(mScreen);
 
+	/// @todo need to move the basic overlay up and left
+	if(_creator->getScale() == GS_HMD)
+	{ _font = CONSOLE_FONT_INDEX_HMD; }
+
 	// Create gorilla things here.
 	_advanced_layer = mScreen->createLayer(10);
 
 	size_t y = mScreen->getHeight()/2;
 	size_t x = 10;
 	// More advanced performance metrics
-	_advanced_caption = _advanced_layer->createCaption(CONSOLE_FONT_INDEX,  x,y, "Performance Overlay");
+	_advanced_caption = _advanced_layer->createCaption(_font,  x,y, "Performance Overlay");
 
 	x = 10;
 	y = mScreen->getHeight()/2;
 	// Total frame time
 	y += 24;
-	_frame_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x, y, "FRAME time");
+	_frame_text = _advanced_layer->createMarkupText(_font,  x, y, "FRAME time");
 	_frame_line = _advanced_layer->createLineList();
 	_frame_line->begin(1.5, Gorilla::Colours::BlueViolet);
 	_frame_line->position(x, y + 22);
@@ -82,7 +89,7 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	y += 24;
 	size_t line_x_end = 60;
 	size_t line_x_start = x;
-	_kinematics_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x, y, "KINEMATICS time");
+	_kinematics_text = _advanced_layer->createMarkupText(_font,  x, y, "KINEMATICS time");
 	_kinematics_line = _advanced_layer->createLineList();
 	_kinematics_line->begin(1.5, Gorilla::Colours::BlueViolet);
 	_kinematics_line->position(line_x_start, y + 22);
@@ -92,7 +99,7 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	y += 24;
 	line_x_start = line_x_end;
 	line_x_end += 40;
-	_physics_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x, y, "PHYSICS time");
+	_physics_text = _advanced_layer->createMarkupText(_font,  x, y, "PHYSICS time");
 	_physics_line = _advanced_layer->createLineList();
 	_physics_line->begin(1.5, Gorilla::Colours::BlueViolet);
 	_physics_line->position(line_x_start, y + 22);
@@ -103,7 +110,7 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	y += 24;
 	line_x_start = line_x_end;
 	line_x_end += 60;
-	_collisions_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x, y, "COLLISIONS time");
+	_collisions_text = _advanced_layer->createMarkupText(_font,  x, y, "COLLISIONS time");
 	_collisions_line = _advanced_layer->createLineList();
 	_collisions_line->begin(1.5, Gorilla::Colours::BlueViolet);
 	_collisions_line->position(line_x_start, y + 22);
@@ -113,7 +120,7 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	y += 24;
 	line_x_start = line_x_end;
 	line_x_end = mScreen->getWidth() - 20 - line_x_start;
-	_rendering_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x, y, "RENDERING time");
+	_rendering_text = _advanced_layer->createMarkupText(_font,  x, y, "RENDERING time");
 	_rendering_line = _advanced_layer->createLineList();
 	_rendering_line->begin(1.5, Gorilla::Colours::Red);
 	_rendering_line->position(line_x_start, y + 22);
@@ -122,7 +129,7 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 
 	// Extra text displyu for extra ordinary stuff
 	y = mScreen->getHeight()/4*3;
-	_advance_text = _advanced_layer->createMarkupText(CONSOLE_FONT_INDEX,  x,y + 20, "");
+	_advance_text = _advanced_layer->createMarkupText(_font,  x,y + 20, "");
 	_advance_text->width(mScreen->getWidth() - x - 10);
 
 	// @todo add maximum height
@@ -137,7 +144,14 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	size_t basic_h = 3*23;
 	size_t basic_y = mScreen->getHeight() - (basic_h + 10);
 	size_t basic_x = mScreen->getWidth() - (basic_w + 10);
-	_basic_text = _basic_layer->createMarkupText(CONSOLE_FONT_INDEX,  basic_x, basic_y, "");
+	if(_creator->getScale() == GS_HMD)
+	{
+		basic_w = 330;
+		basic_h = 3*47;
+		basic_y = mScreen->getHeight() - (basic_h + 10);
+		basic_x = mScreen->getWidth() - (basic_w + 10);
+	}
+	_basic_text = _basic_layer->createMarkupText(_font,  basic_x, basic_y, "");
 	_basic_text->width(basic_w);
 	_basic_text->height(basic_h);
 	// @todo this would look nicer if it had round edged (not easily achieved)

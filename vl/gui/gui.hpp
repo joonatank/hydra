@@ -38,6 +38,12 @@ namespace vl
 namespace gui
 {
 
+enum GUI_SCALE
+{
+	GS_NORMAL,
+	GS_HMD,
+};
+
 /**	@class GUI
  *	@brief Distributed class for GUI modifications
  *
@@ -47,6 +53,14 @@ namespace gui
  *
  *	@todo add global scale variable to scale all the windows
  *	primarily for Oculus since the windows/fonts need to be scaled for it.
+ *	We need to 
+ *		- find font size we want to use
+		- replace CONSOLE_FONT_INDEX with dynamic version
+		- make configurations for two or three different font sizes
+		- we need to use fractions to modify the scale off all windows
+			or maybe not, since only few of them use borders
+			some like the console is full screen we just need to add more lines
+ *
  */
 class HYDRA_API GUI : public vl::Distributed
 {
@@ -74,7 +88,10 @@ public :
 	vl::Channel *getChannel(void)
 	{ return _channel; }
 
-	void setChannel(vl::Channel *view);
+	GUI_SCALE getScale(void) const
+	{ return _scale; }
+
+	void initialise(vl::Channel *view, GUI_SCALE scale);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -130,10 +147,12 @@ private :
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
 
+	GUI_SCALE _scale;
+
 	vl::Session *_session;
 
 	vl::Channel *_channel;
-		
+
 	Gorilla::Silverback *_gorilla;
 	Ogre::Viewport *_viewport;
 

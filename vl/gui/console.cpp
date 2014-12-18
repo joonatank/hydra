@@ -18,14 +18,11 @@
 // Necessary for passing messages back to creator
 #include "gui.hpp"
 
-#define CONSOLE_FONT_INDEX 14
-
-#define CONSOLE_LINE_LENGTH 85
-#define CONSOLE_LINE_COUNT 15
-
+#include "gui_defines.hpp"
 
 bool isValidChar(unsigned int c)
 {
+	// @todo add Scandinavian characters
 	static const char legalchars[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+!\"'#%&/()=?[]\\*-_.:,; ";
 	// needs to be skipped as their text field is legal and appears as a whitespace
 	// otherwise doesn't skip special characters
@@ -57,6 +54,9 @@ vl::gui::ConsoleWindow::ConsoleWindow(vl::gui::GUI *creator)
 	, mUpdatePrompt(false)
 	, mIsInitialised(false)
 	, _caret_position(0)
+	, _font(CONSOLE_FONT_INDEX)
+	, _line_length(CONSOLE_LINE_LENGTH)
+	, _line_count(CONSOLE_LINE_COUNT)
 {
 }
 
@@ -265,13 +265,20 @@ vl::gui::ConsoleWindow::_window_resetted(void)
 
 	assert(mScreen);
 
+	if(_creator->getScale() == GS_HMD)
+	{
+		_font = CONSOLE_FONT_INDEX_HMD;
+		_line_length = CONSOLE_LINE_LENGTH_HMD;
+		_line_count = CONSOLE_LINE_COUNT_HMD;
+	}
+
 	// Create gorilla things here.
 	mLayer = mScreen->createLayer(15);
-	mGlyphData = mLayer->_getGlyphData(CONSOLE_FONT_INDEX);
+	mGlyphData = mLayer->_getGlyphData(_font);
 
-	mConsoleText = mLayer->createMarkupText(CONSOLE_FONT_INDEX,  10,10, Ogre::StringUtil::BLANK);
+	mConsoleText = mLayer->createMarkupText(_font,  10,10, Ogre::StringUtil::BLANK);
 	mConsoleText->width(mScreen->getWidth() - 10);
-	mPromptText = mLayer->createCaption(CONSOLE_FONT_INDEX,  10,10, "> _");
+	mPromptText = mLayer->createCaption(_font,  10,10, "> _");
 	mDecoration = mLayer->createRectangle(8,8, mScreen->getWidth() - 16, mGlyphData->mLineHeight );
 	mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
 	mDecoration->border(2, Gorilla::rgb(128,128,128,128));
@@ -316,7 +323,7 @@ vl::gui::ConsoleWindow::_updateConsole(void)
 	{ start++; }
 
 	end=start;
-	for(int c=0; c < CONSOLE_LINE_COUNT; c++)
+	for(int c=0; c < _line_count; c++)
 	{
 		if(end==_lines.end())
 			break;
@@ -363,7 +370,7 @@ vl::gui::ConsoleWindow::_print(Ogre::String const &text)
 	Ogre::String line;
 	for(int c=0; c < len; c++)
 	{
-		if(str[c]=='\n'||line.length() >= CONSOLE_LINE_LENGTH)
+		if(str[c]=='\n'||line.length() >= _line_length)
 		{
 			_lines.push_back(line);
 			line="";
@@ -373,8 +380,8 @@ vl::gui::ConsoleWindow::_print(Ogre::String const &text)
 	}
 	if(line.length())
 	{ _lines.push_back(line); }
-	if(_lines.size() > CONSOLE_LINE_COUNT)
-	{ mStartline = _lines.size() - CONSOLE_LINE_COUNT; }
+	if(_lines.size() > _line_count)
+	{ mStartline = _lines.size() - _line_count; }
 	else
 	{ mStartline = 0; }
 	mUpdateConsole = true;

@@ -124,6 +124,8 @@ private :
 
 	bool _show_advanced;
 
+	uint32_t _font;
+
 	/// Gorilla
 
 	/// Advanced layer
