@@ -884,6 +884,7 @@ vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE ster
 	{
 		case RM_WINDOW:
 			// @todo Window is depricated, throw here
+			std::cout << "Warning : Using depricated direct window rendering." << std::endl;
 			channel = new Channel(chan_cfg, stereo_cfg, this);
 			break;
 		case RM_FBO:

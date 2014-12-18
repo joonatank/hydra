@@ -207,7 +207,7 @@ struct HYDRA_API Renderer
 	};
 
 	Renderer(void)
-		: type(WINDOW)
+		: type(FBO)
 		, hardware_gamma(false)
 		, stereo_type(ST_DEFAULT)
 		, ipd(0.065)
