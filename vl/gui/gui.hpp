@@ -91,7 +91,11 @@ public :
 	GUI_SCALE getScale(void) const
 	{ return _scale; }
 
-	void initialise(vl::Channel *view, GUI_SCALE scale);
+	/// @brief setScale
+	/// Needs to be called before initialised
+	void setScale(GUI_SCALE scale);
+
+	void initialise(vl::Channel *view);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -154,7 +158,6 @@ private :
 	vl::Channel *_channel;
 
 	Gorilla::Silverback *_gorilla;
-	Ogre::Viewport *_viewport;
 
 	Gorilla::Layer *_mouse_cursor_layer;
 	Gorilla::Rectangle *_mouse_cursor;

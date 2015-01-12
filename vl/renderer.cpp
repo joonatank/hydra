@@ -263,14 +263,11 @@ vl::Renderer::initialiseGUI(vl::Window *window)
 	std::clog << "vl::Renderer::_initialiseGUI" << std::endl;
 
 	assert(window);
+	assert(window->getChannels().size());
 
-	/// @todo need to add stereo gui, at least for single window double channel
 	ChannelPtr channel = window->getChannels().at(0);
 	assert(channel);
-	if(window->isHMD())
-	{ _gui->initialise(window->getChannels().at(0), vl::gui::GS_HMD); }
-	else
-	{ _gui->initialise(window->getChannels().at(0), vl::gui::GS_NORMAL); }
+	_gui->initialise(channel);
 }
 
 /// ----------------------- Syncing -----------------------------------------
@@ -377,6 +374,17 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
 					_gui.reset(new vl::gui::GUI(_session, id));
+					
+					// set scale from window or here
+					// have to set it at both places since we don't know which one
+					// is created first
+					if(_pipe && _pipe->getWindows().size() > 0)
+					{
+						if(_pipe->getWindows().at(0)->isHMD())
+						{ _gui->setScale(gui::GS_HMD); }
+						else
+						{ _gui->setScale(gui::GS_NORMAL); }
+					}
 				}
 				// store for later
 				else

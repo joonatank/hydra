@@ -112,9 +112,9 @@ vl::gui::GUI::getWindow(std::string const &name)
 Gorilla::Screen *
 vl::gui::GUI::createScreen(void)
 {
-	if(_viewport && _viewport->getCamera())
+	if(_channel->getRenderViewport() && _channel->getRenderViewport()->getCamera())
 	{	
-		return _gorilla->createScreen(_viewport, "dejavu"); 
+		return _gorilla->createScreen(_channel->getRenderViewport(), "dejavu"); 
 	}
 	
 	return 0;
@@ -154,7 +154,7 @@ vl::gui::GUI::showMouseCursor(void)
 bool
 vl::gui::GUI::initialised(void) const
 {
-	return(_viewport && _viewport->getCamera());
+	return(_channel->getRenderViewport() && _channel->getRenderViewport()->getCamera());
 }
 
 void
@@ -189,7 +189,15 @@ vl::gui::GUI::injectMouseEvent(OIS::MouseEvent const &evt)
 }
 
 void
-vl::gui::GUI::initialise(vl::Channel *view, GUI_SCALE scale)
+vl::gui::GUI::setScale(GUI_SCALE scale)
+{
+	/// @todo change to throwing or NOP
+	assert(!initialised());
+	_scale = scale;
+}
+
+void
+vl::gui::GUI::initialise(vl::Channel *view)
 {
 	if(_channel)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("Resetting Channel is not supported.")); }
@@ -201,8 +209,6 @@ vl::gui::GUI::initialise(vl::Channel *view, GUI_SCALE scale)
 	{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("No Ogre::Viewport")); }
 
 	_channel = view;
-	_viewport = _channel->getRenderViewport();
-	_scale = scale;
 }
 
 bool
@@ -250,7 +256,6 @@ vl::gui::GUI::_clear(void)
 	_session = 0;
 	_channel = 0;
 	_gorilla = 0;
-	_viewport = 0;
 	_mouse_cursor_layer = 0;
 	_mouse_cursor = 0;
 }

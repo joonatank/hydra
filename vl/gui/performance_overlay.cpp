@@ -36,6 +36,11 @@ vl::gui::PerformanceOverlay::PerformanceOverlay(vl::gui::GUI *creator)
 	, mIsInitialised(false)
 	, _dirty(true)
 {
+	if(_creator->getScale() == GS_HMD)
+	{
+		std::clog << "vl::gui::PerformanceOverlay::PerformanceOverlay : HMD" << std::endl;
+		_font = CONSOLE_FONT_INDEX_HMD;
+	}
 }
 
 vl::gui::PerformanceOverlay::~PerformanceOverlay(void)
@@ -62,10 +67,6 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 		shutdown();
 
 	assert(mScreen);
-
-	/// @todo need to move the basic overlay up and left
-	if(_creator->getScale() == GS_HMD)
-	{ _font = CONSOLE_FONT_INDEX_HMD; }
 
 	// Create gorilla things here.
 	_advanced_layer = mScreen->createLayer(10);
@@ -148,8 +149,8 @@ vl::gui::PerformanceOverlay::_window_resetted(void)
 	{
 		basic_w = 330;
 		basic_h = 3*47;
-		basic_y = mScreen->getHeight() - (basic_h + 10);
-		basic_x = mScreen->getWidth() - (basic_w + 10);
+		basic_y = mScreen->getHeight() - (basic_h + 300);
+		basic_x = mScreen->getWidth() - (basic_w + 300);
 	}
 	_basic_text = _basic_layer->createMarkupText(_font,  basic_x, basic_y, "");
 	_basic_text->width(basic_w);

@@ -187,6 +187,11 @@ private :
 
 	config::Window _window_config;
 
+	/// @todo can we change the Pipe/Renderer somewhat
+	/// it's confusing to have them both since
+	/// Pipe is only defined on Master and Renderer on Slave
+	/// can we define them using a virtual interface or smth
+
 	/// Pipe used on Master
 	vl::PipePtr _pipe;
 	/// Pipe ID used on slaves to determine if the Pipe is on this Node

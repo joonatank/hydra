@@ -18,9 +18,11 @@
 #define CONSOLE_FONT_INDEX 14
 #define CONSOLE_FONT_INDEX_HMD 24
 
+// @todo line length and count should be calculated using the 
+// screen and font size
 #define CONSOLE_LINE_LENGTH 85
-#define CONSOLE_LINE_LENGTH_HMD 85
+#define CONSOLE_LINE_LENGTH_HMD 60
 #define CONSOLE_LINE_COUNT 15
-#define CONSOLE_LINE_COUNT_HMD 30
+#define CONSOLE_LINE_COUNT_HMD 20
 
 #endif

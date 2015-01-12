@@ -57,7 +57,18 @@ vl::gui::ConsoleWindow::ConsoleWindow(vl::gui::GUI *creator)
 	, _font(CONSOLE_FONT_INDEX)
 	, _line_length(CONSOLE_LINE_LENGTH)
 	, _line_count(CONSOLE_LINE_COUNT)
+	, _x(10)
+	, _y(10)
 {
+	if(_creator->getScale() == GS_HMD)
+	{
+		std::clog << "vl::gui::ConsoleWindow::ConsoleWindow : HMD" << std::endl;
+		_font = CONSOLE_FONT_INDEX_HMD;
+		_line_length = CONSOLE_LINE_LENGTH_HMD;
+		_line_count = CONSOLE_LINE_COUNT_HMD;
+		_x = 100;
+		_y = 100;
+	}
 }
 
 vl::gui::ConsoleWindow::~ConsoleWindow(void)
@@ -265,23 +276,20 @@ vl::gui::ConsoleWindow::_window_resetted(void)
 
 	assert(mScreen);
 
-	if(_creator->getScale() == GS_HMD)
-	{
-		_font = CONSOLE_FONT_INDEX_HMD;
-		_line_length = CONSOLE_LINE_LENGTH_HMD;
-		_line_count = CONSOLE_LINE_COUNT_HMD;
-	}
-
 	// Create gorilla things here.
 	mLayer = mScreen->createLayer(15);
 	mGlyphData = mLayer->_getGlyphData(_font);
+	
+	// We keep the background (decoration) full size
+	// and just change the prompt and text size based on the scale.
 
-	mConsoleText = mLayer->createMarkupText(_font,  10,10, Ogre::StringUtil::BLANK);
+	mConsoleText = mLayer->createMarkupText(_font,  _x,_y, Ogre::StringUtil::BLANK);
+	// console text width doesn't seem to do anything
 	mConsoleText->width(mScreen->getWidth() - 10);
-	mPromptText = mLayer->createCaption(_font,  10,10, "> _");
-	mDecoration = mLayer->createRectangle(8,8, mScreen->getWidth() - 16, mGlyphData->mLineHeight );
-	mDecoration->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
-	mDecoration->border(2, Gorilla::rgb(128,128,128,128));
+	mPromptText = mLayer->createCaption(_font, _x,_y, "> _");
+	_background = mLayer->createRectangle(8,8, mScreen->getWidth() - 16, mGlyphData->mLineHeight );
+	_background->background_gradient(Gorilla::Gradient_NorthSouth, Gorilla::rgb(128,128,128,128), Gorilla::rgb(64,64,64,128));
+	_background->border(2, Gorilla::rgb(128,128,128,128));
    
 	mIsInitialised = true;
 }
@@ -338,13 +346,15 @@ vl::gui::ConsoleWindow::_updateConsole(void)
 	mConsoleText->text(text.str());
  
 	// Move prompt downwards.
-	mPromptText->top(10 + (lcount * mGlyphData->mLineHeight));
+	mPromptText->top(_y + (lcount * mGlyphData->mLineHeight));
  
 	// Change background height so it covers the text and prompt
-	mDecoration->height(((lcount+1) * mGlyphData->mLineHeight) + 4);
+	_background->height(((lcount+1) * mGlyphData->mLineHeight) + (_y+4));
  
+	// console text width doesn't do anything, it is overriden by
+	// the text that is printed
 	mConsoleText->width(mScreen->getWidth() - 20);
-	mDecoration->width(mScreen->getWidth() - 16);
+	_background->width(mScreen->getWidth() - 16);
 	mPromptText->width(mScreen->getWidth() - 20);
 }
 

@@ -787,6 +787,17 @@ vl::Window::_createNative(void)
 		_ogre_window = _createOgreWindow(_window_config);
 	}
 
+	// set scale from window or here
+	// have to set it at both places since we don't know which one
+	// is created first
+	assert(_renderer && _renderer->getGui());
+	{
+		if(isHMD())
+		{ _renderer->getGui()->setScale(gui::GS_HMD); }
+		else
+		{ _renderer->getGui()->setScale(gui::GS_NORMAL); }
+	}
+
 	assert(_ogre_window);
 
 	_createInputHandling();
