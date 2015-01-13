@@ -35,6 +35,61 @@ namespace vl
 namespace dae
 {
 
+/// @class VertexNormal
+/// A collection made from Face normals
+/// We can implement multiple methods for calculating the resulting vertex normal
+class VertexNormal
+{
+public :
+	// uses huge amounts of memory but should never be necessary to resize
+	// @todo what is the necessary size of the array?
+	VertexNormal(void)
+		: _index(0)
+		, _size(32)
+	{}
+
+	/// @brief calculate a sum and normalise
+	Ogre::Vector3 avarage(void) const
+	{
+		if(_index == 0)
+		{ return Ogre::Vector3::ZERO; }
+
+		Ogre::Vector3 s = Ogre::Vector3::ZERO;
+		for(size_t i = 0; i < _index; ++i)
+		{ s += _normals[i]; }
+
+		s.normalise();
+
+		return s;
+	}
+
+	Ogre::Vector3 sum(void) const
+	{
+		Ogre::Vector3 s = Ogre::Vector3::ZERO;
+		for(size_t i = 0; i < _index; ++i)
+		{
+			s += _normals[i];
+		}
+
+		return s;
+	}
+
+	size_t size() const
+	{ return _index; }
+
+	void add(Ogre::Vector3 const &v)
+	{
+		assert(_index < _size);
+		_normals[_index] = v;
+		++_index;
+	}
+
+private :
+	Ogre::Vector3 _normals[32];
+	size_t _index;
+	size_t _size;
+};
+
 class MeshImporter
 {
 public:
@@ -78,6 +133,10 @@ private:
 	void handleIndexBuffer(COLLADAFW::MeshPrimitive* meshPrimitive,
 		const COLLADABU::Math::Matrix4& matrix, vl::IndexBuffer *ibf);
 
+	/// Normals in Collada files are face normals (aka proper normals)
+	/// we need vertex normals for meshes, so we calculate those here.
+	/// You can confirm that they are face normals by importing a cube mesh
+	/// and checking that it has 8 vertices and 6 normals (6 faces).
 	void _calculate_vertex_normals(std::vector<uint32_t> const &normalIndices, vl::IndexBuffer *ibf);
 	void _calculate_vertex_uvs(std::vector<uint32_t> const &uvIndices, vl::IndexBuffer *ibf);
 	

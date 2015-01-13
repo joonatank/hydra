@@ -34,6 +34,7 @@
 #include "dae_importer.hpp"
 
 #include "math/math.hpp"
+#include <base/chrono.hpp>
 
 namespace {
 
@@ -506,67 +507,84 @@ vl::dae::MeshImporter::handleVertexBuffer(COLLADAFW::Mesh const *mesh, vl::Verte
 	}
 }
 
-struct VertexNormal
-{
-	// uses huge amounts of memory but should never be necessary to resize
-	VertexNormal(void)
-	{
-		normals.reserve(32);
-	}
-
-	Ogre::Vector3 avarage(void) const
-	{
-		if(normals.size() == 0)
-		{ return Ogre::Vector3::ZERO; }
-
-		return sum()/normals.size();
-	}
-
-	Ogre::Vector3 sum(void) const
-	{
-		Ogre::Vector3 s = Ogre::Vector3::ZERO;
-		for(size_t i = 0; i < normals.size(); ++i)
-		{
-			s += normals.at(i);
-		}
-
-		return s;
-	}
-
-	size_t size() const
-	{ return normals.size(); }
-
-	std::vector<Ogre::Vector3> normals;
-};
-
 void
 vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &normalIndices, vl::IndexBuffer *ibf)
 {
 	std::clog << "vl::dae::MeshImporter::_calculate_vertex_normals" << std::endl;
 
+	vl::chrono c;
+
 	// we have a map from faces -> normals (normalIndices)
 	// we have a map from vertices -> faces (ibf)
 	// we need a map from vertices -> normals
+
+	// Switching from vector to array made the allocation significantly faster,
+	// but alas the allocation isn't taking that long to begin with.
 	std::vector<VertexNormal> vert_to_normal;
 	vert_to_normal.resize(_mesh->sharedVertexData->getVertexCount());
 
-	// @todo can we reduce the complexity of this function?
-	// it will take a significant amount of time considering it iterates
-	// twice over the indexes
-	for(size_t i = 0; i < _mesh->sharedVertexData->getVertexCount(); ++i)
+	// Original algorithm with double loop, complexity O(n^2)
+	// Loop over vertices and then indices finding the indices of the normals
+	// that link to the vertex.
+	//
+	// Debug
+	// takes 10 ms with bunny model without the inner loop
+	// takes 100s with bunny model without any code inside the loop
+	// takes 285s with bunny model with empty if clause
+	// takes 290s with bunny model with the inner loop
+	// Release
+	// takes 44us with bunny model without the inner loop
+	// takes 44us with bunny model with empty inner loop
+	// takes 2s 700ms with bunny model with empty if clause
+	// takes 8s with bunny model with the inner loop
+	//
+	// New algorithm with sorted index map, complexity O(nlog(n))
+	//
+	// Debug with new algorithm
+	// takes 80ms with bunny model (3600 times faster)
+	// Release with the new algorithm
+	// takes 11ms with bunny model (720 times faster)
+	//
+	// Bunny model size, vertex count = 34 835 : index count = 208 998
+	// Release mode, takes 400 us to loop over indices
+	// Debug mode, takes 8 ms to loop over indices
+	//
+	// New algorithm
+	//
+	// Create a [normal index, vertex] map
+	// Instead of iterating over both the vertices and indices.
+	// This reduces the complexity to O(n)
+	// No need to sort the buffer.
+
+	assert(normalIndices.size() == ibf->indexCount());
+
+	// We need a [normal index, vertex] map
+	// where index can be present multiple times (there is more indices than vertices)
+	// so we need vector<uint, uint>
+	std::vector< std::pair<uint32_t, uint32_t> > indices;
+	indices.resize(normalIndices.size());
+
+	for(size_t j = 0; j < normalIndices.size(); ++j)
 	{
-		for(size_t j = 0; j < ibf->indexCount(); ++j)
-		{
-			// Find the face id
-			// @todo this should be done before by using a temporary array
-			if(ibf->at(j) == i)
-			{
-				Ogre::Vector3 const &normal = _normals.at(normalIndices.at(j));
-				// @todo we should not be using push_back but resize and at
-				vert_to_normal.at(i).normals.push_back(normal);
-			}
-		}
+		// First value is index read from normal index buffer.
+		// Second value is the vertex from index buffer
+		// so we need to retrieve the vertex from index buffer.
+		assert(j < ibf->indexCount());
+		indices.at(j) = std::pair<uint32_t, uint32_t>(normalIndices.at(j), ibf->at(j));
 	}
+
+	// Doesn't need to be sorted, we are using vertices for indexes
+	// and normal indices for retrieving the normal from an array.
+	for(size_t i = 0; i < indices.size(); ++i)
+	{
+		std::pair<uint32_t, uint32_t> const &vert_to_index = indices.at(i);
+		assert(vert_to_index.first < _normals.size());
+		// second is the vertex, first is the index for the normal
+		Ogre::Vector3 const &normal = _normals.at(vert_to_index.first);
+		vert_to_normal.at(vert_to_index.second).add(normal);
+	}
+
+	std::clog << "Making vertex normal map took " << c.elapsed() << std::endl;
 
 	// if smooth shading is on
 	// the vertex normal is the avarage of all the face normals
@@ -575,10 +593,6 @@ vl::dae::MeshImporter::_calculate_vertex_normals(std::vector<uint32_t> const &no
 	// we should create this mesh first and then use an operation
 	// that creates a flat shaded one.
 	
-	// trying to figure out if the normal array is same size as vertices array
-	std::clog << "Copy vertex normals. Mesh has "
-		<< _mesh->sharedVertexData->getVertexCount() << " vertices and "
-		<< vert_to_normal.size() << " normals." << std::endl;
 	// just do some checking here if this is true all the time
 	// we can remove some dynamic array resizing from code above
 	assert(vert_to_normal.size() == _mesh->sharedVertexData->getVertexCount());
