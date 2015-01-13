@@ -446,7 +446,8 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 
 			case OBJ_MATERIAL :
 			{
-				if(_material_manager)
+				// need to check for Pipe because if we don't have it, the Ogre renderer might not be initialised
+				if(_material_manager && _pipe)
 				{
 					vl::MaterialRefPtr mat = _material_manager->_createMaterial(id);
 					_materials_to_check.push_back(mat);
