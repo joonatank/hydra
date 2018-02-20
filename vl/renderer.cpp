@@ -154,22 +154,6 @@ vl::Renderer::draw(void)
 	if(_pipe)
 	{ _pipe->draw(); }
 
-	// Copy view and projection matrices
-	// @todo should be in the pipe or something
-	if(_pipe->getWindows().size() > 0 && _pipe->getWindows().at(0)->getChannels().size() > 0)
-	{
-		// @todo does this work for deferred shading or FBOs?
-		// what projection and view matrices exacatly are left after
-		// rendering a frame?
-		// need to test more but view matrix seemed fine for deferred.
-		//Channel *chan = _pipe->getWindows().at(0)->getChannels().at(0);
-
-		//vl::Transform t = chan->getCamera().getLastViewMatrix();
-		//_last_view_matrix = Ogre::Matrix4(t.quaternion);
-		//_last_view_matrix.setTrans(t.position);
-		//_last_proj_matrix = chan->getCamera().getLastProjectionMatrix();
-	}
-
 	if(_scene_manager)
 	{ _scene_manager->_notifyFrameEnd(); }
 
@@ -260,19 +244,23 @@ vl::Renderer::clearProject(void)
 
 /// --------------------------------------------------------------------------
 void
-vl::Renderer::initialiseGUI(vl::ChannelPtr channel)
+vl::Renderer::initialiseGUI(vl::Window *window)
 {
 	assert(_gui);
 
 	// NOP if already initialised
+	// @todo should this be NOP or throw
 	if(_gui->initialised() || _gui->getChannel())
 	{ return; }
 
 	std::clog << "vl::Renderer::_initialiseGUI" << std::endl;
 
+	assert(window);
+	assert(window->getChannels().size());
+
+	ChannelPtr channel = window->getChannels().at(0);
 	assert(channel);
-	
-	_gui->setChannel(channel);
+	_gui->initialise(channel);
 }
 
 /// ----------------------- Syncing -----------------------------------------
@@ -379,6 +367,17 @@ vl::Renderer::_create_objects(IdTypeMap const &objects, IdTypeMap &left_overs)
 					{ BOOST_THROW_EXCEPTION(vl::exception() << vl::desc("GUI already created")); }
 
 					_gui.reset(new vl::gui::GUI(_session, id));
+					
+					// set scale from window or here
+					// have to set it at both places since we don't know which one
+					// is created first
+					if(_pipe && _pipe->getWindows().size() > 0)
+					{
+						if(_pipe->getWindows().at(0)->isHMD())
+						{ _gui->setScale(gui::GS_HMD); }
+						else
+						{ _gui->setScale(gui::GS_NORMAL); }
+					}
 				}
 				// store for later
 				else
@@ -626,6 +625,16 @@ vl::Renderer::_updateDistribData( void )
 		
 		for( size_t i = 0; i < _pipe->getWindows().size(); ++i )
 		{ _pipe->getWindows().at(i)->setCamera(_player->getCamera()); }
+
+		// @todo create gui here if it's not already created
+		// here because we need the Channel to be initialised with camera first
+		// so we can get the correct viewport for FBOs
+		// the other option would be to fix the FBO Channel initialisation
+		if(!_gui->initialised())
+		{
+			assert(_pipe->getWindows().size() > 0);
+			initialiseGUI(_pipe->getWindows().at(0));
+		}
 
 		// Take a screenshot
 		if( _player->getScreenshotVersion() > _screenshot_num )

@@ -30,6 +30,8 @@ set(SRC
 	logger.cpp
 	window.cpp
 	channel.cpp
+	channel_fbo.cpp
+	channel_deferred.cpp
 	stereo_camera.cpp
 	master.cpp
 	slave.cpp
@@ -245,6 +247,8 @@ set( HEADERS
 	window.hpp
 	window_interface.hpp
 	channel.hpp
+	channel_fbo.hpp
+	channel_deferred.hpp
 	stereo_camera.hpp
 	master.hpp
 	slave.hpp
@@ -269,6 +273,7 @@ source_group(HydraMain FILES ${HEADERS} ${SRC})
 
 set(GUI_HEADERS
 	gui/gui.hpp
+	gui/gui_defines.hpp
 	gui/gui_window.hpp
 	gui/console.hpp
 	gui/performance_overlay.hpp

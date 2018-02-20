@@ -94,6 +94,9 @@ public:
 	/// @return true if the window has stereo enabled
 	bool hasStereo(void) const;
 
+	bool isHMD(void) const
+	{ return _hmd != 0; }
+
 	/// Capture input events
 	virtual void capture( void );
 
@@ -159,7 +162,7 @@ private :
 	/// @todo wall is tied to projection we should not need them both
 	/// @todo this should be public so we can move channel creation to Renderer
 	vl::Channel *_create_channel(vl::config::Channel const &channel, 
-		STEREO_EYE stereo_cfg, RENDER_MODE render_mode, uint32_t fsaa);
+		STEREO_EYE stereo_cfg, RENDER_MODE render_mode);
 
 	/// Create the OIS input handling
 	/// For now supports mouse and keyboard
@@ -183,6 +186,11 @@ private :
 	std::string _name;
 
 	config::Window _window_config;
+
+	/// @todo can we change the Pipe/Renderer somewhat
+	/// it's confusing to have them both since
+	/// Pipe is only defined on Master and Renderer on Slave
+	/// can we define them using a virtual interface or smth
 
 	/// Pipe used on Master
 	vl::PipePtr _pipe;

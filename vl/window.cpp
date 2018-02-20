@@ -44,9 +44,12 @@
 // Necessary for checking for stereo support
 // @todo should really be in the GLWindow implemetation
 #include <GL/gl.h>
+// Necessary for creating the Channels
+#include "channel.hpp"
+#include "channel_fbo.hpp"
+#include "channel_deferred.hpp"
 
 // For Oculus hacks
-#include "channel.hpp"
 #include "player.hpp"
 #include <gl/GL.h>
 
@@ -196,15 +199,30 @@ vl::Window::hasStereo(void) const
 Ogre::RenderTarget::FrameStats 
 vl::Window::getStatistics(void) const
 {
-	if(!_ogre_window)
-	{ return Ogre::RenderTarget::FrameStats(); }
-
 	/// @todo should we store the frame stats instead of calculating them here?
 
 	/// Compine the statistics from Window 
 	/// (all viewports that render directly to the window).
 	/// And more specialised channels that render first to FBO.
-	Ogre::RenderTarget::FrameStats stats = _ogre_window->getStatistics();
+	Ogre::RenderTarget::FrameStats stats;
+	stats.batchCount = 0;
+	stats.avgFPS = 0;
+	stats.bestFPS = 0;
+	stats.bestFrameTime = 0;
+	stats.lastFPS = 0;
+	stats.triangleCount = 0;
+	stats.worstFPS = 0;
+	stats.worstFrameTime = 0;
+
+	if(_ogre_window)
+	{
+		stats.avgFPS = _ogre_window->getStatistics().avgFPS;
+		stats.bestFPS = _ogre_window->getStatistics().bestFPS;
+		stats.lastFPS = _ogre_window->getStatistics().lastFPS;
+		stats.worstFPS = _ogre_window->getStatistics().worstFPS;
+		stats.worstFrameTime = _ogre_window->getStatistics().worstFrameTime;
+		stats.bestFrameTime = _ogre_window->getStatistics().bestFrameTime;
+	}
 
 	/// Append statistics from other than window channels
 	for(size_t i = 0; i < _channels.size(); ++i)
@@ -471,12 +489,7 @@ vl::Window::draw(void)
 	// for now just assert since this should never happen
 	assert(_channels.size() > 0);
 
-	// Dirty hacking to get the Oculus rendering working
-	bool hmd = false;
-	if(_channels.at(0)->getRenderMode() == RM_OCULUS)
-	{ hmd = true; }
-
-	if(hmd)
+	if(_hmd)
 	{ _begin_frame_oculus(); }
 
 	// Updating FBOs and channel data is separated from drawing to screen
@@ -501,28 +514,21 @@ vl::Window::draw(void)
 		{ _channels.at(i)->draw(); }
 	}
 
-	// GUI is not rendered as part of the FBO which might become problematic
-	// instead it is overlayed on the Window.
-	// For post screen effects and distribution of the Channels this shouldn't
-	// be a problem, but we should tread carefully anyway.
-	//
-	// why isn't it part of the FBO?
-	// oh because it doesn't work with Deferred Rendering?
-	// or it might get distorted with Oculus?
+	// GUI is now rendered into the FBO, this because Oculus needs it so.
+	// This might not be ideal for some cases, but for those individually
+	// change the GUI to be rendered onto some other viewport.
 	//
 	// @todo
 	// Do we want to overlay the GUI for all Channels
 	// Probably not, but how do we decide it?
 	// And should we bind the GUI to Channel?
 	//
-	// @todo this doesn't do what I thought it would
-	// it has nothing to do with Rendering it just updates the variables
+	// GUI::update has nothing to do with Rendering it just updates the variables
 	// for Rendering, so it probably should be first in the Rendering loop
-	// where is the GUI rendered?
-	//
-	// For Oculus Rift
-	// GUI doesn't work, it has nothing to do with this though
-	// we need to figure out where the GUI is drawn and what exactly does update do.
+	// Where is the GUI rendered?
+	// It is rendered in Renderer::draw where we call Ogre to finish a frame draw
+	// well that is my guess since Gorilla automatically draws using an Ogre
+	// frameDraw callback.
 	if(_renderer->getGui())
 	{ _renderer->getGui()->update(); }
 
@@ -539,7 +545,7 @@ vl::Window::draw(void)
 		overlay->setLastTriangleCount(stats.triangleCount);
 	}
 
-	if(hmd)
+	if(_hmd)
 	{ _end_frame_oculus(); }
 
 	_ogre_window->_endUpdate();
@@ -678,17 +684,11 @@ vl::Window::deserialize(vl::cluster::ByteStream &msg, const uint64_t dirtyBits)
 			&& _renderer->getPipe()->getID() != vl::ID_UNDEFINED
 			&& _pipe_id != vl::ID_UNDEFINED);
 
+		/// @todo what is the purpose of this?
 		if(_renderer->getPipe()->getID() != _pipe_id)
 		{ return; }
 
 		_createNative();
-
-		// Needs to be after Channels and Ogre::Viewports are created
-		// for the of change that window does not have Channel
-		if(_channels.size() > 0)
-		{
-			_renderer->initialiseGUI(_channels.at(0));
-		}
 	}
 }
 
@@ -701,7 +701,7 @@ vl::Window::_create_channels(void)
 	for(size_t i = 0; i < _window_config.get_n_channels(); ++i)
 	{
 		config::Channel channel_config = _window_config.get_channel(i);
-
+		channel_config.fsaa = _window_config.fsaa;
 		config::Renderer::Type renderer_type = _window_config.renderer.type;
 
 		RENDER_MODE rend_mode(RM_WINDOW);
@@ -734,12 +734,12 @@ vl::Window::_create_channels(void)
 			// left channel
 			std::string base_name = channel_config.name;
 			channel_config.name = base_name + "_left";
-			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_LEFT, rend_mode);
 			
 			// right channel
 			channel_config.name = base_name + "_right";
 			channel_config.area.x += channel_config.area.w;
-			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_RIGHT, rend_mode);
 
 		}
 		// We already have a window so it should be safe to check for stereo
@@ -748,14 +748,14 @@ vl::Window::_create_channels(void)
 		{
 			std::string base_name = channel_config.name;
 			channel_config.name = base_name + "_left";
-			_create_channel(channel_config, HS_LEFT, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_LEFT, rend_mode);
 			channel_config.name = base_name + "_right";
-			_create_channel(channel_config, HS_RIGHT, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_RIGHT, rend_mode);
 		}
 		// no stereo
 		else
 		{
-			_create_channel(channel_config, HS_MONO, rend_mode, _window_config.fsaa);
+			_create_channel(channel_config, HS_MONO, rend_mode);
 		}
 	}
 }
@@ -785,6 +785,17 @@ vl::Window::_createNative(void)
 	else
 	{
 		_ogre_window = _createOgreWindow(_window_config);
+	}
+
+	// set scale from window or here
+	// have to set it at both places since we don't know which one
+	// is created first
+	assert(_renderer && _renderer->getGui());
+	{
+		if(isHMD())
+		{ _renderer->getGui()->setScale(gui::GS_HMD); }
+		else
+		{ _renderer->getGui()->setScale(gui::GS_NORMAL); }
 	}
 
 	assert(_ogre_window);
@@ -877,15 +888,26 @@ vl::Window::_createOgreWindow(vl::config::Window const &winConf)
 
 vl::Channel *
 vl::Window::_create_channel(vl::config::Channel const &chan_cfg, STEREO_EYE stereo_cfg,
-			RENDER_MODE render_mode, uint32_t fsaa)
+			RENDER_MODE render_mode)
 {
-	/// We don't yet have a valid SceneManager
-	/// So we need to wait till the camera is set here
-	vl::Rect<double> const &rect = chan_cfg.area;
-	assert(rect.valid());
-	Ogre::Viewport *view = _ogre_window->addViewport(0, _channels.size(), rect.x, rect.y, rect.w, rect.h);
+	Channel *channel = 0;
+	switch(render_mode)
+	{
+		case RM_WINDOW:
+			// @todo Window is depricated, throw here
+			std::cout << "Warning : Using depricated direct window rendering." << std::endl;
+			channel = new Channel(chan_cfg, stereo_cfg, this);
+			break;
+		case RM_FBO:
+		case RM_OCULUS:
+			channel = new ChannelFBO(chan_cfg, stereo_cfg, this);
+			break;
+		case RM_DEFERRED:
+			channel = new ChannelDeferred(chan_cfg, stereo_cfg, this);
+			break;
 
-	Channel *channel = new Channel(chan_cfg, view, render_mode, fsaa, stereo_cfg, this);
+	}
+	assert(channel);
 	_channels.push_back(channel);
 
 	// set the aspect ratio

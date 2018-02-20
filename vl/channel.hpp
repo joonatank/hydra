@@ -36,12 +36,8 @@ enum RENDER_MODE
 	RM_WINDOW,
 	// Render to FBO first then Blit the FBO directly to screen
 	RM_FBO,		// Working fine for both mono and stereo buffers
-	// Use MRT to render both stereo images to FBO in a single pass
-	RM_MRT_STEREO,	// Not implemented
 	// Render first G-Buffer and then lights
 	RM_DEFERRED,	// Work in progress
-	// Combined mode
-	RM_DEFERRED_MRT_STEREO,	// Not implemented
 	RM_OCULUS,
 };
 
@@ -53,12 +49,8 @@ inline std::string getRenderModeName(RENDER_MODE rm)
 		return "RM_WINDOW";
 	case RM_FBO:
 		return "RM_FBO";
-	case RM_MRT_STEREO:
-		return "RM_MRT_STEREO";
 	case RM_DEFERRED:
 		return "RM_DEFERRED";
-	case RM_DEFERRED_MRT_STEREO:
-		return "RM_DEFERRED_MRT_STEREO";
 	case RM_OCULUS:
 		return "RM_OCULUS";
 	default:
@@ -67,6 +59,16 @@ inline std::string getRenderModeName(RENDER_MODE rm)
 	
 }
 
+/**	@brief Channel
+ *	@todo remove direct Window rendering
+ *	cleans up the the code a lot, both Deferred and Oculus use FBOs anyway
+ *	FBO rendering is just slightly slower than direct window while
+ *	it has the possibilities to use post processing effects etc.
+ *
+ *	@todo break into multiple versions, FBO and Deferred at least
+ *
+ *	@todo Deferred with Oculus?
+ */
 class Channel
 {
 public:
@@ -74,16 +76,25 @@ public:
 	/// @todo add FBO size as a parameter
 	/// we can add it to channel config, no need to distribute it for now though
 	/// @todo also move fsaa and rm to Channel config, they are annoying
-	Channel(vl::config::Channel config, Ogre::Viewport *view, 
-		RENDER_MODE rm, uint32_t fsaa, STEREO_EYE stereo_cfg, vl::Window *parent);
+	/// we can probably remove rm when we remove Window rendering and split the Channel
+	/// to multiple classes
+	/// can we move stereo_cfg to config?
+	Channel(vl::config::Channel config, STEREO_EYE stereo_cfg, vl::Window *parent);
 
-	void setCamera(vl::CameraPtr cam);
+	virtual ~Channel(void);
 
 	std::string const &getName(void) const
 	{ return _name; }
 
+	/// the default implementation for Window
+	virtual void setCamera(vl::CameraPtr cam);
+
+	/// Predraw step
+	/// use the private template to override
 	void update(void);
 
+	/// Draw step
+	/// use the private template to override
 	void draw(void);
 
 	/// @brief get the size of the Channel in homogeneous coordinates
@@ -91,79 +102,73 @@ public:
 	Rect<double> getSize(void) const
 	{ return _size; }
 
-	/// @brief get the Texture size
-	/// only valid for FBO render targets
-	Rect<uint32_t> getTextureSize(void) const;
-
 	/// Per frame statistics
-	vl::scalar getLastFPS(void) const;
+	virtual vl::scalar getLastFPS(void) const;
 
 	/// @brief returns the number of triangles rendered in a frame
 	/// For window targets this returns zero intentionally because
 	/// windows can't provide statistics per viewport.
-	size_t getTriangleCount(void) const;
+	virtual size_t getTriangleCount(void) const;
 
 	/// @brief returns the number of batches rendered in a frame
 	/// For window targets this returns zero intentionally because
 	/// windows can't provide statistics per viewport.
-	size_t getBatchCount(void) const;
+	virtual size_t getBatchCount(void) const;
 
-	void resetStatistics(void);
+	virtual void resetStatistics(void);
 
 	StereoCamera &getCamera(void)
 	{ return _camera; }
 
-	Ogre::Viewport *getNative(void)
-	{ return _viewport; }
+	Ogre::Viewport *getWindowViewport(void)
+	{ return _win_viewport; }
 
-	RENDER_MODE getRenderMode(void) const
-	{ return _render_mode; }
+	virtual Ogre::Viewport *getRenderViewport(void);
 
 	/// For Oculus
 	void setCustomProjMatrix(bool use, vl::Matrix4 const proj);
 	void setCustomViewMatrix(bool use, vl::Matrix4 const view);
 
+	/// @todo do we need these here? they are only implemted for FBO targets
 	// Dirty hack to retrieve the texture ID for the RenderTarget
 	// DO NOT use either of these on non-fbo targets or Deferred targets
 	//
 	// we are going to remove non FBO targets so these will just assert
 	// fail for old Windowed rendering
-	uint32_t getTextureID(void) const;
+	virtual uint32_t getTextureID(void) const
+	{ assert(false); return 0; }
 
-	uint32_t getFBOID(void) const;
+	virtual uint32_t getFBOID(void) const
+	{ assert(false); return 0; }
+
+	/// @brief get the Texture size
+	/// only valid for FBO render targets
+	virtual Rect<uint32_t> getTextureSize(void) const
+	{ assert(false); return Rect<uint32_t>(); }
+
+private :
+	// template method pattern
+	virtual void _predraw(void) {}
+
+	virtual void _draw(void);
 
 	/// Methods
-private :
+	// @todo sort out private/protected
+protected :
 
 	void _update_camera();
 
-	void _render_to_fbo(void);
+	void _copy_player(void);
 
-	/// nop if null parameter is passed here
-	void _set_fbo_camera(vl::CameraPtr cam, std::string const &base_material);
-
-	/// @param base_material is used to select post processing effects
-	/// rtt has no post processing, oculus_rtt has distortion for Oculus Rift
-	void _initialise_fbo(vl::CameraPtr camera, std::string const &base_material);
-
-	/// nop if null parameter is passed here
-	void _set_mrt_camera(vl::CameraPtr cam);
-
-	void _initialise_mrt(vl::CameraPtr camera);
-
-	Ogre::RenderTexture *_create_fbo(std::string const &name, Ogre::PixelFormat pf);
+	Ogre::TexturePtr _create_fbo(std::string const &name, Ogre::PixelFormat pf);
 
 	void _create_screen_quad(std::string const &name, std::string const &material_name);
-
-	void _deferred_geometry_pass(void);
-
-	void _deferred_light_pass(void);
 
 	uint32_t _get_window_mask(void)
 	{
 		// minimum 1<<2 because 1<<0 is the scene mask
 		// and 1<<1 is the light mask
-		return 1 << (_viewport->getZOrder()+2); 
+		return 1 << (_win_viewport->getZOrder()+2); 
 	}
 
 	uint32_t _get_scene_mask(void)
@@ -177,36 +182,31 @@ private :
 	{ return _get_scene_mask() | _get_light_mask(); }
 
 	/// Data
-private:
+	// @todo sort out private/protected
+protected :
 	std::string _name;
 	Rect<double> _size;
 	// saved variable for FBO creation, might not be actual texture size
 	vl::vec2i _texture_size;
 
 	StereoCamera _camera;
-	Ogre::Viewport *_viewport;
+	/// Window viewport, for FBOs this is the non render viewport
+	/// For windows this is the render viewport
+	Ogre::Viewport *_win_viewport;
 
-	RENDER_MODE _render_mode;
 	uint32_t _fsaa;
 
 	// -1 for left, +1 for right
 	vl::scalar _stereo_eye;
 
-	// Special Rendering surface
-	// MRT is only available for Deferred shading
-	// FBO is only available for FBO rendering
-	Ogre::MultiRenderTarget *_mrt;
-	Ogre::RenderTexture *_fbo;
-
-	std::vector<Ogre::MaterialPtr> _fbo_materials;
-	std::vector<Ogre::TexturePtr> _fbo_textures;
-
-	Ogre::Camera *_rtt_camera;
 	Ogre::SceneNode* _quad_node;
 
+	/// OpenGL buffer we use for drawing (used for switching quad buffer eyes)
 	int _draw_buffer;
 
 	/// Oculus hacks
+	// don't really need these for anything other than FBO but they logically
+	// don't belong there
 	bool _use_custom_view;
 	bool _use_custom_proj;
 	Matrix4 _custom_view;

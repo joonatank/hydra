@@ -38,8 +38,29 @@ namespace vl
 namespace gui
 {
 
+enum GUI_SCALE
+{
+	GS_NORMAL,
+	GS_HMD,
+};
+
 /**	@class GUI
  *	@brief Distributed class for GUI modifications
+ *
+ *	@todo figure out where this is updated/rendered and document
+ *	add general process documentation here
+ *	add specific method documentation
+ *
+ *	@todo add global scale variable to scale all the windows
+ *	primarily for Oculus since the windows/fonts need to be scaled for it.
+ *	We need to 
+ *		- find font size we want to use
+		- replace CONSOLE_FONT_INDEX with dynamic version
+		- make configurations for two or three different font sizes
+		- we need to use fractions to modify the scale off all windows
+			or maybe not, since only few of them use borders
+			some like the console is full screen we just need to add more lines
+ *
  */
 class HYDRA_API GUI : public vl::Distributed
 {
@@ -50,7 +71,6 @@ public :
 	/// @brief Slave or Renderer constructor
 	/// @param session the distributed session this GUI is attached to
 	/// @param id ID of this GUI, has to be valid
-	/// @param cb callback for sendCommand, ownership is passed to this
 	GUI(vl::Session *session, uint64_t id);
 	
 	~GUI(void);
@@ -68,9 +88,14 @@ public :
 	vl::Channel *getChannel(void)
 	{ return _channel; }
 
-	void setChannel(vl::Channel *view);
-	
-	void initGUI(void);
+	GUI_SCALE getScale(void) const
+	{ return _scale; }
+
+	/// @brief setScale
+	/// Needs to be called before initialised
+	void setScale(GUI_SCALE scale);
+
+	void initialise(vl::Channel *view);
 
 	ConsoleWindowRefPtr getConsole(void)
 	{ return _console; }
@@ -80,8 +105,7 @@ public :
 
 	bool isVisible(void) const;
 
-	void sendCommand(std::string const &cmd);
-
+	/// Called from Windows to create the actual draw object
 	Gorilla::Screen *createScreen(void);
 	
 	void createMouseCursor(Gorilla::Screen *screen);
@@ -112,6 +136,13 @@ private :
 	GUI(GUI const &);
 	GUI &operator=(GUI const &);
 
+	/// Initialisation function used by all constructors
+	void _clear(void);
+	
+	/// Initialise the GUI
+	/// @internal, called when deserialised
+	void _init(void);
+
 /// Data
 private :
 
@@ -120,17 +151,16 @@ private :
 
 	std::vector<vl::gui::WindowRefPtr> _windows;
 
+	GUI_SCALE _scale;
+
 	vl::Session *_session;
 
 	vl::Channel *_channel;
-		
+
 	Gorilla::Silverback *_gorilla;
-	Ogre::Viewport *mViewport;
 
 	Gorilla::Layer *_mouse_cursor_layer;
 	Gorilla::Rectangle *_mouse_cursor;
-
-	//CEGUI::Window *_root;
 
 };	// class GUI
 

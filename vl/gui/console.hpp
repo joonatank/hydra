@@ -79,7 +79,7 @@ private :
 	Gorilla::Layer *mLayer;
 	Gorilla::Caption*    mPromptText;
 	Gorilla::MarkupText* mConsoleText;
-	Gorilla::Rectangle*  mDecoration;
+	Gorilla::Rectangle*  _background;
 	Gorilla::GlyphData*  mGlyphData;
 
 	bool mUpdateConsole;
@@ -92,6 +92,12 @@ private :
 	std::list<Ogre::String> _lines;
 
 	uint16_t _caret_position;
+
+	uint32_t _font;
+	int _line_length;
+	int _line_count;
+	int _x;
+	int _y;
 
 };	// class ConsoleWindow
 

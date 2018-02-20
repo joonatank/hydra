@@ -1044,7 +1044,7 @@ namespace Gorilla
  
  void Screen::renderQueueEnded(Ogre::uint8 queueGroupId, const Ogre::String& invocation, bool& repeatThisInvocation)
  {
-  if (mRenderSystem->_getViewport() != mViewport || queueGroupId != SCREEN_RENDERQUEUE)
+  if (queueGroupId != SCREEN_RENDERQUEUE)
    return;
   if (mIsVisible && mLayers.size())
    renderOnce();
